@@ -4,6 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>MAGNOVA Invest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 /* ═══════════════════════════════════════════════════════════════════
@@ -11,7 +13,7 @@
    Inspirado en: Linear, Vercel, Stripe Dashboard, Bloomberg Terminal
    ═══════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Fonts loaded via <link> in <head> */
 
 /* ── DESIGN TOKENS ────────────────────────────────────────────── */
 :root {
@@ -825,6 +827,7 @@ select.inp { cursor: pointer; }
   <div class="drwb" id="drwb"></div>
 </div>
 <script>
+
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -2626,18 +2629,8 @@ async function sendAIMessage(userMsg){
   var msgs=AI.messages.map(function(m){return {role:m.role,content:m.content};});
 
   try{
-    var res=await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:1000,
-        system:sysPrompt,
-        messages:msgs
-      })
-    });
-    var data=await res.json();
-    var reply=data.content&&data.content[0]&&data.content[0].text||"No pude procesar tu consulta.";
+    await new Promise(function(r){setTimeout(r,600);});
+    var reply="🔧 El AI Advisor está en mantenimiento mientras migramos a un servidor seguro. Estará disponible muy pronto con mejoras importantes. Mientras tanto usa el Radar Financiero (📡) para análisis de tu portfolio.";
     AI.messages.push({role:"assistant",content:reply});
   }catch(e){
     AI.messages.push({role:"assistant",content:"❌ Error de conexión. Verifica tu acceso a la API de Claude."});
@@ -3334,38 +3327,22 @@ async function generateRadarReport(){
     '}';
 
   try{
-    var res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:2000,
-        system:systemPrompt,
-        messages:[{role:'user',content:userPrompt}]
-      })
-    });
-    var data=await res.json();
-    var rawText=data.content&&data.content[0]&&data.content[0].text||'';
-
-    // Parse JSON — strip any accidental markdown fences
-    var clean=rawText.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
-    var parsed=JSON.parse(clean);
-
+    await new Promise(function(r){setTimeout(r,600);});
     var reportObj={
       date:new Date().toISOString(),
       dateLabel:new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),
-      score:health.total,
-      subs:health.subs,
-      profile:RADAR.profile,
-      summary:parsed.summary||'',
-      sections:parsed.sections||[],
+      score:health.total,subs:health.subs,profile:RADAR.profile,
+      summary:'Diagnóstico local del portfolio — AI Advisor disponible próximamente.',
+      sections:[
+        {id:'health',title:'Score de Salud',content:'Tu portfolio tiene un score de '+health.total+'/100. Diversificación: '+health.subs.div+' · Momentum: '+health.subs.mom+' · Riesgo: '+health.subs.risk+' · Correlación: '+health.subs.corr+' · Valoración: '+health.subs.val+'.'},
+        {id:'macro',title:'Análisis AI en Mantenimiento',content:'🔧 El análisis con inteligencia artificial está temporalmente en mantenimiento mientras migramos a infraestructura segura. Los sub-scores del Health Score son precisos y calculados localmente. El análisis narrativo completo con Claude estará disponible muy pronto.'},
+        {id:'action',title:'Mientras tanto',content:'1. Revisa tus posiciones en Portfolio. 2. Consulta el Signal Engine para señales BUY/HOLD/SELL. 3. Usa el Position Builder para calcular entradas optimas.'},
+      ],
     };
-
     RADAR.report=reportObj;
     RADAR.history.unshift(reportObj);
     if(RADAR.history.length>12) RADAR.history=RADAR.history.slice(0,12);
     radarSave();
-
   }catch(e){
     RADAR.report={
       date:new Date().toISOString(),
@@ -4108,6 +4085,622 @@ renderMain=function(){
     }
   }
 };
+
+// ── COMPARADOR DE ACTIVOS ────────────────────────────────────────
+var COMP={tickers:["AAPL","MSFT"],range:60,data:{},loading:false};
+
+function compSet(t1,t2,t3,t4){
+  COMP.tickers=[t1,t2];
+  if(t3) COMP.tickers.push(t3);
+  if(t4) COMP.tickers.push(t4);
+  COMP.data={};
+  compLoad();
+}
+function compAddTicker(){
+  if(COMP.tickers.length<4){COMP.tickers.push("NEW");COMP.data={};renderComp();}
+}
+function compRemove(i){
+  COMP.tickers.splice(i,1);
+  COMP.data={};
+  if(COMP.tickers.length<2) COMP.tickers=["AAPL","MSFT"];
+  renderComp();
+}
+function compChangeTicker(i,val){
+  COMP.tickers[i]=(val||"").toUpperCase().trim();
+  COMP.data={};
+  COMP.loading=false;
+}
+
+function renderComp(){
+  var colors=["var(--orange)","var(--blue)","var(--green)","#a78bfa"];
+
+  var tickerInputs=COMP.tickers.map(function(t,i){
+    var lp=getLivePrice(t);
+    var lq=LIVE[t];
+    var chg=lq?((lq.changePct||0)*100).toFixed(2):null;
+    var pos=chg!==null&&parseFloat(chg)>=0;
+    return '<div style="display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid '+colors[i]+'33;border-radius:8px;padding:9px 12px;margin-bottom:8px">'+
+      '<div style="width:8px;height:8px;border-radius:50%;background:'+colors[i]+';flex-shrink:0"></div>'+
+      '<input class="inp" style="flex:1;font-size:12px;font-weight:700;text-transform:uppercase" value="'+t+'" maxlength="8" onchange="compChangeTicker('+i+',this.value)" onblur="COMP.data={};renderComp()"/>'+
+      '<div style="text-align:right">'+
+      '<div style="font-size:11px;font-weight:600;color:var(--bright);font-family:\'JetBrains Mono\',monospace">$'+fmtD(lp)+'</div>'+
+      (chg!==null?'<div style="font-size:9px;color:'+(pos?'var(--green)':'var(--red)')+'">'+( pos?'+':'')+chg+'%</div>':'<div style="font-size:9px;color:var(--text3)">—</div>')+
+      '</div>'+
+      (COMP.tickers.length>2?'<button onclick="compRemove('+i+')" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:13px;line-height:1;padding:2px">✕</button>':'')+
+      '</div>';
+  }).join('');
+
+  var rangeBtns=[[30,"1M"],[60,"2M"],[90,"3M"],[130,"6M"]].map(function(p){
+    return '<button class="tab'+(COMP.range===p[0]?" act":"")+
+      '" onclick="COMP.range='+p[0]+';COMP.data={};compLoad()">'+p[1]+'</button>';
+  }).join('');
+
+  var SUGS=[
+    ["AAPL","MSFT","Los 2 grandes Tech"],
+    ["SPY","QQQ","IVV","ETFs de índice"],
+    ["NVDA","AMD","Chips / IA"],
+    ["GOOGL","META","Publicidad digital"],
+    ["BRK-B","JPM","Value vs Banking"],
+    ["VTI","VXUS","US vs Global"]
+  ];
+  var sugRows=SUGS.map(function(s){
+    var label=s.slice(0,-1).join(" vs ");
+    var desc=s[s.length-1];
+    var args=s.slice(0,-1).map(function(t){return '"'+t+'"';}).join(",");
+    return '<div onclick="compSet('+args+')" style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;cursor:pointer;border-radius:6px;border:1px solid var(--border);margin-bottom:4px;transition:.15s" onmouseover="this.style.borderColor=\'var(--orange-bd)\';this.style.background=\'var(--orange-bg)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'transparent\'">'+
+      '<span style="font-size:11px;font-weight:600;color:var(--bright);font-family:\'JetBrains Mono\',monospace">'+label+'</span>'+
+      '<span style="font-size:10px;color:var(--text3)">'+desc+'</span></div>';
+  }).join('');
+
+  var chartContent='';
+  var statsContent='';
+  var hasData=Object.keys(COMP.data).length===COMP.tickers.length;
+
+  if(COMP.loading){
+    chartContent='<div class="dload"><div class="spin"></div>Cargando histórico...</div>';
+  } else if(!hasData){
+    chartContent='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;text-align:center;color:var(--text3)">'+
+      '<div style="font-size:40px;margin-bottom:10px">⚖️</div>'+
+      '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:5px">Comparador head-to-head</div>'+
+      '<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace">Presiona "Comparar" para cargar datos reales</div></div>';
+  } else {
+    var series=[];
+    COMP.tickers.forEach(function(t,ti){
+      var hist=COMP.data[t];
+      if(!hist||!hist.length) return;
+      var base=hist[0].close;
+      var pts=hist.map(function(d,i){return{x:i,y:(d.close/base-1)*100,close:d.close};});
+      series.push({t:t,pts:pts,color:colors[ti]});
+    });
+
+    if(series.length>0){
+      var W=520,H=200;
+      var allY=[];
+      series.forEach(function(s){s.pts.forEach(function(p){allY.push(p.y);});});
+      var minY=Math.min.apply(null,allY)-3;
+      var maxY=Math.max.apply(null,allY)+3;
+      var rng=maxY-minY||1;
+      var nPts=series[0].pts.length;
+      var xS=function(i){return(i/Math.max(nPts-1,1))*W;};
+      var yS=function(v){return H-((v-minY)/rng)*H;};
+
+      var grid='';
+      [-20,-10,0,10,20,30].forEach(function(v){
+        if(v<minY||v>maxY) return;
+        var y=yS(v).toFixed(1);
+        var col=v===0?'rgba(255,255,255,.15)':'rgba(255,255,255,.04)';
+        grid+="<line x1='0' y1='"+y+"' x2='"+W+"' y2='"+y+"' stroke='"+col+"' stroke-width='1'/>";
+        grid+="<text x='3' y='"+(parseFloat(y)-2).toFixed(1)+"' fill='var(--text3)' font-size='8' font-family='JetBrains Mono,monospace'>"+(v>=0?'+':'')+v+"%</text>";
+      });
+
+      var lines_svg=series.map(function(s){
+        var pts_str=s.pts.map(function(p){return xS(p.x).toFixed(1)+','+yS(p.y).toFixed(1);}).join(' ');
+        var last=s.pts[s.pts.length-1];
+        var lx=xS(last.x);var ly=yS(last.y);
+        return "<polyline points='"+pts_str+"' fill='none' stroke='"+s.color+"' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/>"+
+          "<circle cx='"+lx.toFixed(1)+"' cy='"+ly.toFixed(1)+"' r='3' fill='"+s.color+"'/>"+
+          "<text x='"+(lx+5).toFixed(1)+"' y='"+(ly+3).toFixed(1)+"' fill='"+s.color+"' font-size='9' font-weight='700' font-family='JetBrains Mono,monospace'>"+s.t+" "+(last.y>=0?'+':'')+last.y.toFixed(1)+"%</text>";
+      }).join('');
+
+      chartContent='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:'+H+'px">'+grid+lines_svg+'</svg>';
+
+      // Stats
+      var tickerStats=series.map(function(s){
+        var closes=s.pts.map(function(p){return p.close;});
+        var returns=closes.slice(1).map(function(c,i){return(c-closes[i])/closes[i]*100;});
+        var mean=returns.reduce(function(a,b){return a+b;},0)/(returns.length||1);
+        var vol=Math.sqrt(returns.reduce(function(a,r){return a+(r-mean)*(r-mean);},0)/(returns.length||1));
+        var ret=s.pts[s.pts.length-1].y;
+        var maxR=Math.max.apply(null,s.pts.map(function(p){return p.y;}));
+        var minR=Math.min.apply(null,s.pts.map(function(p){return p.y;}));
+        var sharpe=vol>0?(mean/vol)*Math.sqrt(252/(closes.length||1)):0;
+        var sig=ALL_SIG.find(function(x){return x.t===s.t;})||{sig:'HOLD',sc:60};
+        var lq=LIVE[s.t];
+        return{t:s.t,color:s.color,ret:ret,vol:vol,maxR:maxR,minR:minR,sharpe:sharpe,
+          cur:lq?lq.price:closes[closes.length-1],sig:sig.sig+' ('+sig.sc+')',returns:returns};
+      });
+
+      if(tickerStats.length>=2){
+        var r0=tickerStats[0].returns;
+        tickerStats.forEach(function(s,i){
+          if(i===0){s.corr=1.00;return;}
+          var n=Math.min(r0.length,s.returns.length);
+          var m1=r0.slice(0,n).reduce(function(a,b){return a+b;},0)/n;
+          var m2=s.returns.slice(0,n).reduce(function(a,b){return a+b;},0)/n;
+          var cov=0,v1=0,v2=0;
+          for(var k=0;k<n;k++){cov+=(r0[k]-m1)*(s.returns[k]-m2);v1+=(r0[k]-m1)*(r0[k]-m1);v2+=(s.returns[k]-m2)*(s.returns[k]-m2);}
+          s.corr=(v1>0&&v2>0)?cov/Math.sqrt(v1*v2):0;
+        });
+      }
+
+      var METRICS=[
+        {k:'ret',    label:'Retorno período', fmt:function(v){return(v>=0?'+':'')+v.toFixed(2)+'%';}, higher:true},
+        {k:'vol',    label:'Volatilidad',      fmt:function(v){return v.toFixed(2)+'%';},              higher:false},
+        {k:'sharpe', label:'Sharpe ratio',     fmt:function(v){return v.toFixed(2)+'x';},              higher:true},
+        {k:'maxR',   label:'Máximo',           fmt:function(v){return(v>=0?'+':'')+v.toFixed(2)+'%';}, higher:true},
+        {k:'minR',   label:'Mínimo',           fmt:function(v){return(v>=0?'+':'')+v.toFixed(2)+'%';}, higher:true},
+        {k:'cur',    label:'Precio actual',    fmt:function(v){return'$'+fmtD(v);},                    higher:null},
+        {k:'corr',   label:'Correlación',      fmt:function(v){return v!==null&&v!==undefined?v.toFixed(2):'—';}, higher:null},
+      ];
+
+      var headerRow='<tr><th>Métrica</th>'+tickerStats.map(function(s){return'<th style="color:'+s.color+'">'+s.t+'</th>';}).join('')+'<th>Mejor</th></tr>';
+      var dataRows=METRICS.map(function(m){
+        var best=null;
+        if(m.higher!==null&&tickerStats.length>1){
+          best=tickerStats.reduce(function(a,b){return(m.higher?a[m.k]>=b[m.k]:a[m.k]<=b[m.k])?a:b;}).t;
+        }
+        var cells=tickerStats.map(function(s){
+          var v=s[m.k];var fmt=m.fmt(v);var isBest=best===s.t;
+          var col='var(--text)';
+          if(m.k==='ret'||m.k==='maxR'||m.k==='minR') col=typeof v==='number'?(v>=0?'var(--green)':'var(--red)'):'var(--text)';
+          if(m.k==='sharpe') col=typeof v==='number'?(v>=1?'var(--green)':v>=0.5?'var(--orange)':'var(--red)'):'var(--text)';
+          return '<td style="color:'+col+';font-weight:'+(isBest?'700':'400')+'">'+fmt+'</td>';
+        }).join('');
+        var bestCell=best?'<td><span style="font-size:9px;padding:2px 7px;border-radius:3px;background:rgba(34,197,94,.1);color:var(--green);font-family:\'JetBrains Mono\',monospace">'+best+' 🏆</span></td>':'<td style="color:var(--text3)">—</td>';
+        return '<tr class="trow"><td style="font-size:11px;color:var(--text2)">'+m.label+'</td>'+cells+bestCell+'</tr>';
+      }).join('');
+
+      statsContent='<div class="tw" style="margin-top:14px"><table><thead>'+headerRow+'</thead><tbody>'+dataRows+'</tbody></table></div>';
+
+      if(tickerStats.length>=2){
+        var corrInsight=tickerStats.slice(1).map(function(s){
+          if(s.corr===null||s.corr===undefined) return '';
+          var c=s.corr;
+          var advice=c>0.8?'⚠️ Poca diversificación':c<0.2?'✅ Excelente par para diversificar':'📊 Correlación '+(c>0.5?'moderada':'baja');
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">'+
+            '<span style="font-size:11px;color:var(--bright);font-family:\'JetBrains Mono\',monospace">'+tickerStats[0].t+' vs '+s.t+'</span>'+
+            '<span style="font-size:11px;color:var(--text2)">'+advice+'</span>'+
+            '<span style="font-size:11px;font-weight:700;color:var(--orange);font-family:\'JetBrains Mono\',monospace">'+c.toFixed(2)+'</span></div>';
+        }).join('');
+        if(corrInsight) statsContent+='<div class="cb" style="margin-top:12px"><div class="st"><div class="stbar"></div>Correlación</div>'+corrInsight+
+          '<div style="font-size:9px;color:var(--text3);margin-top:8px;font-family:\'JetBrains Mono\',monospace">1.0=idéntico · 0=independientes · -1=opuestos</div></div>';
+      }
+    }
+  }
+
+  var legend=COMP.tickers.map(function(t,i){
+    return '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px">'+
+      '<span style="width:16px;height:2px;background:'+colors[i]+';display:inline-block;border-radius:1px;flex-shrink:0"></span>'+
+      '<span style="font-size:10px;font-weight:600;color:'+colors[i]+';font-family:\'JetBrains Mono\',monospace">'+t+'</span></span>';
+  }).join('');
+
+  document.getElementById('main').innerHTML=
+    '<div class="ph"><div><h1>Comparador de Activos</h1>'+
+    '<p class="sub-txt">// Performance normalizado · Correlación · Sharpe ratio</p></div>'+
+    '<div class="ph-right">'+liveBadge()+'</div></div>'+
+    '<div style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start">'+
+    '<div>'+
+    '<div class="cb" style="margin-bottom:10px">'+
+    '<div class="st"><div class="stbar"></div>Tickers</div>'+
+    tickerInputs+
+    (COMP.tickers.length<4?'<button onclick="compAddTicker()" class="btn" style="width:100%;margin-top:4px">+ Agregar ticker</button>':'')+
+    '<div style="margin-top:12px"><div class="st" style="margin-bottom:7px"><div class="stbar"></div>Período</div><div>'+rangeBtns+'</div></div>'+
+    '<button onclick="compLoad()" class="btn-big" style="width:100%;margin-top:14px">'+
+    (COMP.loading?'<span style="display:inline-flex;align-items:center;gap:7px"><span class="spin-sm"></span>Cargando...</span>':'⚖️ Comparar →')+'</button>'+
+    '</div>'+
+    '<div class="cb"><div class="st"><div class="stbar"></div>Pares rápidos</div>'+sugRows+'</div>'+
+    '</div>'+
+    '<div>'+
+    '<div class="cb">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+    '<div class="st" style="margin-bottom:0"><div class="stbar"></div>Performance (base 0%)</div>'+
+    '<div>'+legend+'</div></div>'+
+    chartContent+'</div>'+
+    statsContent+'</div></div>';
+}
+
+async function compLoad(){
+  if(COMP.loading) return;
+  COMP.tickers=COMP.tickers.filter(function(t){return t&&t.trim().length>0;});
+  if(COMP.tickers.length<2){alert('Selecciona al menos 2 tickers');return;}
+  COMP.loading=true;COMP.data={};renderComp();
+  var rangeMap={30:'1mo',60:'2mo',90:'3mo',130:'6mo'};
+  var rng=rangeMap[COMP.range]||'3mo';
+  try{
+    var promises=COMP.tickers.map(function(t){
+      return fetchHistory(t,rng).then(function(hist){
+        if(hist&&hist.length>5){COMP.data[t]=hist;}
+        else{COMP.data[t]=genFallback(getLivePrice(t)||100,COMP.range);}
+        if(!LIVE[t]) return fetchQuote(t).then(function(q){if(q) LIVE[t]=q;});
+      }).catch(function(){COMP.data[t]=genFallback(getLivePrice(t)||100,COMP.range);});
+    });
+    await Promise.all(promises);
+  }catch(e){/* silent */}
+  COMP.loading=false;renderComp();
+}
+
+// ── CHILE / LATAM + APV ──────────────────────────────────────────
+var LATAM={usdClp:958,loading:false,lastUpdate:null};
+
+async function fetchUsdClpLatam(){
+  var urls=[
+    'https://corsproxy.io/?url='+encodeURIComponent('https://mindicador.cl/api/dolar'),
+    'https://api.allorigins.win/raw?url='+encodeURIComponent('https://mindicador.cl/api/dolar'),
+  ];
+  for(var i=0;i<urls.length;i++){
+    try{
+      var ctrl=new AbortController();
+      var timer=setTimeout(function(){ctrl.abort();},6000);
+      var res=await fetch(urls[i],{signal:ctrl.signal});
+      clearTimeout(timer);
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      var data=await res.json();
+      if(data&&data.serie&&data.serie[0]&&data.serie[0].valor){
+        LATAM.usdClp=data.serie[0].valor;
+        LATAM.lastUpdate=Date.now();
+        try{localStorage.setItem('mv_fx_cache',JSON.stringify({v:LATAM.usdClp,ts:Date.now()}));}catch(e){}
+        return;
+      }
+    }catch(e){
+      if(i===urls.length-1){
+        try{var c=JSON.parse(localStorage.getItem('mv_fx_cache')||'null');if(c&&(Date.now()-c.ts)<86400000) LATAM.usdClp=c.v;}catch(e2){}
+      }
+    }
+  }
+}
+
+function renderLatam(){
+  var fx=LATAM.usdClp;
+  var port=S.portfolio;
+  var totM=port.reduce(function(s,h){return s+h.sh*(getLivePrice(h.t)||h.cur||0);},0);
+  var totC=port.reduce(function(s,h){return s+h.sh*h.cost;},0);
+  var pnl=totM-totC;
+
+  var IPSA=[
+    {t:'SQM-B.SN',  name:'SQM B',       sector:'Minería'},
+    {t:'COPEC.SN',  name:'Copec',        sector:'Energía'},
+    {t:'FALABELLA.SN',name:'Falabella',  sector:'Retail'},
+    {t:'BCI.SN',    name:'BCI',          sector:'Banca'},
+    {t:'ECL.SN',    name:'ECL',          sector:'Utilities'},
+    {t:'CENCOSUD.SN',name:'Cencosud',    sector:'Retail'},
+    {t:'ENELAM.SN', name:'Enel Américas',sector:'Utilities'},
+    {t:'CCU.SN',    name:'CCU',          sector:'Consumo'},
+  ];
+
+  var ipsaRows=IPSA.map(function(s){
+    var lq=LIVE[s.t];var price=lq?lq.price:0;
+    var clp=price?fmt(Math.round(price*fx)):'—';
+    var chg=lq?((lq.changePct||0)*100).toFixed(2):null;
+    var pos=chg!==null&&parseFloat(chg)>=0;
+    var inW=S.watchlist.indexOf(s.t)>=0;
+    return '<tr class="trow"><td style="font-weight:600;color:var(--bright)">'+s.name+'</td>'+
+      '<td style="color:var(--text2);font-size:10px">'+s.t+'</td>'+
+      '<td style="color:var(--text2)">'+s.sector+'</td>'+
+      '<td style="font-weight:600;color:var(--white)">'+(price?'$'+fmtD(price):'—')+'</td>'+
+      '<td style="font-weight:600;color:var(--white)">'+(price?'$'+clp+' CLP':'—')+'</td>'+
+      (chg!==null?'<td style="color:'+(pos?'var(--green)':'var(--red)')+'">'+( pos?'+':'')+chg+'%</td>':'<td style="color:var(--text3)">—</td>')+
+      '<td><button class="btn" style="padding:2px 7px;font-size:10px" onclick="'+(inW?"rmWatch('"+s.t+"')":"addWatch('"+s.t+"')")+'">'+(inW?'✓ En lista':'+ Watch')+'</button></td></tr>';
+  }).join('');
+
+  var portClpRows=port.slice(0,8).map(function(h){
+    var cur=getLivePrice(h.t)||h.cur||0;
+    var mktCLP=h.sh*cur*fx;var pnlCLP=h.sh*(cur-h.cost)*fx;
+    return '<tr class="trow"><td style="font-weight:600;color:var(--bright)">'+h.t+'</td>'+
+      '<td>$'+fmtD(cur)+'</td>'+
+      '<td style="font-weight:600;color:var(--white)">$'+fmt(Math.round(mktCLP))+' CLP</td>'+
+      '<td style="color:'+(pnlCLP>=0?'var(--green)':'var(--red)')+';font-weight:600">'+
+      (pnlCLP>=0?'+':'')+fmt(Math.round(pnlCLP))+' CLP</td></tr>';
+  }).join('');
+
+  document.getElementById('main').innerHTML=
+    '<div class="ph"><div><h1>Chile / LATAM</h1>'+
+    '<p class="sub-txt">// Bolsa de Santiago · APV · USD/CLP · Mercado local</p></div>'+
+    '<div class="ph-right">'+
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 12px;display:flex;align-items:center;gap:8px">'+
+    '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">USD/CLP</span>'+
+    '<span style="font-size:16px;font-weight:700;color:var(--white);font-family:\'JetBrains Mono\',monospace">$'+fmt(Math.round(fx))+'</span>'+
+    '<button onclick="fetchUsdClpLatam().then(renderLatam)" class="btn" style="padding:2px 8px;font-size:10px">↻</button>'+
+    '</div></div></div>'+
+    '<div class="krow">'+
+    kpi('Portfolio USD',D(totM),(pnl>=0?'+':'')+D(pnl),pnl>=0?'g':'r')+
+    kpi('Portfolio CLP','$'+fmt(Math.round(totM*fx)),'Tipo cambio $'+fmt(Math.round(fx)),'b')+
+    kpi('P&L CLP','$'+(pnl>=0?'+':'')+fmt(Math.round(pnl*fx)),(pnl>=0?'+':'')+pct(pnl/(totC||1)),pnl>=0?'g':'r')+
+    kpi('Cash CLP','$'+fmt(Math.round((S.capital-totC)*fx)),'Disponible','a')+
+    '</div>'+
+    '<div class="cb" style="margin-bottom:14px">'+
+    '<div class="st"><div class="stbar"></div>Calculadora APV — Régimen A vs B</div>'+
+    '<div style="background:var(--orange-bg);border:1px solid var(--orange-bd);border-radius:8px;padding:11px;margin-bottom:14px;font-size:11px;color:var(--orange);font-family:\'JetBrains Mono\',monospace">'+
+    '💡 Régimen A = crédito 15% anual · Régimen B = retiro libre de impuestos al jubilarse</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">'+
+    '<div><label style="display:block;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:\'JetBrains Mono\',monospace;margin-bottom:5px">Renta bruta anual ($CLP)</label>'+
+    '<input id="apv-renta" class="inp" style="width:100%" type="number" placeholder="30000000" value="30000000" oninput="calcAPV()"/></div>'+
+    '<div><label style="display:block;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:\'JetBrains Mono\',monospace;margin-bottom:5px">Aporte mensual APV ($CLP)</label>'+
+    '<input id="apv-aporte" class="inp" style="width:100%" type="number" placeholder="200000" value="200000" oninput="calcAPV()"/></div>'+
+    '<div><label style="display:block;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:\'JetBrains Mono\',monospace;margin-bottom:5px">Rentabilidad esperada (%)</label>'+
+    '<input id="apv-rent" class="inp" style="width:100%" type="number" placeholder="7" value="7" step="0.5" oninput="calcAPV()"/></div>'+
+    '</div>'+
+    '<div id="apv-results"></div>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+
+    '<div><div class="st"><div class="stbar"></div>Portfolio en Pesos Chilenos</div>'+
+    '<div class="tw"><table><thead><tr><th>Ticker</th><th>USD</th><th>Valor CLP</th><th>P&L CLP</th></tr></thead><tbody>'+portClpRows+'</tbody></table></div></div>'+
+    '<div><div class="st"><div class="stbar"></div>IPSA — Bolsa de Santiago</div>'+
+    '<div class="tw"><table><thead><tr><th>Empresa</th><th>Ticker</th><th>Sector</th><th>USD</th><th>CLP</th><th>Cambio</th><th></th></tr></thead><tbody>'+ipsaRows+'</tbody></table></div>'+
+    '<button onclick="loadIPSA()" class="btn" style="margin-top:8px">↻ Cargar precios IPSA</button>'+
+    '</div></div>';
+
+  setTimeout(calcAPV,50);
+  if(!LATAM.lastUpdate) fetchUsdClpLatam().then(renderLatam);
+}
+
+function calcAPV(){
+  var renta=parseFloat((document.getElementById('apv-renta')||{}).value)||30000000;
+  var aporte=parseFloat((document.getElementById('apv-aporte')||{}).value)||200000;
+  var rentPct=(parseFloat((document.getElementById('apv-rent')||{}).value)||7)/100;
+  var anual=aporte*12;
+  var tasa=renta>107000000?0.40:renta>80000000?0.35:renta>54000000?0.30:
+           renta>43000000?0.25:renta>21000000?0.20:renta>13000000?0.15:
+           renta>8000000?0.10:0.04;
+  var creditoA=anual*0.15;
+  var years=30;
+  var fondo=rentPct>0?anual*((Math.pow(1+rentPct,years)-1)/rentPct):anual*years;
+  var ahorroTotalA=creditoA*years;
+  var ahorroTotalB=fondo*tasa;
+  var recommended=tasa>=0.20?'Régimen B — Tu tramo hace el ahorro al retiro mayor':'Régimen A — El crédito del 15% es más conveniente';
+  var recColor=tasa>=0.20?'var(--green)':'var(--orange)';
+  var el=document.getElementById('apv-results');
+  if(!el) return;
+  el.innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'+
+    '<div style="background:var(--card2);border:1px solid '+(tasa<0.20?'var(--orange-bd)':'var(--border)')+';border-radius:9px;padding:14px">'+
+    '<div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:8px">Régimen A</div>'+
+    '<div style="display:flex;justify-content:space-between;font-size:11px;border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:5px"><span style="color:var(--text2)">Crédito anual</span><span style="font-weight:700;color:var(--green);font-family:\'JetBrains Mono\',monospace">+$'+fmt(Math.round(creditoA))+' CLP</span></div>'+
+    '<div style="display:flex;justify-content:space-between;font-size:11px;border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:5px"><span style="color:var(--text2)">Fondo a 30 años</span><span style="font-weight:700;color:var(--white);font-family:\'JetBrains Mono\',monospace">$'+fmt(Math.round(fondo/1e6))+'M CLP</span></div>'+
+    '<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text2)">Ahorro total</span><span style="font-weight:700;color:var(--green);font-family:\'JetBrains Mono\',monospace">$'+fmt(Math.round(ahorroTotalA/1e6))+'M CLP</span></div>'+
+    '</div>'+
+    '<div style="background:var(--card2);border:1px solid '+(tasa>=0.20?'var(--orange-bd)':'var(--border)')+';border-radius:9px;padding:14px">'+
+    '<div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:8px">Régimen B</div>'+
+    '<div style="display:flex;justify-content:space-between;font-size:11px;border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:5px"><span style="color:var(--text2)">Tu tramo impuesto</span><span style="font-weight:700;color:var(--white);font-family:\'JetBrains Mono\',monospace">'+(tasa*100).toFixed(0)+'%</span></div>'+
+    '<div style="display:flex;justify-content:space-between;font-size:11px;border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:5px"><span style="color:var(--text2)">Fondo a 30 años</span><span style="font-weight:700;color:var(--white);font-family:\'JetBrains Mono\',monospace">$'+fmt(Math.round(fondo/1e6))+'M CLP</span></div>'+
+    '<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text2)">Impuesto ahorrado</span><span style="font-weight:700;color:var(--green);font-family:\'JetBrains Mono\',monospace">$'+fmt(Math.round(ahorroTotalB/1e6))+'M CLP</span></div>'+
+    '</div></div>'+
+    '<div style="background:var(--card2);border:1px solid var(--orange-bd);border-radius:8px;padding:11px;display:flex;align-items:center;gap:10px">'+
+    '<div style="font-size:22px">💡</div>'+
+    '<div><div style="font-size:12px;font-weight:700;color:'+recColor+';margin-bottom:2px">'+recommended+'</div>'+
+    '<div style="font-size:10px;color:var(--text2);font-family:\'JetBrains Mono\',monospace">Renta: $'+fmt(Math.round(renta/1e6))+'M · Aporte: $'+fmt(aporte)+'/mes · Rentabilidad: '+(rentPct*100).toFixed(1)+'%</div>'+
+    '</div></div>';
+}
+
+async function loadIPSA(){
+  var tickers=["SQM-B.SN","COPEC.SN","FALABELLA.SN","BCI.SN","ECL.SN","CENCOSUD.SN","ENELAM.SN","CCU.SN"];
+  var promises=tickers.map(function(t){return fetchQuote(t).then(function(q){if(q) LIVE[t]=q;}).catch(function(){});});
+  await Promise.all(promises);
+  renderLatam();
+}
+
+// ── DIVIDEND CALENDAR ────────────────────────────────────────────
+var DIVS={data:{},loading:false};
+
+async function loadDivData(){
+  if(DIVS.loading) return;
+  DIVS.loading=true;
+  var port=S.portfolio;
+  var promises=port.map(function(h){
+    if(DIVS.data[h.t]) return Promise.resolve();
+    var url='https://query1.finance.yahoo.com/v8/finance/chart/'+h.t+'?interval=1d&range=1y&events=dividends';
+    return fetchYF(url).then(function(json){
+      if(!json) return;
+      var res=json.chart&&json.chart.result&&json.chart.result[0];
+      if(!res) return;
+      var divs=res.events&&res.events.dividends;
+      var meta=res.meta||{};
+      DIVS.data[h.t]={
+        dividends:divs?Object.values(divs):[],
+        trailingAnnualDividendRate:meta.trailingAnnualDividendRate||0,
+        dividendRate:meta.dividendRate||0,
+      };
+    }).catch(function(){});
+  });
+  await Promise.all(promises);
+  DIVS.loading=false;
+  renderDivs();
+}
+
+function renderDivs(){
+  var port=S.portfolio;
+  var fx=LATAM.usdClp;
+  var divRows=port.map(function(h){
+    var d=DIVS.data[h.t];
+    var annualRate=d?d.trailingAnnualDividendRate||d.dividendRate:0;
+    var annualIncome=annualRate*h.sh;
+    var cur=getLivePrice(h.t)||h.cur||0;
+    var yld=annualRate&&cur?annualRate/cur:0;
+    var freq=d&&d.dividendRate&&d.trailingAnnualDividendRate?Math.round(d.trailingAnnualDividendRate/d.dividendRate):0;
+    var freqLabel=freq===12?'Mensual':freq===4?'Trimestral':freq===2?'Semestral':freq===1?'Anual':freq===0?'Sin dividendo':'Irregular';
+    return annualRate>0?{t:h.t,sh:h.sh,cur:cur,annualRate:annualRate,annualIncome:annualIncome,yld:yld,freqLabel:freqLabel}:null;
+  }).filter(Boolean);
+
+  var totalAnnual=divRows.reduce(function(s,r){return s+r.annualIncome;},0);
+  var totalCLP=totalAnnual*fx;
+
+  var months=[];
+  var now=new Date();
+  for(var m=0;m<12;m++){
+    var d2=new Date(now.getFullYear(),now.getMonth()+m,1);
+    months.push({label:d2.toLocaleDateString('es-CL',{month:'short',year:'2-digit'}),income:0});
+  }
+  divRows.forEach(function(r){
+    var freq=r.freqLabel==='Trimestral'?[0,3,6,9]:r.freqLabel==='Mensual'?[0,1,2,3,4,5,6,7,8,9,10,11]:
+              r.freqLabel==='Semestral'?[0,6]:r.freqLabel==='Anual'?[6]:[3];
+    freq.forEach(function(offset){if(offset<12) months[offset].income+=r.annualIncome*(r.freqLabel==='Mensual'?1:1/freq.length);});
+  });
+  var maxIncome=Math.max.apply(null,months.map(function(m){return m.income||0.01;}));
+
+  var calBars=months.map(function(m,i){
+    var h=m.income>0?Math.max(8,Math.round(m.income/maxIncome*80)):3;
+    var isNow=i===0;
+    return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px" title="$'+fmtD(m.income)+'">'+
+      '<div style="font-size:9px;color:'+(isNow?'var(--orange)':'var(--text3)')+';font-family:\'JetBrains Mono\',monospace">$'+fmtD(m.income)+'</div>'+
+      '<div style="width:100%;height:'+h+'px;background:'+(isNow?'var(--orange)':'var(--blue)')+';border-radius:3px 3px 0 0;opacity:'+(isNow?'1':'0.6')+'"></div>'+
+      '<div style="font-size:8px;color:'+(isNow?'var(--orange)':'var(--text3)')+';font-family:\'JetBrains Mono\',monospace">'+m.label+'</div>'+
+      '</div>';
+  }).join('');
+
+  var tableRows=divRows.map(function(r){
+    return '<tr class="trow"><td style="font-weight:600;color:var(--bright)">'+r.t+'</td>'+
+      '<td>'+r.sh+'</td>'+
+      '<td style="font-weight:600;color:var(--white)">$'+fmtD(r.annualRate)+'/acción</td>'+
+      '<td style="font-weight:700;color:var(--green)">$'+fmtD(r.annualIncome)+'/año</td>'+
+      '<td style="color:var(--orange)">'+(r.yld*100).toFixed(2)+'%</td>'+
+      '<td style="color:var(--text2)">'+r.freqLabel+'</td></tr>';
+  }).join('');
+
+  document.getElementById('main').innerHTML=
+    '<div class="ph"><div><h1>Dividend Calendar</h1>'+
+    '<p class="sub-txt">// Proyección de ingresos · 12 meses</p></div>'+
+    '<button onclick="loadDivData()" class="btn-big" style="padding:8px 18px;font-size:12px">'+
+    (DIVS.loading?'<span style="display:inline-flex;align-items:center;gap:7px"><span class="spin-sm"></span>Cargando...</span>':'💰 Cargar dividendos')+'</button></div>'+
+    '<div class="krow">'+
+    kpi('Ingreso anual USD','$'+fmtD(totalAnnual),'Proyectado','g')+
+    kpi('Ingreso mensual','$'+fmtD(totalAnnual/12),'Promedio','b')+
+    kpi('Ingreso anual CLP','$'+fmt(Math.round(totalCLP/1e6))+'M','A tipo de cambio','a')+
+    kpi('Con dividendos',divRows.length+' de '+port.length+'','b')+
+    '</div>'+
+    (divRows.length>0||DIVS.loading?
+      '<div class="cb" style="margin-bottom:14px"><div class="st"><div class="stbar"></div>Proyección mensual — próximos 12 meses</div>'+
+      '<div style="display:flex;align-items:flex-end;height:100px;gap:4px;padding:0 4px">'+calBars+'</div></div>'+
+      '<div class="tw"><table><thead><tr><th>Ticker</th><th>Shares</th><th>Dividendo</th><th>Ingreso anual</th><th>Yield</th><th>Frecuencia</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>'
+    :'<div style="text-align:center;padding:40px;color:var(--text3)"><div style="font-size:36px;margin-bottom:10px">💰</div>'+
+      '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:6px">Sin datos de dividendos</div>'+
+      '<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace">Presiona "Cargar dividendos" para obtener datos reales</div></div>');
+}
+
+// ── REBALANCING TOOL ─────────────────────────────────────────────
+var REBAL={targets:{}};
+
+function renderRebal(){
+  var port=S.portfolio;
+  var totM=port.reduce(function(s,h){return s+h.sh*(getLivePrice(h.t)||h.cur||0);},0);
+
+  port.forEach(function(h){
+    if(REBAL.targets[h.t]===undefined){
+      REBAL.targets[h.t]=Math.round(h.sh*(getLivePrice(h.t)||h.cur||0)/(totM||1)*100);
+    }
+  });
+
+  var sumTargets=Object.values(REBAL.targets).reduce(function(s,v){return s+v;},0);
+  var balanced=Math.abs(sumTargets-100)<1;
+
+  var sliders=port.map(function(h){
+    var cur=getLivePrice(h.t)||h.cur||0;
+    var curW=h.sh*cur/(totM||1)*100;
+    var tgt=REBAL.targets[h.t]||0;
+    var diff=tgt-curW;
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'+
+      '<span style="font-size:12px;font-weight:700;color:var(--bright);font-family:\'JetBrains Mono\',monospace;width:52px">'+h.t+'</span>'+
+      '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;width:36px">'+curW.toFixed(1)+'%</span>'+
+      '<input type="range" min="0" max="60" step="1" value="'+tgt+'" style="flex:1;accent-color:var(--orange)" oninput="REBAL.targets[\''+h.t+'\']=parseInt(this.value);rebalUpdate()"/>'+
+      '<span id="rebal-tgt-'+h.t+'" style="font-size:11px;font-weight:600;color:var(--orange);font-family:\'JetBrains Mono\',monospace;width:32px;text-align:right">'+tgt+'%</span>'+
+      '<span style="font-size:11px;font-weight:600;width:60px;text-align:right;color:'+(Math.abs(diff)<0.5?'var(--text3)':diff>0?'var(--green)':'var(--red)')+';font-family:\'JetBrains Mono\',monospace">'+
+      (Math.abs(diff)<0.5?'—':(diff>0?'+':'')+diff.toFixed(1)+'%')+'</span></div>';
+  }).join('');
+
+  var trades=port.map(function(h){
+    var cur=getLivePrice(h.t)||h.cur||0;
+    var curVal=h.sh*cur;
+    var tgtVal=totM*(REBAL.targets[h.t]||0)/100;
+    var diff=tgtVal-curVal;
+    if(Math.abs(diff)<10) return null;
+    return{t:h.t,cur:cur,diff:diff,shares:diff/cur,buy:diff>0};
+  }).filter(Boolean);
+
+  var tradeRows=trades.map(function(tr){
+    return '<tr style="background:'+(tr.buy?'rgba(34,197,94,.04)':'rgba(239,68,68,.04)')+'">'+
+      '<td style="font-weight:700;color:var(--bright)">'+tr.t+'</td>'+
+      '<td><span class="badge '+(tr.buy?'buy':'sell')+'">'+(tr.buy?'COMPRAR':'VENDER')+'</span></td>'+
+      '<td style="font-weight:600;color:'+(tr.buy?'var(--green)':'var(--red)')+'">'+Math.abs(tr.shares).toFixed(4)+' acc.</td>'+
+      '<td style="font-weight:600;color:'+(tr.buy?'var(--green)':'var(--red)')+'">'+(tr.buy?'+':'-')+'$'+fmt(Math.abs(tr.diff))+'</td>'+
+      '</tr>';
+  }).join('');
+
+  document.getElementById('main').innerHTML=
+    '<div class="ph"><div><h1>Rebalanceo</h1>'+
+    '<p class="sub-txt">// Define pesos objetivo · Calcula trades exactos</p></div>'+
+    '<div class="ph-right">'+liveBadge()+'</div></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+
+    '<div class="cb">'+
+    '<div class="st"><div class="stbar"></div>Pesos objetivo</div>'+
+    sliders+
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;margin-top:4px">'+
+    '<span style="font-size:12px;color:var(--text2)">Suma total:</span>'+
+    '<span id="rebal-sum" style="font-size:15px;font-weight:700;color:'+(balanced?'var(--green)':'var(--red)')+';font-family:\'JetBrains Mono\',monospace">'+sumTargets+'%</span>'+
+    '</div>'+
+    (!balanced?'<div style="font-size:10px;color:var(--red);font-family:\'JetBrains Mono\',monospace;margin-top:4px">⚠ Los pesos deben sumar 100%</div>':'')+
+    '<button onclick="rebalReset()" class="btn" style="margin-top:10px;width:100%">↺ Restaurar pesos actuales</button>'+
+    '</div>'+
+    '<div>'+
+    '<div class="cb" style="margin-bottom:12px">'+
+    '<div class="st"><div class="stbar"></div>Capital a rebalancear</div>'+
+    '<div style="font-size:26px;font-weight:700;color:var(--white);font-family:\'JetBrains Mono\',monospace">$'+fmt(totM)+'</div>'+
+    '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:3px">'+port.length+' posiciones · Suma pesos: '+sumTargets+'%</div>'+
+    '</div>'+
+    (trades.length>0?
+      '<div class="cb"><div class="st"><div class="stbar"></div>Trades para rebalancear</div>'+
+      '<div class="tw"><table><thead><tr><th>Ticker</th><th>Acción</th><th>Cantidad</th><th>Monto USD</th></tr></thead><tbody>'+tradeRows+'</tbody></table></div></div>'
+    :'<div class="cb"><div style="text-align:center;padding:24px;color:var(--text3)">'+
+      '<div style="font-size:32px;margin-bottom:8px">✅</div>'+
+      '<div style="font-size:12px;font-weight:600;color:var(--bright)">Portfolio balanceado</div>'+
+      '<div style="font-size:10px;font-family:\'JetBrains Mono\',monospace;margin-top:4px">Ajusta los sliders para ver los trades</div></div></div>'
+    )+
+    '</div></div>';
+}
+
+function rebalUpdate(){
+  var sumTargets=Object.values(REBAL.targets).reduce(function(s,v){return s+v;},0);
+  var el=document.getElementById('rebal-sum');
+  if(el){el.textContent=sumTargets+'%';el.style.color=Math.abs(sumTargets-100)<1?'var(--green)':'var(--red)';}
+  Object.keys(REBAL.targets).forEach(function(t){
+    var el2=document.getElementById('rebal-tgt-'+t);if(el2) el2.textContent=REBAL.targets[t]+'%';
+  });
+  // Re-render trades only
+  var port=S.portfolio;
+  var totM=port.reduce(function(s,h){return s+h.sh*(getLivePrice(h.t)||h.cur||0);},0);
+  var trades=port.map(function(h){
+    var cur=getLivePrice(h.t)||h.cur||0;
+    var diff=totM*(REBAL.targets[h.t]||0)/100-h.sh*cur;
+    if(Math.abs(diff)<10) return null;
+    return{t:h.t,diff:diff,shares:diff/cur,buy:diff>0};
+  }).filter(Boolean);
+  var tradeRows=trades.map(function(tr){
+    return '<tr style="background:'+(tr.buy?'rgba(34,197,94,.04)':'rgba(239,68,68,.04)')+'">'+
+      '<td style="font-weight:700;color:var(--bright)">'+tr.t+'</td>'+
+      '<td><span class="badge '+(tr.buy?'buy':'sell')+'">'+(tr.buy?'COMPRAR':'VENDER')+'</span></td>'+
+      '<td style="color:'+(tr.buy?'var(--green)':'var(--red)')+'">'+Math.abs(tr.shares).toFixed(4)+' acc.</td>'+
+      '<td style="color:'+(tr.buy?'var(--green)':'var(--red)')+'">'+(tr.buy?'+':'-')+'$'+fmt(Math.abs(tr.diff))+'</td>'+
+      '</tr>';
+  }).join('');
+  var tradesEl=document.querySelector('.tw table tbody');
+  if(tradesEl) tradesEl.innerHTML=tradeRows;
+}
+
+function rebalReset(){REBAL.targets={};renderRebal();}
+
+
+// ── STARTUP ──────────────────────────────────────────────────
+radarInit();
+radarCheckSharedLink();
+render();
+
 
 </script>
 </body>
