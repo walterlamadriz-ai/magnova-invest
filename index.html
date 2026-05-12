@@ -4,6 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>MAGNOVA Invest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 /* ═══════════════════════════════════════════════════════════════════
@@ -11,7 +13,7 @@
    Inspirado en: Linear, Vercel, Stripe Dashboard, Bloomberg Terminal
    ═══════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Fonts loaded via <link> in <head> */
 
 /* ── DESIGN TOKENS ────────────────────────────────────────────── */
 :root {
@@ -811,6 +813,8 @@ select.inp { cursor: pointer; }
   @page{size:A4;margin:18mm 15mm 14mm}
 }
 
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:.9}}
+
 </style>
 </head>
 <body>
@@ -825,6 +829,7 @@ select.inp { cursor: pointer; }
   <div class="drwb" id="drwb"></div>
 </div>
 <script>
+
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -1043,7 +1048,7 @@ async function fetchYF(url){
 }
 async function fetchQuote(ticker){
   try{
-    var url="https://query1.finance.yahoo.com/v8/finance/chart/"+ticker+"?interval=1d&range=1d&includePrePost=false";
+    var url="https://query1.finance.yahoo.com/v8/finance/chart/"+ticker+"?interval=1d&range=1d&includePrePost=false&events=&indicators=quote";
     var json=await fetchYF(url);
     if(!json) return null;
     var m=json.chart&&json.chart.result&&json.chart.result[0]&&json.chart.result[0].meta;
@@ -1114,16 +1119,24 @@ async function refreshLive(tickers,manual){
     b.innerHTML='<span class="spin-sm"></span>';b.disabled=true;
   });
   try{
-    var results=await Promise.allSettled(tickers.map(function(t){return fetchQuote(t);}));
+    // Fetch in batches of 6 — progressive update after each batch
+    var BATCH_SIZE=6;
     var gotAny=false;
-    results.forEach(function(r,i){
-      if(r.status==="fulfilled"&&r.value){
-        LIVE[tickers[i]]=r.value;
-        S.portfolio.forEach(function(h){if(h.t===tickers[i])h.cur=r.value.price;});
-        ALL_SIG.forEach(function(s){if(s.t===tickers[i])s.p=r.value.price;});
-        gotAny=true;
-      }
-    });
+    for(var bi=0;bi<tickers.length;bi+=BATCH_SIZE){
+      var batch=tickers.slice(bi,bi+BATCH_SIZE);
+      var results=await Promise.allSettled(batch.map(function(t){return fetchQuote(t);}));
+      results.forEach(function(r,i){
+        if(r.status==="fulfilled"&&r.value){
+          var t=batch[i];
+          LIVE[t]=r.value;
+          S.portfolio.forEach(function(h){if(h.t===t)h.cur=r.value.price;});
+          ALL_SIG.forEach(function(s){if(s.t===t)s.p=r.value.price;});
+          gotAny=true;
+        }
+      });
+      // Progressive render after each batch — user sees prices arriving
+      if(gotAny) updateLivePricesInDOM();
+    }
     if(gotAny){
       liveUpdated=Date.now();liveFailed=false;liveFromCache=false;
       try{localStorage.setItem('mv_prices_cache',JSON.stringify({ts:Date.now(),live:LIVE}));}catch(e){/* silent */}
@@ -1300,7 +1313,7 @@ function liveBadge(){
   var lastT=liveUpdated?new Date(liveUpdated).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"}):"...";
   var state=liveFailed?"error":liveFromCache?"cache":liveLoading?"loading":hasLive?"live":"loading";
   var cfg={
-    live:   {cls:"live live-badge",        col:"var(--green)",  txt:"LIVE · "+lastT},
+    live:   {cls:"live live-badge",        col:"var(--green)",  txt:"Yahoo ~15m · "+lastT},
     loading:{cls:"live live-badge loading",col:"var(--orange)", txt:"Actualizando..."},
     cache:  {cls:"live live-badge cached", col:"var(--orange)",  txt:"⚠ Caché · "+lastT},
     error:  {cls:"live live-badge error",  col:"var(--red)",    txt:"✕ Sin conexión"}
@@ -1322,7 +1335,12 @@ function setPage(p){
   });
   renderMain();
 }
-function logout(){S.user=null;S.page="dash";persist();render();}
+function logout(){
+  S.user=null;S.page="dash";
+  if(typeof stopBoot==="function") stopBoot();
+  LIVE={};REBAL.targets={};DIVS.data={};
+  persist();render();
+}
 function openModal(t,data){S.modal=t;S.editPos=data||null;renderModal();}
 function closeModal(){
   S.modal=null;S.editPos=null;
@@ -2626,18 +2644,8 @@ async function sendAIMessage(userMsg){
   var msgs=AI.messages.map(function(m){return {role:m.role,content:m.content};});
 
   try{
-    var res=await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:1000,
-        system:sysPrompt,
-        messages:msgs
-      })
-    });
-    var data=await res.json();
-    var reply=data.content&&data.content[0]&&data.content[0].text||"No pude procesar tu consulta.";
+    await new Promise(function(r){setTimeout(r,600);});
+    var reply="🔧 El AI Advisor está en mantenimiento mientras migramos a un servidor seguro. Estará disponible muy pronto con mejoras importantes. Mientras tanto usa el Radar Financiero (📡) para análisis de tu portfolio.";
     AI.messages.push({role:"assistant",content:reply});
   }catch(e){
     AI.messages.push({role:"assistant",content:"❌ Error de conexión. Verifica tu acceso a la API de Claude."});
@@ -3334,38 +3342,22 @@ async function generateRadarReport(){
     '}';
 
   try{
-    var res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:2000,
-        system:systemPrompt,
-        messages:[{role:'user',content:userPrompt}]
-      })
-    });
-    var data=await res.json();
-    var rawText=data.content&&data.content[0]&&data.content[0].text||'';
-
-    // Parse JSON — strip any accidental markdown fences
-    var clean=rawText.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
-    var parsed=JSON.parse(clean);
-
+    await new Promise(function(r){setTimeout(r,600);});
     var reportObj={
       date:new Date().toISOString(),
       dateLabel:new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),
-      score:health.total,
-      subs:health.subs,
-      profile:RADAR.profile,
-      summary:parsed.summary||'',
-      sections:parsed.sections||[],
+      score:health.total,subs:health.subs,profile:RADAR.profile,
+      summary:'Diagnóstico local del portfolio — AI Advisor disponible próximamente.',
+      sections:[
+        {id:'health',title:'Score de Salud',content:'Tu portfolio tiene un score de '+health.total+'/100. Diversificación: '+health.subs.div+' · Momentum: '+health.subs.mom+' · Riesgo: '+health.subs.risk+' · Correlación: '+health.subs.corr+' · Valoración: '+health.subs.val+'.'},
+        {id:'macro',title:'Análisis AI en Mantenimiento',content:'🔧 El análisis con inteligencia artificial está temporalmente en mantenimiento mientras migramos a infraestructura segura. Los sub-scores del Health Score son precisos y calculados localmente. El análisis narrativo completo con Claude estará disponible muy pronto.'},
+        {id:'action',title:'Mientras tanto',content:'1. Revisa tus posiciones en Portfolio. 2. Consulta el Signal Engine para señales BUY/HOLD/SELL. 3. Usa el Position Builder para calcular entradas optimas.'},
+      ],
     };
-
     RADAR.report=reportObj;
     RADAR.history.unshift(reportObj);
     if(RADAR.history.length>12) RADAR.history=RADAR.history.slice(0,12);
     radarSave();
-
   }catch(e){
     RADAR.report={
       date:new Date().toISOString(),
@@ -4719,10 +4711,69 @@ function rebalUpdate(){
 function rebalReset(){REBAL.targets={};renderRebal();}
 
 
+// ── BOOT & LIVE PRICES ────────────────────────────────────────────
+var _bootInterval=null;
+var _bootRunning=false;
+
+async function bootLiveData(){
+  if(_bootRunning) return;
+  _bootRunning=true;
+  if(_bootInterval) clearInterval(_bootInterval);
+
+  // Boot: only fetch portfolio + watchlist (ALL_SIG fetched lazily on Signals page)
+  var tickers=[];
+  S.portfolio.forEach(function(h){if(tickers.indexOf(h.t)<0)tickers.push(h.t);});
+  S.watchlist.forEach(function(t){if(tickers.indexOf(t)<0)tickers.push(t);});
+  // ALL_SIG fetched lazily — reduces boot from ~20 to ~18 requests
+
+  // ① Show cached prices instantly — user sees something immediately
+  try{
+    var _c=JSON.parse(localStorage.getItem('mv_prices_cache')||'null');
+    if(_c&&_c.live&&(Date.now()-_c.ts)<2*60*60*1000){
+      Object.assign(LIVE,_c.live);
+      liveFromCache=true;liveUpdated=_c.ts;
+      S.portfolio.forEach(function(h){if(LIVE[h.t])h.cur=LIVE[h.t].price;});
+      updateLiveBadge();
+      updateLivePricesInDOM();
+    }
+  }catch(e){/* silent */}
+
+  // ② Fetch fresh in background — update DOM as each batch arrives
+  refreshLive(tickers).then(function(){
+    updateLiveBadge();
+    updateLivePricesInDOM();
+  }).catch(function(){});
+
+  // ③ Auto-refresh every 5 min
+  _bootInterval=setInterval(function(){
+    if(!S.user){clearInterval(_bootInterval);_bootInterval=null;_bootRunning=false;return;}
+    var t2=[];
+    S.portfolio.forEach(function(h){if(t2.indexOf(h.t)<0)t2.push(h.t);});
+    S.watchlist.forEach(function(t){if(t2.indexOf(t)<0)t2.push(t);});
+    refreshLive(t2).then(function(){
+      updateLiveBadge();
+      updateLivePricesInDOM();
+    }).catch(function(){});
+  },5*60*1000);
+}
+
+function stopBoot(){
+  if(_bootInterval){clearInterval(_bootInterval);_bootInterval=null;}
+  _bootRunning=false;
+}
+
+// ── SERVICE WORKER ────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('/sw.js').catch(function(){/* silent */});
+  });
+}
+
 // ── STARTUP ──────────────────────────────────────────────────
 radarInit();
 radarCheckSharedLink();
 render();
+
 
 </script>
 </body>
