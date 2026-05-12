@@ -1029,10 +1029,39 @@ function fetchWithTimeout(url,ms){
 }
 
 async function fetchYF(url){
+  var isVercel=window.location.hostname.includes('vercel.app')||
+               window.location.hostname.includes('magnova.app')||
+               window.location.hostname.includes('magnova-invest');
+
+  // On Vercel: use our Edge Function proxy (fast, no CORS)
+  if(isVercel){
+    var tm=url.match(/chart\/([^?/]+)/);
+    if(tm){
+      try{
+        var apiRes=await fetchWithTimeout('/api/quote?ticker='+encodeURIComponent(tm[1]),4000);
+        if(apiRes.ok){
+          var apiData=await apiRes.json();
+          var t=tm[1].toUpperCase();
+          if(apiData[t]){
+            var q=apiData[t];
+            fetchStats.ok++;fetchStats.lastOk=Date.now();
+            // Return Yahoo-compatible format
+            return {chart:{result:[{meta:{
+              regularMarketPrice:q.price,previousClose:q.prevClose,
+              regularMarketVolume:q.volume,fiftyTwoWeekHigh:q.high52,
+              fiftyTwoWeekLow:q.low52,marketCap:q.marketCap,currency:q.currency,
+            },timestamps:[],indicators:{quote:[{close:[],open:[],high:[],low:[],volume:[]}]}}]}};
+          }
+        }
+      }catch(e){fetchStats.fail++;fetchStats.lastErr=e.message;}
+    }
+  }
+
+  // Fallback: public proxies (local dev or Edge Function unavailable)
   var proxies=[proxyUrl(url),proxyUrl2(url)];
   for(var i=0;i<proxies.length;i++){
     try{
-      var res=await fetchWithTimeout(proxies[i],7000);
+      var res=await fetchWithTimeout(proxies[i],4000);
       if(!res.ok) throw new Error("HTTP "+res.status);
       var text=await res.text();
       if(!text||text.length<10) throw new Error("Empty");
@@ -1041,7 +1070,7 @@ async function fetchYF(url){
       return json;
     }catch(e){
       fetchStats.fail++;fetchStats.lastErr=e.message;
-      if(i<proxies.length-1) await new Promise(function(r){setTimeout(r,400);});
+      if(i<proxies.length-1) await new Promise(function(r){setTimeout(r,300);});
     }
   }
   return null;
@@ -1119,23 +1148,46 @@ async function refreshLive(tickers,manual){
     b.innerHTML='<span class="spin-sm"></span>';b.disabled=true;
   });
   try{
-    // Fetch in batches of 6 — progressive update after each batch
-    var BATCH_SIZE=6;
     var gotAny=false;
-    for(var bi=0;bi<tickers.length;bi+=BATCH_SIZE){
-      var batch=tickers.slice(bi,bi+BATCH_SIZE);
-      var results=await Promise.allSettled(batch.map(function(t){return fetchQuote(t);}));
-      results.forEach(function(r,i){
-        if(r.status==="fulfilled"&&r.value){
-          var t=batch[i];
-          LIVE[t]=r.value;
-          S.portfolio.forEach(function(h){if(h.t===t)h.cur=r.value.price;});
-          ALL_SIG.forEach(function(s){if(s.t===t)s.p=r.value.price;});
-          gotAny=true;
-        }
-      });
-      // Progressive render after each batch — user sees prices arriving
-      if(gotAny) updateLivePricesInDOM();
+    var isVercel=window.location.hostname.includes('vercel.app')||
+                 window.location.hostname.includes('magnova.app')||
+                 window.location.hostname.includes('magnova-invest');
+
+    if(isVercel){
+      // ONE request for all tickers via our Edge Function
+      try{
+        var batchRes=await fetchWithTimeout('/api/quote?ticker='+tickers.join(','),6000);
+        var batchData=await batchRes.json();
+        Object.keys(batchData).forEach(function(t){
+          var q=batchData[t];
+          if(q&&q.price){
+            LIVE[t]=q;
+            S.portfolio.forEach(function(h){if(h.t===t)h.cur=q.price;});
+            ALL_SIG.forEach(function(s){if(s.t===t)s.p=q.price;});
+            gotAny=true;
+          }
+        });
+        if(gotAny) updateLivePricesInDOM();
+      }catch(e){/* fall through to individual fetches */}
+    }
+
+    if(!gotAny){
+      // Fallback: individual fetches with batching
+      var BATCH_SIZE=6;
+      for(var bi=0;bi<tickers.length;bi+=BATCH_SIZE){
+        var batch=tickers.slice(bi,bi+BATCH_SIZE);
+        var results=await Promise.allSettled(batch.map(function(t){return fetchQuote(t);}));
+        results.forEach(function(r,i){
+          if(r.status==="fulfilled"&&r.value){
+            var t=batch[i];
+            LIVE[t]=r.value;
+            S.portfolio.forEach(function(h){if(h.t===t)h.cur=r.value.price;});
+            ALL_SIG.forEach(function(s){if(s.t===t)s.p=r.value.price;});
+            gotAny=true;
+          }
+        });
+        if(gotAny) updateLivePricesInDOM();
+      }
     }
     if(gotAny){
       liveUpdated=Date.now();liveFailed=false;liveFromCache=false;
@@ -4348,9 +4400,24 @@ async function compLoad(){
 var LATAM={usdClp:958,loading:false,lastUpdate:null};
 
 async function fetchUsdClpLatam(){
+  // Try our Edge Function first on Vercel
+  var isVercelFx=window.location.hostname.includes('vercel.app')||
+                 window.location.hostname.includes('magnova.app')||
+                 window.location.hostname.includes('magnova-invest');
+  if(isVercelFx){
+    try{
+      var fxRes=await fetchWithTimeout('/api/fx',5000);
+      var fxData=await fxRes.json();
+      if(fxData&&fxData.usdClp){
+        LATAM.usdClp=fxData.usdClp;LATAM.lastUpdate=Date.now();
+        try{localStorage.setItem('mv_fx_cache',JSON.stringify({v:fxData.usdClp,ts:Date.now()}));}catch(e){}
+        return;
+      }
+    }catch(e){/* fall through */}
+  }
   var urls=[
-    'https://corsproxy.io/?url='+encodeURIComponent('https://mindicador.cl/api/dolar'),
     'https://api.allorigins.win/raw?url='+encodeURIComponent('https://mindicador.cl/api/dolar'),
+    'https://corsproxy.io/?url='+encodeURIComponent('https://mindicador.cl/api/dolar'),
   ];
   for(var i=0;i<urls.length;i++){
     try{
