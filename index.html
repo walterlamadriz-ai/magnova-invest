@@ -4,8 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>MAGNOVA Invest</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 /* ═══════════════════════════════════════════════════════════════════
@@ -13,7 +11,7 @@
    Inspirado en: Linear, Vercel, Stripe Dashboard, Bloomberg Terminal
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Fonts loaded via <link> in <head> */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /* ── DESIGN TOKENS ────────────────────────────────────────────── */
 :root {
@@ -827,7 +825,6 @@ select.inp { cursor: pointer; }
   <div class="drwb" id="drwb"></div>
 </div>
 <script>
-
 
 
 // ═══════════════════════════════════════════════════════════════
@@ -2629,8 +2626,18 @@ async function sendAIMessage(userMsg){
   var msgs=AI.messages.map(function(m){return {role:m.role,content:m.content};});
 
   try{
-    await new Promise(function(r){setTimeout(r,600);});
-    var reply="🔧 El AI Advisor está en mantenimiento mientras migramos a un servidor seguro. Estará disponible muy pronto con mejoras importantes. Mientras tanto usa el Radar Financiero (📡) para análisis de tu portfolio.";
+    var res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1000,
+        system:sysPrompt,
+        messages:msgs
+      })
+    });
+    var data=await res.json();
+    var reply=data.content&&data.content[0]&&data.content[0].text||"No pude procesar tu consulta.";
     AI.messages.push({role:"assistant",content:reply});
   }catch(e){
     AI.messages.push({role:"assistant",content:"❌ Error de conexión. Verifica tu acceso a la API de Claude."});
@@ -3327,22 +3334,38 @@ async function generateRadarReport(){
     '}';
 
   try{
-    await new Promise(function(r){setTimeout(r,600);});
+    var res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:2000,
+        system:systemPrompt,
+        messages:[{role:'user',content:userPrompt}]
+      })
+    });
+    var data=await res.json();
+    var rawText=data.content&&data.content[0]&&data.content[0].text||'';
+
+    // Parse JSON — strip any accidental markdown fences
+    var clean=rawText.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
+    var parsed=JSON.parse(clean);
+
     var reportObj={
       date:new Date().toISOString(),
       dateLabel:new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),
-      score:health.total,subs:health.subs,profile:RADAR.profile,
-      summary:'Diagnóstico local del portfolio — AI Advisor disponible próximamente.',
-      sections:[
-        {id:'health',title:'Score de Salud',content:'Tu portfolio tiene un score de '+health.total+'/100. Diversificación: '+health.subs.div+' · Momentum: '+health.subs.mom+' · Riesgo: '+health.subs.risk+' · Correlación: '+health.subs.corr+' · Valoración: '+health.subs.val+'.'},
-        {id:'macro',title:'Análisis AI en Mantenimiento',content:'🔧 El análisis con inteligencia artificial está temporalmente en mantenimiento mientras migramos a infraestructura segura. Los sub-scores del Health Score son precisos y calculados localmente. El análisis narrativo completo con Claude estará disponible muy pronto.'},
-        {id:'action',title:'Mientras tanto',content:'1. Revisa tus posiciones en Portfolio. 2. Consulta el Signal Engine para señales BUY/HOLD/SELL. 3. Usa el Position Builder para calcular entradas optimas.'},
-      ],
+      score:health.total,
+      subs:health.subs,
+      profile:RADAR.profile,
+      summary:parsed.summary||'',
+      sections:parsed.sections||[],
     };
+
     RADAR.report=reportObj;
     RADAR.history.unshift(reportObj);
     if(RADAR.history.length>12) RADAR.history=RADAR.history.slice(0,12);
     radarSave();
+
   }catch(e){
     RADAR.report={
       date:new Date().toISOString(),
@@ -4700,7 +4723,6 @@ function rebalReset(){REBAL.targets={};renderRebal();}
 radarInit();
 radarCheckSharedLink();
 render();
-
 
 </script>
 </body>
