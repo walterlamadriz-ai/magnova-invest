@@ -870,6 +870,9 @@ tr:last-child td { border-bottom: none; }
 /* ── PAGE BODY PADDING ── */
 #main > *:not(.ph) { padding: 0; }
 .page-body, #main > div { }
+
+/* content padding */
+#main > div:not(.ph) { padding: 20px 28px; }
 </style>
 </head>
 <body>
@@ -1627,7 +1630,7 @@ function renderDash(){
       '<span style="font-weight:600;color:var(--bright)">'+h.t+' <span style="font-size:9px;color:var(--text3)">↗</span></span>'+
       '<span style="color:var(--text3)">'+w.toFixed(1)+'%</span></div>'+
       '<div style="height:4px;background:var(--card3);border-radius:2px">'+
-      '<div style="height:100%;width:'+w+'%;background:hsl('+(160-i*20)+',65%,40%);border-radius:2px"></div></div></div>';
+      '<div style="height:100%;width:'+w+'%;background:var(--grn);border-radius:2px"></div></div></div>';
   }).join("");
 
   var summaryRows=[
