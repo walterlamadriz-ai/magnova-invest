@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!-- MAXNOVA Invest v2.1 -->
 <html lang="es" data-theme="light">
 <head>
 <meta charset="UTF-8"/>
@@ -1473,7 +1473,7 @@ function renderSidebar(){
     '<div class="logo-icon">MX</div>'+
     '<div>'+
     '<div class="logo-name">MAXNOVA</div>'+
-    '<div class="logo-sub">by FinanceOS · '+( S.user&&S.user.plan?S.user.plan.toUpperCase():'')+'</div>'+
+    '<div class="logo-sub">MAXNOVA & LUCI · '+( S.user&&S.user.plan?S.user.plan.toUpperCase():'')+'</div>'+
     '</div></div>';
 
   // Section: Main
@@ -1647,7 +1647,7 @@ function renderDash(){
 
   document.getElementById("main").innerHTML=
     '<div class="ph">'+
-    '<div><h1>Dashboard</h1><p class="sub-txt">// '+S.user.name+' · Plan '+plan.label+' · '+port.length+' posiciones</p></div>'+
+    '<div><h1>Dashboard</h1><p class="sub-txt">'+S.user.name+' · Plan '+plan.label+' · '+port.length+' posiciones</p></div>'+
     '<div class="ph-right">'+liveBadge()+'<span id="saved">✓ Guardado</span>'+(S.user.plan==="free"?'<button class="btn btn-up" onclick="openModal(\'upgrade\')">⚡ Upgrade</button>':'')+
     '</div></div>'+
     freeBanner("Plan Free: "+plan.maxT+"/"+S.portfolio.length+" tickers. Indicadores, Risk y Backtest bloqueados.")+
