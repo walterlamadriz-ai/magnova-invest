@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>MAGNOVA Invest — by MAXNOVA & LUCI Global LLC</title>
+<title>MAXNOVA Invest — by MAXNOVA & LUCI Global LLC</title>
 <meta name="description" content="Plataforma de análisis de inversiones para LATAM. Portfolio, señales técnicas, gestión de riesgo y contexto macro."/>
 <style>
 /* ═══════════════════════════════════════════════════════════════════
-   MAGNOVA INVEST — Sistema de diseño alineado con FinanceOS Pro
+   MAXNOVA INVEST — Sistema de diseño alineado con FinanceOS Pro
    MAXNOVA & LUCI Global LLC · v2.0
    Tipografía: Inter + JetBrains Mono
    Paleta: mismos tokens que FinanceOS globals.css
@@ -819,7 +819,7 @@ tr:last-child td { border-bottom: none; }
 
 
 // ═══════════════════════════════════════════════════════════════
-// MAGNOVA INVEST — Real market data · Clean build
+// MAXNOVA INVEST — Real market data · Clean build
 // ═══════════════════════════════════════════════════════════════
 
 // ── USERS & PLANS ──────────────────────────────────────────────
@@ -827,7 +827,7 @@ const USERS=[
   {email:"demo@free.com",  password:"demo123",plan:"free",  name:"Demo User",     joinedDays:45},
   {email:"trial@magnova.com",password:"trial123",plan:"trial",name:"Ana Rodríguez",joinedDays:3,  trialStarted:Date.now()-3*24*60*60*1000},
   {email:"pro@magnova.com",  password:"pro123",  plan:"pro",  name:"Walter M.",    joinedDays:120, badge:"Pro"},
-  {email:"teams@magnova.com",password:"teams123",plan:"teams",name:"MAGNOVA Corp.", joinedDays:60,  badge:"Teams"},
+  {email:"teams@magnova.com",password:"teams123",plan:"teams",name:"MAXNOVA Corp.", joinedDays:60,  badge:"Teams"},
 ];
 const PLANS={
   free:{label:"Free",maxT:5,maxA:3,maxS:5,locked:["ind","risk","back"],
@@ -1395,9 +1395,9 @@ function renderSidebar(){
 
   var html=
     '<div class="logo">'+
-    '<div class="logo-icon">MV</div>'+
+    '<div class="logo-icon">MX</div>'+
     '<div>'+
-    '<div class="logo-name">MAGNOVA</div>'+
+    '<div class="logo-name">MAXNOVA</div>'+
     '<div class="logo-sub">by FinanceOS · '+( S.user&&S.user.plan?S.user.plan.toUpperCase():'')+'</div>'+
     '</div></div>';
 
@@ -1482,9 +1482,9 @@ function renderWelcome(){
     '<div class="welcome-wrap">'+
     '<div class="welcome-box">'+
     '<div class="welcome-logo">'+
-    '<div class="welcome-icon">MV</div>'+
+    '<div class="welcome-icon">MX</div>'+
     '<div>'+
-    '<div class="welcome-title">MAGNOVA Invest</div>'+
+    '<div class="welcome-title">MAXNOVA Invest</div>'+
     '<div class="welcome-sub">by MAXNOVA & LUCI Global LLC</div>'+
     '</div></div>'+
     '<div style="margin-bottom:22px">'+
@@ -2311,8 +2311,8 @@ function renderModal(){
 function mLogin(mr){
   mr.innerHTML='<div class="overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">'+
     '<button class="mx" onclick="closeModal()">✕</button>'+
-    '<div style="width:40px;height:40px;background:linear-gradient(135deg,#1a73e8,#0ea5c9);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;font-family:\'Share Tech Mono\';margin:0 auto 14px">MV</div>'+
-    '<h2 style="text-align:center">MAGNOVA Invest</h2>'+
+    '<div style="width:40px;height:40px;background:linear-gradient(135deg,#1a73e8,#0ea5c9);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;font-family:\'Share Tech Mono\';margin:0 auto 14px">MX</div>'+
+    '<h2 style="text-align:center">MAXNOVA Invest</h2>'+
     '<p class="msub" style="text-align:center">// Precios reales · Free &amp; Pro</p>'+
     '<div id="lerr" class="err"></div>'+
     '<label class="fl">Email</label>'+
@@ -2695,7 +2695,7 @@ async function sendAIMessage(userMsg){
   renderAIMessages();
 
   var context=buildPortfolioContext();
-  var sysPrompt="Eres MAGNOVA Advisor, un asistente de inversión experto especializado en mercados de EE.UU. y LATAM. "+
+  var sysPrompt="Eres MAXNOVA Advisor, un asistente de inversión experto especializado en mercados de EE.UU. y LATAM. "+
     "Analizas portfolios reales, das recomendaciones concretas basadas en datos, y explicas conceptos de forma clara. "+
     "Siempre considera el contexto del usuario: inversor en Chile con exposición a mercados US. "+
     "Responde en español. Sé directo, específico y accionable. Máximo 3-4 párrafos por respuesta.\n\n"+
@@ -2733,7 +2733,7 @@ function renderAIPanel(){
     '<div style="display:flex;align-items:center;gap:10px">'+
     '<div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--orange),var(--orange-d));display:flex;align-items:center;justify-content:center;font-size:14px">🤖</div>'+
     '<div>'+
-    '<div style="font-size:13px;font-weight:700;color:var(--white)">MAGNOVA Advisor</div>'+
+    '<div style="font-size:13px;font-weight:700;color:var(--white)">MAXNOVA Advisor</div>'+
     '<div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Powered by Claude · Contexto de tu portfolio</div>'+
     '</div></div>'+
     '<button onclick="toggleAI()" style="background:transparent;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px;border-radius:5px;line-height:1">✕</button>'+
@@ -2744,7 +2744,7 @@ function renderAIPanel(){
     (AI.messages.length===0?
       '<div style="text-align:center;padding:24px 0">'+
       '<div style="font-size:28px;margin-bottom:10px">🤖</div>'+
-      '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:6px">Hola, soy tu MAGNOVA Advisor</div>'+
+      '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:6px">Hola, soy tu MAXNOVA Advisor</div>'+
       '<div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:16px">Conozco tu portfolio en tiempo real.<br>Pregúntame lo que quieras sobre tus inversiones.</div>'+
       '<div style="display:flex;flex-direction:column;gap:6px">'+
       suggested.map(function(q){
@@ -3119,7 +3119,7 @@ function renderSentimentWidget(){
 var COACH={report:null,loading:false,lastGenerated:null};
 
 // ══════════════════════════════════════════════════════════════════
-// RADAR FINANCIERO MAGNOVA
+// RADAR FINANCIERO MAXNOVA
 // Health Score · Perfil · 7 Secciones · Historial · PDF · Share
 // ══════════════════════════════════════════════════════════════════
 
@@ -3533,7 +3533,7 @@ function radarExportPDF(){
 
   // Set title for the PDF filename
   var origTitle=document.title;
-  document.title='MAGNOVA-Radar-'+(new Date().toISOString().split('T')[0]);
+  document.title='MAXNOVA-Radar-'+(new Date().toISOString().split('T')[0]);
 
   // Show the print area, hide the rest
   var printArea=document.getElementById('radar-print-area');
@@ -3667,7 +3667,7 @@ function renderRadar(){
     // Empty state
     mainContent='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:360px;text-align:center">'+
       '<div style="font-size:56px;margin-bottom:16px">📡</div>'+
-      '<div style="font-size:18px;font-weight:700;color:var(--white);margin-bottom:10px">Radar Financiero MAGNOVA</div>'+
+      '<div style="font-size:18px;font-weight:700;color:var(--white);margin-bottom:10px">Radar Financiero MAXNOVA</div>'+
       '<div style="font-size:13px;color:var(--text2);line-height:1.7;max-width:440px;margin-bottom:28px">'+
       'Diagnóstico semanal personalizado con 7 secciones: Score de salud, Contexto macro, Diagnóstico del portfolio, Entradas y salidas con precios concretos, Práctica de la semana y Plan de acción.'+
       '</div>'+
@@ -3739,7 +3739,7 @@ function renderRadar(){
 
     // PDF header (only visible on print)
     '<div class="radar-pdf-header" style="display:none">'+
-    '<div class="radar-pdf-logo">📡 MAGNOVA Invest</div>'+
+    '<div class="radar-pdf-logo">📡 MAXNOVA Invest</div>'+
     '<div class="radar-pdf-meta">Radar Financiero Semanal<br>'+(RADAR.report?RADAR.report.dateLabel:'')+'<br>'+
     (S.user?S.user.name||S.user.email:'')+'</div>'+
     '</div>'+
@@ -3790,7 +3790,7 @@ var ONBOARD={step:0,shown:false};
 function showOnboarding(){
   var steps=[
     {icon:'💼',title:'Tu portfolio, en tiempo real',
-     desc:'Agrega tus posiciones y MAGNOVA las conecta con precios reales de Yahoo Finance. Ve tu P&L actualizado al minuto.',
+     desc:'Agrega tus posiciones y MAXNOVA las conecta con precios reales de Yahoo Finance. Ve tu P&L actualizado al minuto.',
      action:'Ver Portfolio',page:'port'},
     {icon:'⚡',title:'Señales inteligentes',
      desc:'20 activos analizados con 4 indicadores técnicos. Score compuesto 0-100. Señales BUY/HOLD/SELL actualizadas con el mercado.',
@@ -3898,7 +3898,7 @@ function showShortcuts(){
     '<div class="modal" style="max-width:380px" onclick="event.stopPropagation()">'+
     '<button class="mx" onclick="document.getElementById(\'mroot\').innerHTML=\'\'">✕</button>'+
     '<h2 style="margin-bottom:3px">⌨️ Atajos de teclado</h2>'+
-    '<p class="msub">Navega MAGNOVA sin el mouse</p>'+
+    '<p class="msub">Navega MAXNOVA sin el mouse</p>'+
     '<div style="display:flex;flex-direction:column;gap:2px">'+
     rows.map(function(r){
       return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">'+
@@ -3989,7 +3989,7 @@ function mUpgrade(mr){
     '<div style="background:linear-gradient(135deg,#1a0a00,#2d1500);padding:28px 28px 24px;position:relative;overflow:hidden">'+
     '<div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:var(--orange);border-radius:50%;opacity:.08"></div>'+
     '<button class="mx" onclick="closeModal()" style="color:rgba(255,255,255,.5)">✕</button>'+
-    '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);font-family:\'JetBrains Mono\',monospace;margin-bottom:8px">MAGNOVA PRO</div>'+
+    '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);font-family:\'JetBrains Mono\',monospace;margin-bottom:8px">MAXNOVA PRO</div>'+
     '<h2 style="font-size:22px;color:#fff;margin-bottom:8px">Invierte como un profesional</h2>'+
     '<p style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6">AI Advisor · Precios reales · Herramientas que InvestingPro cobra $40/mes</p>'+
     '</div>'+
@@ -4055,8 +4055,8 @@ function startTrial(){
       '<div class="modal" style="max-width:340px;text-align:center" onclick="event.stopPropagation()">'+
       '<div style="font-size:48px;margin-bottom:14px">🎉</div>'+
       '<h2 style="margin-bottom:8px">¡Trial activado!</h2>'+
-      '<p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px">Tienes 14 días de acceso completo a MAGNOVA Pro. Explora el AI Advisor, los Indicadores Pro, el Comparador y Chile/LATAM.</p>'+
-      '<button class="btn-big" onclick="document.getElementById(\'mroot\').innerHTML=\'\';renderMain()" style="width:100%">Explorar MAGNOVA Pro →</button>'+
+      '<p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px">Tienes 14 días de acceso completo a MAXNOVA Invest Pro. Explora el AI Advisor, los Indicadores Pro, el Comparador y Chile/LATAM.</p>'+
+      '<button class="btn-big" onclick="document.getElementById(\'mroot\').innerHTML=\'\';renderMain()" style="width:100%">Explorar MAXNOVA Pro →</button>'+
       '</div></div>';
   }
 }
@@ -4124,7 +4124,7 @@ window.addEventListener('beforeinstallprompt',function(e){
       var btn=document.createElement('div');
       btn.style.cssText='position:fixed;bottom:16px;left:calc(var(--sb-width)+16px);background:var(--card);border:1px solid var(--orange-bd);border-radius:var(--r-md);padding:12px 16px;display:flex;align-items:center;gap:10px;z-index:99;box-shadow:var(--shadow-md);max-width:320px';
       btn.innerHTML='<span style="font-size:20px">📱</span>'+
-        '<div><div style="font-size:12px;font-weight:600;color:var(--white)">Instalar MAGNOVA</div>'+
+        '<div><div style="font-size:12px;font-weight:600;color:var(--white)">Instalar MAXNOVA Invest</div>'+
         '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Acceso directo desde tu pantalla de inicio</div></div>'+
         '<button onclick="installPWA()" class="btn" style="flex-shrink:0;border-color:var(--orange-bd);color:var(--orange)">Instalar</button>'+
         '<button onclick="this.parentNode.remove()" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:16px;line-height:1">✕</button>';
