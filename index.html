@@ -798,13 +798,85 @@ tr:last-child td { border-bottom: none; }
   @page{size:A4;margin:18mm 15mm 14mm}
 }
 
+
+/* ── NAV BUTTONS (nb) — sidebar navigation ── */
+.nb {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: var(--r-sm);
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  transition: background .12s, color .12s;
+  margin-bottom: 1px;
+}
+.nb:hover { background: var(--card2); color: var(--bright); }
+.nb.act {
+  background: var(--grn-bg);
+  color: var(--grn);
+  font-weight: 600;
+}
+.nb.lk { opacity: .45; cursor: not-allowed; }
+.nb.lk:hover { background: transparent; color: var(--text2); }
+.nb-icon {
+  width: 16px;
+  text-align: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.nb-label { flex: 1; }
+
+/* ── USER PILL ── */
+.ua-pill {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 8px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background .12s;
+  margin-top: 4px;
+}
+.ua-pill:hover { background: var(--card2); }
+.ua-av {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--grn-bg);
+  border: 1.5px solid var(--grn-lt);
+  display: flex; align-items:center; justify-content:center;
+  font-size: 11px; font-weight: 600;
+  color: var(--grn);
+  flex-shrink: 0;
+}
+.ua-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--bright);
+}
+.ua-plan {
+  font-size: 9px;
+  color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── PAGE BODY PADDING ── */
+#main > *:not(.ph) { padding: 0; }
+.page-body, #main > div { }
 </style>
 </head>
 <body>
 <div class="app">
   <nav class="sb" id="sb"></nav>
   <div style="display:flex;flex-direction:column;flex:1;margin-left:var(--sb-w)">
-    <main class="main" id="main" style="flex:1"></main>
+    <main class="main" id="main" style="flex:1;padding:0"></main>
   </div>
 </div>
 <div id="mroot"></div>
