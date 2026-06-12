@@ -888,6 +888,7 @@ tr:last-child td { border-bottom: none; }
   <div class="drwh" id="drwh"></div>
   <div class="drwb" id="drwb"></div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 
 
@@ -898,12 +899,7 @@ tr:last-child td { border-bottom: none; }
 // ═══════════════════════════════════════════════════════════════
 
 // ── USERS & PLANS ──────────────────────────────────────────────
-const USERS=[
-  {email:"demo@free.com",  password:"demo123",plan:"free",  name:"Demo User",     joinedDays:45},
-  {email:"trial@magnova.com",password:"trial123",plan:"trial",name:"Ana Rodríguez",joinedDays:3,  trialStarted:Date.now()-3*24*60*60*1000},
-  {email:"pro@magnova.com",  password:"pro123",  plan:"pro",  name:"Walter M.",    joinedDays:120, badge:"Pro"},
-  {email:"teams@magnova.com",password:"teams123",plan:"teams",name:"MAXNOVA Corp.", joinedDays:60,  badge:"Teams"},
-];
+// USERS[] migrado a Supabase Auth — ver migrate-test-users.md
 const PLANS={
   free:{label:"Free",maxT:5,maxA:3,maxS:5,locked:["ind","risk","back"],
     price:0,desc:"Portafolio básico · 5 activos · Señales limitadas"},
@@ -1042,25 +1038,19 @@ const fmtM=n=>!n?"—":n>=1e12?"$"+(n/1e12).toFixed(2)+"T":n>=1e9?"$"+(n/1e9).to
 const fmtV=n=>!n?"—":n>=1e9?(n/1e9).toFixed(1)+"B":n>=1e6?(n/1e6).toFixed(1)+"M":n>=1e3?(n/1e3).toFixed(0)+"K":fmt(n);
 
 // ── STATE ───────────────────────────────────────────────────────
-function loadSaved(){try{const s=localStorage.getItem("mv4");return s?JSON.parse(s):null;}catch(e){return null;}}
-const saved=loadSaved();
 const S={
-  user:saved&&saved.user?saved.user:null,
+  user:null,
   page:"news",
-  capital:saved&&saved.capital?saved.capital:100000,
-  portfolio:saved&&saved.portfolio?saved.portfolio:JSON.parse(JSON.stringify(DEF_PORT)),
-  watchlist:saved&&saved.watchlist?saved.watchlist:[...DEF_WATCH],
+  capital:100000,
+  portfolio:JSON.parse(JSON.stringify(DEF_PORT)),
+  watchlist:[...DEF_WATCH],
   sigFilter:"ALL",
   newsFilter:"Todo",
   modal:null,editPos:null,
-  nextId:saved&&saved.portfolio?Math.max.apply(null,saved.portfolio.map(function(p){return p.id;}))+1:10
+  nextId:10
 };
 
-function persist(){
-  try{localStorage.setItem("mv4",JSON.stringify({user:S.user,capital:S.capital,portfolio:S.portfolio,watchlist:S.watchlist}));}catch(e){/* silent */}
-  var el=document.getElementById("saved");
-  if(el){el.classList.add("show");setTimeout(function(){el.classList.remove("show");},1400);}
-}
+
 
 // ── LIVE MARKET DATA ────────────────────────────────────────────
 var LIVE={};
@@ -1449,12 +1439,7 @@ function setPage(p){
   });
   renderMain();
 }
-function logout(){
-  S.user=null;S.page="dash";
-  if(typeof stopBoot==="function") stopBoot();
-  LIVE={};REBAL.targets={};DIVS.data={};
-  persist();render();
-}
+
 function openModal(t,data){S.modal=t;S.editPos=data||null;renderModal();}
 function closeModal(){
   S.modal=null;S.editPos=null;
@@ -1575,14 +1560,42 @@ function renderWelcome(){
     '<input id="lp" class="inp" type="password" placeholder="••••••••" onkeydown="if(event.keyCode===13)doLogin()"/>'+
     '<div id="lerr" class="form-error">Email o contraseña incorrectos.</div>'+
     '</div>'+
-    '<button onclick="doLogin()" class="btn-big" style="width:100%;justify-content:center;padding:10px">Entrar</button>'+
-    '<div style="margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">'+
-    '<button onclick="activateDemoMode()" class="btn" style="flex:1;justify-content:center">Ver demo</button>'+
-    '<button onclick="openModal(\'register\')" class="btn" style="flex:1;justify-content:center">Crear cuenta</button>'+
+    '<button id="lbtn" onclick="doLogin()" class="btn-big" style="width:100%;justify-content:center;padding:10px">Entrar</button>'+
+    '<div style="margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border);text-align:center">'+
+    '<button onclick="renderRegister()" class="btn" style="width:100%;justify-content:center">Crear cuenta nueva</button>'+
     '</div>'+
     '<div style="margin-top:16px;font-size:10px;color:var(--text3);text-align:center;line-height:1.6;font-family:monospace">'+
-    'Acceso demo: demo@free.com / demo123<br>'+
     'Las señales son educativas. No constituyen asesoría financiera.</div>'+
+    '</div></div>';
+}
+
+function renderRegister(){
+  document.getElementById('main').innerHTML=
+    '<div class="welcome-wrap">'+
+    '<div class="welcome-box">'+
+    '<div class="welcome-logo">'+
+    '<div class="welcome-icon">MX</div>'+
+    '<div>'+
+    '<div class="welcome-title">Crear cuenta</div>'+
+    '<div class="welcome-sub">MAXNOVA Invest · Plan Free</div>'+
+    '</div></div>'+
+    '<div class="form-group">'+
+    '<label class="form-label">Nombre</label>'+
+    '<input id="rn" class="inp" type="text" placeholder="Tu nombre"/>'+
+    '</div>'+
+    '<div class="form-group">'+
+    '<label class="form-label">Email</label>'+
+    '<input id="re" class="inp" type="email" placeholder="tu@email.com"/>'+
+    '</div>'+
+    '<div class="form-group">'+
+    '<label class="form-label">Contraseña</label>'+
+    '<input id="rp" class="inp" type="password" placeholder="Mínimo 6 caracteres"/>'+
+    '<div id="rerr" class="form-error">Error</div>'+
+    '</div>'+
+    '<button id="rbtn" onclick="doRegister()" class="btn-big" style="width:100%;justify-content:center;padding:10px">Crear cuenta</button>'+
+    '<div style="margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border);text-align:center">'+
+    '<button onclick="renderWelcome()" class="btn" style="width:100%;justify-content:center">Ya tengo cuenta</button>'+
+    '</div>'+
     '</div></div>';
 }
 
@@ -1797,6 +1810,7 @@ function renderWatch(){
 function addWatch(t){
   if(S.watchlist.indexOf(t)<0){
     S.watchlist.push(t);persist();
+    sbAddWatch(t);
     if(S.page==="watch") renderMain();
   }
 }
@@ -1804,6 +1818,7 @@ function addCustomW(){var t=(document.getElementById("wc").value||"").toUpperCas
 function rmWatch(t){
   S.watchlist=S.watchlist.filter(function(x){return x!==t;});
   persist();
+  sbRmWatch(t);
   if(S.page==="watch") renderMain();
 }
 function resetWatch(){S.watchlist=[...DEF_WATCH];persist();renderWatch();}
@@ -2377,48 +2392,11 @@ function renderAlert(){
 function renderModal(){
   var mr=document.getElementById("mroot");
   if(!S.modal){mr.innerHTML="";return;}
-  if(S.modal==="login") mLogin(mr);
-  else if(S.modal==="upgrade") mUpgrade(mr);
+  if(S.modal==="upgrade") mUpgrade(mr);
   else if(S.modal==="addpos"||S.modal==="editpos") mPos(mr);
   else if(S.modal==="delpos") mDel(mr);
 }
 
-function mLogin(mr){
-  mr.innerHTML='<div class="overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">'+
-    '<button class="mx" onclick="closeModal()">✕</button>'+
-    '<div style="width:40px;height:40px;background:linear-gradient(135deg,#1a73e8,#0ea5c9);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;font-family:\'Share Tech Mono\';margin:0 auto 14px">MX</div>'+
-    '<h2 style="text-align:center">MAXNOVA Invest</h2>'+
-    '<p class="msub" style="text-align:center">// Precios reales · Free &amp; Pro</p>'+
-    '<div id="lerr" class="err"></div>'+
-    '<label class="fl">Email</label>'+
-    '<input id="le" class="inp ifu" type="email" placeholder="email@ejemplo.com" onkeydown="if(event.key===\'Enter\')doLogin()"/>'+
-    '<label class="fl">Contraseña</label>'+
-    '<input id="lp" class="inp ifu" type="password" placeholder="••••••••" onkeydown="if(event.key===\'Enter\')doLogin()"/>'+
-    '<button class="btn-big" style="width:100%;margin-top:12px" onclick="doLogin()">Iniciar Sesión</button>'+
-    '<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:11px;margin-top:14px">'+
-    '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:\'Share Tech Mono\';margin-bottom:8px">Cuentas Demo</div>'+
-    USERS.map(function(u,i){
-      return '<div class="dr" onclick="fillL('+i+')"><span style="color:var(--text3)">'+(i===0?"Free":"Pro ⭐")+'</span><strong style="color:var(--bright)">'+u.email+' / '+u.password+'</strong></div>';
-    }).join("")+
-    '</div></div></div>';
-}
-function fillL(i){document.getElementById("le").value=USERS[i].email;document.getElementById("lp").value=USERS[i].password;}
-function doLogin(){
-  var e=document.getElementById("le").value;
-  var p=document.getElementById("lp").value;
-  var u=USERS.find(function(u){return u.email===e&&u.password===p;});
-  var err=document.getElementById("lerr");
-  if(u){
-    S.user=Object.assign({},u);
-    persist();
-    document.getElementById("mroot").innerHTML=""; // close modal instantly
-    S.modal=null;S.editPos=null;
-    _bootRunning=false; // allow fresh boot after login
-    render(); // show dashboard immediately with static prices
-    bootLiveData(); // fetch real prices in background
-  }
-  else{err.style.display="block";err.textContent="Credenciales incorrectas.";}
-}
 
 function mUpgrade(mr){
   var proFeats=["Tickers ilimitados","20+ señales real-time","Alertas ilimitadas","RSI · MACD · BB reales","Risk & sizing","Backtesting engine","Fundamentals reales","Soporte prioritario"];
@@ -2465,7 +2443,7 @@ function mPos(mr){
     '</div></div>';
   if(!ed)setTimeout(function(){var el=document.getElementById("pt");if(el)el.focus();},100);
 }
-function savePos(id){
+async function savePos(id){
   var t=(document.getElementById("pt").value||"").toUpperCase().trim();
   var type=document.getElementById("pty").value;
   var sh=parseFloat(document.getElementById("ps").value||"");
@@ -2476,8 +2454,17 @@ function savePos(id){
   if(!sh||sh<=0){err.style.display="block";err.textContent="Shares inválido";return;}
   if(!cost||cost<=0){err.style.display="block";err.textContent="Precio de entrada inválido";return;}
   if(!cur||cur<=0){err.style.display="block";err.textContent="Precio actual inválido";return;}
-  if(id===-1){S.portfolio.push({id:S.nextId++,t:t,type:type,sh:sh,cost:cost,cur:cur});}
-  else{var idx=S.portfolio.findIndex(function(p){return p.id===id;});if(idx>=0)S.portfolio[idx]=Object.assign({},S.portfolio[idx],{type:type,sh:sh,cost:cost,cur:cur});}
+  if(id===-1){
+    var h={id:S.nextId++,t:t,type:type,sh:sh,cost:cost,cur:cur};
+    S.portfolio.push(h);
+    sbAddHolding(h).then(function(realId){h.id=realId;});
+  } else {
+    var idx=S.portfolio.findIndex(function(p){return p.id===id;});
+    if(idx>=0){
+      S.portfolio[idx]=Object.assign({},S.portfolio[idx],{type:type,sh:sh,cost:cost,cur:cur});
+      sbUpdateHolding(S.portfolio[idx]);
+    }
+  }
   persist();
   REBAL.targets={}; // reset rebalancing targets when portfolio changes
   S.modal=null;S.editPos=null;
@@ -2497,6 +2484,7 @@ function mDel(mr){
 }
 function delPos(id){
   S.portfolio=S.portfolio.filter(function(p){return p.id!==id;});
+  sbDeleteHolding(id);
   persist();
   REBAL.targets={}; // reset rebalancing targets
   DIVS.data={};     // reset dividend cache for removed ticker
@@ -4137,76 +4125,7 @@ function startTrial(){
 }
 
 // ── DEMO MODE (realistic fictional data) ──────────────────────
-function activateDemoMode(){
-  // Override with rich demo data for presentations
-  S.portfolio=[
-    {id:1,t:"AAPL", type:"Stock",sh:50, cost:172.50,cur:196.80,  note:"Core Tech"},
-    {id:2,t:"MSFT", type:"Stock",sh:30, cost:342.00,cur:419.50,  note:"AI/Cloud"},
-    {id:3,t:"NVDA", type:"Stock",sh:15, cost:495.00,cur:881.20,  note:"Semiconductors"},
-    {id:4,t:"SPY",  type:"ETF",  sh:25, cost:452.00,cur:549.80,  note:"US Index"},
-    {id:5,t:"QQQ",  type:"ETF",  sh:20, cost:380.00,cur:471.30,  note:"Tech ETF"},
-    {id:6,t:"GOOGL",type:"Stock",sh:12, cost:142.00,cur:192.40,  note:"Digital Ads"},
-    {id:7,t:"V",    type:"Stock",sh:20, cost:235.00,cur:289.10,  note:"Fintech"},
-    {id:8,t:"VTI",  type:"ETF",  sh:35, cost:218.00,cur:271.60,  note:"Total Market"},
-    {id:9,t:"AMZN", type:"Stock",sh:10, cost:168.00,cur:201.30,  note:"E-com+Cloud"},
-    {id:10,t:"JPM", type:"Stock",sh:18, cost:158.00,cur:198.70,  note:"Banking"},
-  ];
-  S.watchlist=["TSLA","META","PLTR","AMD","INTC","XLK","GLD","TLT"];
-  S.capital=150000;
-  S.page='dash';
-  renderSidebar();
-  renderMain();
-  // Show demo banner
-  var banner=document.createElement('div');
-  banner.id='demo-banner';
-  banner.style.cssText='position:fixed;bottom:16px;right:16px;background:var(--orange);color:#fff;padding:8px 14px;border-radius:var(--r-sm);font-size:11px;font-family:\'JetBrains Mono\',monospace;z-index:999;box-shadow:var(--shadow-md)';
-  banner.innerHTML='🎬 MODO DEMO · <button onclick="this.parentNode.remove()" style="background:transparent;border:none;color:#fff;cursor:pointer;font-size:13px">✕</button>';
-  document.body.appendChild(banner);
-}
 
-// ── SIDEBAR HELP + DEMO BUTTONS ────────────────────────────────
-var _origRenderSidebar=renderSidebar;
-renderSidebar=function(){
-  _origRenderSidebar();
-  // Inject help + demo links at bottom of sb-section Sistema
-  var sb=document.getElementById('sb');
-  if(!sb||!S.user) return;
-  // Add Help and Demo mode buttons
-  var helpBtn=document.createElement('div');
-  helpBtn.style.cssText='padding:0 8px 6px';
-  helpBtn.innerHTML=
-    '<button onclick="setPage(\'help\')" style="width:100%;display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:var(--r-sm);border:1px solid transparent;background:transparent;color:var(--text3);cursor:pointer;font-size:12px;font-family:\'Inter\',sans-serif;transition:.15s" onmouseover="this.style.color=\'var(--bright)\';this.style.background=\'var(--card2)\'" onmouseout="this.style.color=\'var(--text3)\';this.style.background=\'transparent\'">'+
-    '<span style="font-size:14px;width:18px;text-align:center">❓</span>'+
-    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Ayuda</span></button>';
-  sb.appendChild(helpBtn);
-};
-
-// Register Help page in router
-var _origRenderMain=renderMain;
-renderMain=function(){
-  if(S.page==='help'){renderHelp();return;}
-  _origRenderMain();
-};
-
-// ── PWA: Add to home screen prompt ────────────────────────────
-var _deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',function(e){
-  e.preventDefault();
-  _deferredPrompt=e;
-  // Show install button after 30s if user is logged in
-  setTimeout(function(){
-    if(S.user&&_deferredPrompt){
-      var btn=document.createElement('div');
-      btn.style.cssText='position:fixed;bottom:16px;left:calc(var(--sb-width)+16px);background:var(--card);border:1px solid var(--orange-bd);border-radius:var(--r-md);padding:12px 16px;display:flex;align-items:center;gap:10px;z-index:99;box-shadow:var(--shadow-md);max-width:320px';
-      btn.innerHTML='<span style="font-size:20px">📱</span>'+
-        '<div><div style="font-size:12px;font-weight:600;color:var(--white)">Instalar MAXNOVA Invest</div>'+
-        '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Acceso directo desde tu pantalla de inicio</div></div>'+
-        '<button onclick="installPWA()" class="btn" style="flex-shrink:0;border-color:var(--orange-bd);color:var(--orange)">Instalar</button>'+
-        '<button onclick="this.parentNode.remove()" style="background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:16px;line-height:1">✕</button>';
-      document.body.appendChild(btn);
-    }
-  },30000);
-});
 function installPWA(){
   if(_deferredPrompt){_deferredPrompt.prompt();_deferredPrompt=null;}
 }
@@ -4945,12 +4864,194 @@ function renderDisclaimer(){
   document.body.appendChild(d);
 }
 
+
+// ── SUPABASE ──────────────────────────────────────────────────
+var SB_URL="https://nelwgbcddwiaimzbcuas.supabase.co";
+var SB_KEY="sb_publishable_3QgfV4fRxBAGnkAt3ZYLYA_pNb-92kI";
+var sb=null;
+try{ sb=window.supabase.createClient(SB_URL,SB_KEY); }catch(e){ console.error("Supabase init failed",e); }
+
+// Map a DB holding row -> in-memory portfolio item shape {id,t,type,sh,cost,note}
+function rowToHolding(r){
+  return {id:r.id, t:r.ticker, type:r.asset_type, sh:Number(r.shares), cost:Number(r.avg_cost), note:r.note||""};
+}
+
+// Load profile + portfolio + watchlist from Supabase for the logged-in user
+async function sbLoadUserData(authUser){
+  try{
+    var profRes=await sb.from("profiles").select("*").eq("id",authUser.id).single();
+    var prof=profRes.data;
+
+    var holdRes=await sb.from("portfolio_holdings").select("*").eq("user_id",authUser.id).order("id");
+    var holdings=(holdRes.data||[]).map(rowToHolding);
+
+    var wlRes=await sb.from("watchlist").select("ticker").eq("user_id",authUser.id);
+    var watch=(wlRes.data||[]).map(function(r){return r.ticker;});
+
+    S.user={
+      id:authUser.id, email:authUser.email,
+      name:(prof&&prof.name)||authUser.email.split("@")[0],
+      plan:(prof&&prof.plan)||"free",
+      trialStarted:(prof&&prof.trial_started_at)?new Date(prof.trial_started_at).getTime():null
+    };
+    S.capital=(prof&&prof.capital)?Number(prof.capital):100000;
+
+    if(holdings.length>0){
+      S.portfolio=holdings;
+      S.nextId=Math.max.apply(null,holdings.map(function(h){return h.id;}))+1;
+    } else {
+      // First login: seed Supabase with demo portfolio so the account isn't empty
+      await sbSeedPortfolio(authUser.id);
+      S.portfolio=JSON.parse(JSON.stringify(DEF_PORT));
+      S.nextId=10;
+    }
+    S.watchlist=watch.length>0?watch:[...DEF_WATCH];
+  }catch(e){
+    console.error("sbLoadUserData failed",e);
+    // Fallback to defaults so the app still renders
+    S.user={id:authUser.id,email:authUser.email,name:authUser.email.split("@")[0],plan:"free"};
+    S.portfolio=JSON.parse(JSON.stringify(DEF_PORT));
+    S.watchlist=[...DEF_WATCH];
+  }
+}
+
+// Seed initial portfolio rows for a brand-new account
+async function sbSeedPortfolio(userId){
+  try{
+    var rows=DEF_PORT.map(function(p){
+      return {user_id:userId, ticker:p.t, asset_type:p.type, shares:p.sh, avg_cost:p.cost, note:p.note||""};
+    });
+    await sb.from("portfolio_holdings").insert(rows);
+    var wrows=DEF_WATCH.map(function(t){return {user_id:userId, ticker:t};});
+    await sb.from("watchlist").insert(wrows);
+  }catch(e){ console.error("sbSeedPortfolio failed",e); }
+}
+
+// ── AUTH ACTIONS ──────────────────────────────────────────────
+async function doLogin(){
+  var e=document.getElementById("le").value.trim();
+  var p=document.getElementById("lp").value;
+  var err=document.getElementById("lerr");
+  var btn=document.getElementById("lbtn");
+  if(!e||!p){err.style.display="block";err.textContent="Ingresa email y contraseña.";return;}
+  if(btn){btn.disabled=true;btn.textContent="Entrando...";}
+  var res=await sb.auth.signInWithPassword({email:e,password:p});
+  if(btn){btn.disabled=false;btn.textContent="Entrar";}
+  if(res.error){
+    err.style.display="block";
+    err.textContent="Credenciales incorrectas.";
+    return;
+  }
+  await sbLoadUserData(res.data.user);
+  document.getElementById("mroot").innerHTML="";
+  render();
+}
+
+async function doRegister(){
+  var name=(document.getElementById("rn")?document.getElementById("rn").value:"").trim();
+  var e=document.getElementById("re").value.trim();
+  var p=document.getElementById("rp").value;
+  var err=document.getElementById("rerr");
+  var btn=document.getElementById("rbtn");
+  if(!name||!e||!p){err.style.display="block";err.textContent="Completa todos los campos.";return;}
+  if(p.length<6){err.style.display="block";err.textContent="La contraseña debe tener al menos 6 caracteres.";return;}
+  if(btn){btn.disabled=true;btn.textContent="Creando cuenta...";}
+  var res=await sb.auth.signUp({email:e,password:p,options:{data:{name:name}}});
+  if(btn){btn.disabled=false;btn.textContent="Crear cuenta";}
+  if(res.error){
+    err.style.display="block";
+    err.textContent=res.error.message.indexOf("already")>=0?"Ya existe una cuenta con ese email.":"Error: "+res.error.message;
+    return;
+  }
+  if(res.data.session){
+    await sbLoadUserData(res.data.user);
+    document.getElementById("mroot").innerHTML="";
+    render();
+  }else{
+    err.style.display="block";
+    err.style.color="var(--grn)";
+    err.textContent="Cuenta creada. Revisa tu email para confirmar antes de entrar.";
+  }
+}
+
+async function logout(){
+  if(typeof stopBoot==="function") stopBoot();
+  await sb.auth.signOut();
+  S.user=null;S.page="news";
+  LIVE={};REBAL.targets={};DIVS.data={};
+  S.portfolio=JSON.parse(JSON.stringify(DEF_PORT));
+  S.watchlist=[...DEF_WATCH];
+  render();
+}
+
+// persist(): syncs capital+profile to Supabase (debounced) — portfolio/watchlist
+// have their own granular CRUD functions (sbAddHolding, sbDeleteHolding, etc.)
+var _persistTimer=null;
+function persist(){
+  var el=document.getElementById("saved");
+  if(el){el.classList.add("show");setTimeout(function(){el.classList.remove("show");},1400);}
+  if(!S.user||!S.user.id) return;
+  if(_persistTimer) clearTimeout(_persistTimer);
+  _persistTimer=setTimeout(function(){
+    sb.from("profiles").update({capital:S.capital}).eq("id",S.user.id).then(function(){},function(e){console.error("persist capital failed",e);});
+  },600);
+}
+
+// ── PORTFOLIO CRUD (Supabase-backed) ─────────────────────────────
+async function sbAddHolding(h){
+  if(!S.user||!S.user.id) return h.id;
+  var res=await sb.from("portfolio_holdings").insert({
+    user_id:S.user.id, ticker:h.t, asset_type:h.type, shares:h.sh, avg_cost:h.cost, note:h.note||""
+  }).select().single();
+  if(res.error){ console.error("sbAddHolding failed",res.error); return h.id; }
+  return res.data.id;
+}
+async function sbUpdateHolding(h){
+  if(!S.user||!S.user.id) return;
+  var res=await sb.from("portfolio_holdings").update({
+    ticker:h.t, asset_type:h.type, shares:h.sh, avg_cost:h.cost, note:h.note||""
+  }).eq("id",h.id).eq("user_id",S.user.id);
+  if(res.error) console.error("sbUpdateHolding failed",res.error);
+}
+async function sbDeleteHolding(id){
+  if(!S.user||!S.user.id) return;
+  var res=await sb.from("portfolio_holdings").delete().eq("id",id).eq("user_id",S.user.id);
+  if(res.error) console.error("sbDeleteHolding failed",res.error);
+}
+async function sbAddWatch(ticker){
+  if(!S.user||!S.user.id) return;
+  var res=await sb.from("watchlist").insert({user_id:S.user.id, ticker:ticker});
+  if(res.error) console.error("sbAddWatch failed",res.error);
+}
+async function sbRmWatch(ticker){
+  if(!S.user||!S.user.id) return;
+  var res=await sb.from("watchlist").delete().eq("user_id",S.user.id).eq("ticker",ticker);
+  if(res.error) console.error("sbRmWatch failed",res.error);
+}
+
 // ── STARTUP ──────────────────────────────────────────────────
 initTheme();
 radarInit();
 radarCheckSharedLink();
-render();
 renderDisclaimer();
+
+(async function boot(){
+  document.getElementById('main').innerHTML='<div class="dload"><div class="spin"></div>Cargando MAXNOVA Invest...</div>';
+  try{
+    var sess=await sb.auth.getSession();
+    if(sess.data.session&&sess.data.session.user){
+      await sbLoadUserData(sess.data.session.user);
+    }
+  }catch(e){ console.error("boot session check failed",e); }
+  render();
+})();
+
+sb.auth.onAuthStateChange(function(event,session){
+  if(event==="SIGNED_OUT"){
+    S.user=null;S.page="news";
+    render();
+  }
+});
 
 
 
