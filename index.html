@@ -1591,8 +1591,15 @@ function renderRegister(){
     '<div class="form-group">'+
     '<label class="form-label">Contraseña</label>'+
     '<input id="rp" class="inp" type="password" placeholder="Mínimo 6 caracteres"/>'+
-    '<div id="rerr" class="form-error">Error</div>'+
     '</div>'+
+    '<div class="form-group" style="display:flex;align-items:flex-start;gap:8px">'+
+    '<input id="rdisc" type="checkbox" style="margin-top:2px;flex-shrink:0;width:14px;height:14px"/>'+
+    '<label for="rdisc" style="font-size:11px;color:var(--text2);line-height:1.5;cursor:pointer">'+
+    'Entiendo que los indicadores y análisis de FinanceOS Invest son herramientas '+
+    'educativas basadas en datos históricos, no constituyen asesoría financiera '+
+    'ni recomendación de inversión.</label>'+
+    '</div>'+
+    '<div id="rerr" class="form-error">Error</div>'+
     '<button id="rbtn" onclick="doRegister()" class="btn-big" style="width:100%;justify-content:center;padding:10px">Crear cuenta</button>'+
     '<div style="margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border);text-align:center">'+
     '<button onclick="renderWelcome()" class="btn" style="width:100%;justify-content:center">Ya tengo cuenta</button>'+
@@ -4953,10 +4960,12 @@ async function doRegister(){
   var name=(document.getElementById("rn")?document.getElementById("rn").value:"").trim();
   var e=document.getElementById("re").value.trim();
   var p=document.getElementById("rp").value;
+  var disc=document.getElementById("rdisc");
   var err=document.getElementById("rerr");
   var btn=document.getElementById("rbtn");
   if(!name||!e||!p){err.style.display="block";err.textContent="Completa todos los campos.";return;}
   if(p.length<6){err.style.display="block";err.textContent="La contraseña debe tener al menos 6 caracteres.";return;}
+  if(!disc.checked){err.style.display="block";err.textContent="Debes aceptar el aviso educativo para continuar.";return;}
   if(btn){btn.disabled=true;btn.textContent="Creando cuenta...";}
   var res=await sb.auth.signUp({email:e,password:p,options:{data:{name:name}}});
   if(btn){btn.disabled=false;btn.textContent="Crear cuenta";}
