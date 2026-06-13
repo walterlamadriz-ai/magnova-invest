@@ -1,14 +1,14 @@
-<!DOCTYPE html><!-- MAXNOVA Invest v2.1 -->
+<!DOCTYPE html><!-- FinanceOS Invest v2.2 (rebrand from MAXNOVA Invest v2.1) -->
 <html lang="es" data-theme="light">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>MAXNOVA Invest — by MAXNOVA & LUCI Global LLC</title>
+<title>FinanceOS Invest — by MAXNOVA & LUCI Global LLC</title>
 <meta name="description" content="Plataforma de análisis de inversiones para LATAM. Portfolio, señales técnicas, gestión de riesgo y contexto macro."/>
 <style>
 /* ═══════════════════════════════════════════════════════════════════
-   MAXNOVA INVEST — Sistema de diseño alineado con FinanceOS Pro
-   MAXNOVA & LUCI Global LLC · v2.0
+   FINANCEOS INVEST — Sistema de diseño alineado con FinanceOS Pro
+   MAXNOVA & LUCI Global LLC · v2.2
    Tipografía: Inter + JetBrains Mono
    Paleta: mismos tokens que FinanceOS globals.css
    ═══════════════════════════════════════════════════════════════════ */
@@ -895,7 +895,7 @@ tr:last-child td { border-bottom: none; }
 
 
 // ═══════════════════════════════════════════════════════════════
-// MAXNOVA INVEST — Real market data · Clean build
+// FINANCEOS INVEST — Real market data · Clean build
 // ═══════════════════════════════════════════════════════════════
 
 // ── USERS & PLANS ──────────────────────────────────────────────
@@ -1395,7 +1395,8 @@ function kpi(l,v,s,c){
 }
 function badge(sig){
   var c=sig==="BUY"?"buy":sig==="SELL"?"sell":"hold";
-  return '<span class="badge '+c+'">'+sig+'</span>';
+  var label=sig==="BUY"?"ALTO":sig==="SELL"?"BAJO":"MEDIO";
+  return '<span class="badge '+c+'">'+label+'</span>';
 }
 function sbar(sc){
   var c=sc>=72?"var(--green)":sc>=52?"var(--orange)":"var(--red)";
@@ -1455,9 +1456,9 @@ function renderSidebar(){
 
   var html=
     '<div class="logo">'+
-    '<div class="logo-icon">MX</div>'+
+    '<div class="logo-icon">F</div>'+
     '<div>'+
-    '<div class="logo-name">MAXNOVA</div>'+
+    '<div class="logo-name">FinanceOS Invest</div>'+
     '<div class="logo-sub">MAXNOVA & LUCI · '+( S.user&&S.user.plan?S.user.plan.toUpperCase():'')+'</div>'+
     '</div></div>';
 
@@ -1542,9 +1543,9 @@ function renderWelcome(){
     '<div class="welcome-wrap">'+
     '<div class="welcome-box">'+
     '<div class="welcome-logo">'+
-    '<div class="welcome-icon">MX</div>'+
+    '<div class="welcome-icon">F</div>'+
     '<div>'+
-    '<div class="welcome-title">MAXNOVA Invest</div>'+
+    '<div class="welcome-title">FinanceOS Invest</div>'+
     '<div class="welcome-sub">by MAXNOVA & LUCI Global LLC</div>'+
     '</div></div>'+
     '<div style="margin-bottom:22px">'+
@@ -1574,10 +1575,10 @@ function renderRegister(){
     '<div class="welcome-wrap">'+
     '<div class="welcome-box">'+
     '<div class="welcome-logo">'+
-    '<div class="welcome-icon">MX</div>'+
+    '<div class="welcome-icon">F</div>'+
     '<div>'+
     '<div class="welcome-title">Crear cuenta</div>'+
-    '<div class="welcome-sub">MAXNOVA Invest · Plan Free</div>'+
+    '<div class="welcome-sub">FinanceOS Invest · Plan Free</div>'+
     '</div></div>'+
     '<div class="form-group">'+
     '<label class="form-label">Nombre</label>'+
@@ -1681,7 +1682,7 @@ function renderDash(){
     renderSentimentCompact()+
     '<div class="cb"><div class="st"><div class="stbar"></div>Acciones rápidas</div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
-    [['📐','Position Builder','Entrada óptima · R/R','pb'],
+    [['📐','Position Builder','Nivel de referencia · R/R','pb'],
      ['🌡','Sentiment','Fear & Greed propio','sentiment'],
      ['🤖','AI Coach','Reporte semanal IA','coach'],
      ['📊','Indicadores Pro','RSI · MACD · BB','ind']
@@ -1831,7 +1832,8 @@ function renderSig(){
   var list=f==="ALL"?sigs:sigs.filter(function(s){return s.sig===f;});
 
   var filterBtns=["ALL","BUY","HOLD","SELL"].map(function(ff){
-    return '<button class="tab'+(f===ff?" act":"")+'" onclick="setSigF(\''+ff+'\')">'+( ff==="ALL"?"Todos":ff)+'</button>';
+    var lbl=ff==="ALL"?"Todos":ff==="BUY"?"Alto":ff==="SELL"?"Bajo":"Medio";
+    return '<button class="tab'+(f===ff?" act":"")+'" onclick="setSigF(\''+ff+'\')">'+lbl+'</button>';
   }).join("");
 
   var rows=list.map(function(s){
@@ -1851,16 +1853,16 @@ function renderSig(){
   }).join("");
 
   document.getElementById("main").innerHTML=
-    '<div class="ph"><div><h1>Signal Engine</h1><p class="sub-txt">// Trend×30% + Vol×20% + RSI×25% + MACD×25%</p></div>'+liveBadge()+'</div>'+
-    freeBanner("Plan Free: "+plan.maxS+" señales de "+ALL_SIG.length+".")+
+    '<div class="ph"><div><h1>Análisis Comparativo</h1><p class="sub-txt">// Indicador histórico — Trend×30% + Vol×20% + RSI×25% + MACD×25% (no es recomendación de inversión)</p></div>'+liveBadge()+'</div>'+
+    freeBanner("Plan Free: "+plan.maxS+" indicadores de "+ALL_SIG.length+".")+
     '<div style="margin-bottom:14px">'+filterBtns+'</div>'+
     '<div class="krow">'+
     kpi("Total",sigs.length,"","b")+
-    kpi("BUY",sigs.filter(function(s){return s.sig==="BUY";}).length,"","g")+
-    kpi("HOLD",sigs.filter(function(s){return s.sig==="HOLD";}).length,"","a")+
-    kpi("SELL",sigs.filter(function(s){return s.sig==="SELL";}).length,"","r")+
+    kpi("Indicador Alto",sigs.filter(function(s){return s.sig==="BUY";}).length,"","g")+
+    kpi("Indicador Medio",sigs.filter(function(s){return s.sig==="HOLD";}).length,"","a")+
+    kpi("Indicador Bajo",sigs.filter(function(s){return s.sig==="SELL";}).length,"","r")+
     '</div>'+
-    '<div class="tw"><table><thead><tr><th>Ticker</th><th>Signal</th><th>Score</th><th>Fuerza</th><th>Precio Real</th><th>Stop</th><th>Watch</th></tr></thead>'+
+    '<div class="tw"><table><thead><tr><th>Ticker</th><th>Indicador</th><th>Score</th><th>Fuerza</th><th>Precio Real</th><th>Ref. Histórica</th><th>Watch</th></tr></thead>'+
     '<tbody>'+rows+'</tbody></table></div>';
 }
 function setSigF(f){S.sigFilter=f;renderMain();}
@@ -2251,12 +2253,12 @@ function renderRisk(){
   }).join("");
 
   document.getElementById("main").innerHTML=
-    '<div class="ph"><div><h1>Gestión de Riesgo</h1><p class="sub-txt">// Position Sizing · Stop Loss · Escenarios · '+S.portfolio.length+' posiciones</p></div></div>'+
+    '<div class="ph"><div><h1>Gestión de Riesgo</h1><p class="sub-txt">// Position Sizing · Niveles de Referencia · Escenarios · '+S.portfolio.length+' posiciones</p></div></div>'+
     '<div class="krow">'+
     kpi("Capital",D(cap),"","g")+
     kpi("Riesgo/Op",D(rA),"2% del capital","r")+
-    kpi("Stop Loss","8%","Default","a")+
-    kpi("Take Profit","15%","Objetivo","g")+
+    kpi("Ref. Baja","8%","Histórico","a")+
+    kpi("Ref. Alta","15%","Histórico","g")+
     kpi("Valor Esp.",D(ev),ev>=0?"+Positivo":"Negativo",ev>=0?"g":"r")+
     '</div>'+
     '<div class="st"><div class="stbar"></div>Position Sizing</div>'+
@@ -2634,7 +2636,7 @@ function renderDrawerBody(){
       '</div>'+
       '<div class="ind2">'+
       '<div class="icard"><div class="icl">RSI Actual</div><div class="icv" style="color:'+(rsiVal>70?"var(--red)":rsiVal<30?"var(--green)":"var(--orange)")+'">'+rsiVal.toFixed(1)+'</div><div class="ics">'+(rsiVal>70?"Sobrecomprado":rsiVal<30?"Sobrevendido":"Neutral")+'</div></div>'+
-      '<div class="icard"><div class="icl">Señal RSI</div><div class="icv" style="color:'+(rsiVal>70?"var(--red)":rsiVal<30?"var(--green)":"var(--orange)")+'">'+(rsiVal>70?"SELL":rsiVal<30?"BUY":"NEUTRAL")+'</div><div class="ics">Nivel '+rsiVal.toFixed(0)+'/100</div></div>'+
+      '<div class="icard"><div class="icl">Señal RSI</div><div class="icv" style="color:'+(rsiVal>70?"var(--red)":rsiVal<30?"var(--green)":"var(--orange)")+'">'+(rsiVal>70?"SOBRECOMPRA":rsiVal<30?"SOBREVENTA":"NEUTRAL")+'</div><div class="ics">Nivel '+rsiVal.toFixed(0)+'/100</div></div>'+
       '<div class="icard"><div class="icl">BB Superior</div><div class="icv">$'+(bb.upper?bb.upper.toFixed(2):"—")+'</div><div class="ics">Resistencia</div></div>'+
       '<div class="icard"><div class="icl">BB Inferior</div><div class="icv">$'+(bb.lower?bb.lower.toFixed(2):"—")+'</div><div class="ics">Soporte</div></div>'+
       '</div>';
@@ -2690,7 +2692,7 @@ function renderDrawerBody(){
       (!f?'<div style="font-size:11px;color:var(--text3);font-family:\'Share Tech Mono\';text-align:center;padding:8px">Cargando fundamentals de Yahoo Finance...</div>':'')+
       '<div class="cha" style="margin-top:0">'+
       '<div style="font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-family:\'Share Tech Mono\';margin-bottom:8px">Niveles clave</div>'+
-      [["Stop Loss (8%)","$"+(cur*.92).toFixed(2),"var(--red)"],["SMA 20","$"+s20Last.toFixed(2),"var(--orange)"],["Precio actual","$"+cur.toFixed(2),"var(--bright)"],["Target (12%)","$"+(cur*1.12).toFixed(2),"var(--green)"]].map(function(r){
+      [["Ref. Baja (-8%)","$"+(cur*.92).toFixed(2),"var(--red)"],["SMA 20","$"+s20Last.toFixed(2),"var(--orange)"],["Precio actual","$"+cur.toFixed(2),"var(--bright)"],["Ref. Alta (+12%)","$"+(cur*1.12).toFixed(2),"var(--green)"]].map(function(r){
         return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;font-family:\'Share Tech Mono\'"><span style="color:var(--text3)">'+r[0]+'</span><span style="color:'+r[2]+';font-weight:500">'+r[1]+'</span></div>';
       }).join("")+
       '</div>';
@@ -2701,7 +2703,7 @@ function renderDrawerBody(){
     '<div style="font-size:24px">'+sigIcon+'</div>'+
     '<div><div style="font-size:13px;font-weight:700;color:'+sigColor+'">'+sig.sig+' — Score '+sig.sc+'/100</div>'+
     '<div style="font-size:11px;font-family:\'Share Tech Mono\';color:var(--text);margin-top:2px">'+
-    (sig.sig==="BUY"?"Tendencia alcista confirmada · Entrada válida":sig.sig==="SELL"?"Presión vendedora · Considerar reducir":"Sin señal clara · Monitorear")+
+    (sig.sig==="BUY"?"Tendencia histórica alcista · Indicador alto":sig.sig==="SELL"?"Presión vendedora histórica · Indicador bajo":"Sin tendencia clara · Indicador medio")+
     '</div></div></div>'+
     '<div>'+tabBtns+'</div>'+
     '<div style="margin-bottom:10px">'+rangeBtns+'</div>'+
@@ -2758,7 +2760,7 @@ async function sendAIMessage(userMsg){
   renderAIMessages();
 
   var context=buildPortfolioContext();
-  var sysPrompt="Eres MAXNOVA Advisor, un asistente de inversión experto especializado en mercados de EE.UU. y LATAM. "+
+  var sysPrompt="Eres FinanceOS Advisor, un asistente de análisis financiero experto especializado en mercados de EE.UU. y LATAM. "+
     "Analizas portfolios reales, das recomendaciones concretas basadas en datos, y explicas conceptos de forma clara. "+
     "Siempre considera el contexto del usuario: inversor en Chile con exposición a mercados US. "+
     "Responde en español. Sé directo, específico y accionable. Máximo 3-4 párrafos por respuesta.\n\n"+
@@ -2796,7 +2798,7 @@ function renderAIPanel(){
     '<div style="display:flex;align-items:center;gap:10px">'+
     '<div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--orange),var(--orange-d));display:flex;align-items:center;justify-content:center;font-size:14px">🤖</div>'+
     '<div>'+
-    '<div style="font-size:13px;font-weight:700;color:var(--white)">MAXNOVA Advisor</div>'+
+    '<div style="font-size:13px;font-weight:700;color:var(--white)">FinanceOS Advisor</div>'+
     '<div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Powered by Claude · Contexto de tu portfolio</div>'+
     '</div></div>'+
     '<button onclick="toggleAI()" style="background:transparent;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px;border-radius:5px;line-height:1">✕</button>'+
@@ -2807,7 +2809,7 @@ function renderAIPanel(){
     (AI.messages.length===0?
       '<div style="text-align:center;padding:24px 0">'+
       '<div style="font-size:28px;margin-bottom:10px">🤖</div>'+
-      '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:6px">Hola, soy tu MAXNOVA Advisor</div>'+
+      '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:6px">Hola, soy tu FinanceOS Advisor</div>'+
       '<div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:16px">Conozco tu portfolio en tiempo real.<br>Pregúntame lo que quieras sobre tus inversiones.</div>'+
       '<div style="display:flex;flex-direction:column;gap:6px">'+
       suggested.map(function(q){
@@ -2931,7 +2933,7 @@ function renderPB(){
       '<div class="tw"><table><thead><tr><th>Movimiento</th><th>Precio</th><th>P&L</th><th>Return</th></tr></thead><tbody>'+scRows+'</tbody></table></div>'+
       '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px">'+
       [['Precio Entrada','$'+fmtD(c.price),'var(--bright)'],
-       ['Stop Loss','$'+fmtD(c.stop),'var(--red)'],
+       ['Ref. Baja','$'+fmtD(c.stop),'var(--red)'],
        ['Target R2','$'+fmtD(c.target),'var(--green)'],
        ['R/R Ratio',c.rr.toFixed(2)+'x',c.rr>=2?'var(--green)':'var(--red)']
       ].map(function(r){
@@ -2969,7 +2971,7 @@ function renderPB(){
     '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:260px;background:var(--card);border:1px solid var(--border);border-radius:10px;text-align:center">'+
     '<div style="font-size:44px;margin-bottom:12px">📐</div>'+
     '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:6px">Ingresa los datos y calcula</div>'+
-    '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">Ticker · Precio · Capital · % Riesgo · Stop Loss</div></div>';
+    '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">Ticker · Precio · Capital · % Riesgo · Ref. Baja</div></div>';
 
   document.getElementById("main").innerHTML=
     '<div class="ph"><div><h1>Position Builder</h1>'+
@@ -2990,7 +2992,7 @@ function renderPB(){
     '<input id="pb-capital" class="inp" style="width:100%" type="number" value="'+cap+'" oninput="PB.capital=parseFloat(this.value)||0"/></div>'+
     '<div><label style="display:block;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:\'JetBrains Mono\',monospace;margin-bottom:5px">Riesgo máx (%)</label>'+
     '<input id="pb-risk" class="inp" style="width:100%" type="number" value="'+PB.risk+'" min="0.5" max="10" step="0.5" oninput="PB.risk=parseFloat(this.value)||2"/></div></div>'+
-    '<div style="margin-bottom:14px"><label style="display:block;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:\'JetBrains Mono\',monospace;margin-bottom:5px">Stop Loss (vacío = 8% automático)</label>'+
+    '<div style="margin-bottom:14px"><label style="display:block;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:\'JetBrains Mono\',monospace;margin-bottom:5px">Ref. Baja (vacío = -8% automático)</label>'+
     '<input id="pb-stop" class="inp" style="width:100%" type="number" placeholder="Auto — 8% bajo precio entrada" value="'+(PB.stop||'')+'" oninput="PB.stop=parseFloat(this.value)||0"/></div>'+
     '<button onclick="pbCalc()" class="btn-big" style="width:100%">Calcular posición óptima →</button>'+
     '</div></div>'+
@@ -3182,7 +3184,7 @@ function renderSentimentWidget(){
 var COACH={report:null,loading:false,lastGenerated:null};
 
 // ══════════════════════════════════════════════════════════════════
-// RADAR FINANCIERO MAXNOVA
+// RADAR FINANCIERO FINANCEOS INVEST
 // Health Score · Perfil · 7 Secciones · Historial · PDF · Share
 // ══════════════════════════════════════════════════════════════════
 
@@ -3474,7 +3476,7 @@ async function generateRadarReport(){
       sections:[
         {id:'health',title:'Score de Salud',content:'Tu portfolio tiene un score de '+health.total+'/100. Diversificación: '+health.subs.div+' · Momentum: '+health.subs.mom+' · Riesgo: '+health.subs.risk+' · Correlación: '+health.subs.corr+' · Valoración: '+health.subs.val+'.'},
         {id:'macro',title:'Análisis AI en Mantenimiento',content:'🔧 El análisis con inteligencia artificial está temporalmente en mantenimiento mientras migramos a infraestructura segura. Los sub-scores del Health Score son precisos y calculados localmente. El análisis narrativo completo con Claude estará disponible muy pronto.'},
-        {id:'action',title:'Mientras tanto',content:'1. Revisa tus posiciones en Portfolio. 2. Consulta el Signal Engine para señales BUY/HOLD/SELL. 3. Usa el Position Builder para calcular entradas optimas.'},
+        {id:'action',title:'Mientras tanto',content:'1. Revisa tus posiciones en Portfolio. 2. Consulta Análisis Comparativo para ver indicadores históricos (Alto/Medio/Bajo). 3. Usa el Position Builder para calcular niveles de referencia.'},
       ],
     };
     RADAR.report=reportObj;
@@ -3596,7 +3598,7 @@ function radarExportPDF(){
 
   // Set title for the PDF filename
   var origTitle=document.title;
-  document.title='MAXNOVA-Radar-'+(new Date().toISOString().split('T')[0]);
+  document.title='FinanceOS-Invest-Radar-'+(new Date().toISOString().split('T')[0]);
 
   // Show the print area, hide the rest
   var printArea=document.getElementById('radar-print-area');
@@ -3730,7 +3732,7 @@ function renderRadar(){
     // Empty state
     mainContent='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:360px;text-align:center">'+
       '<div style="font-size:56px;margin-bottom:16px">📡</div>'+
-      '<div style="font-size:18px;font-weight:700;color:var(--white);margin-bottom:10px">Radar Financiero MAXNOVA</div>'+
+      '<div style="font-size:18px;font-weight:700;color:var(--white);margin-bottom:10px">Radar Financiero FinanceOS Invest</div>'+
       '<div style="font-size:13px;color:var(--text2);line-height:1.7;max-width:440px;margin-bottom:28px">'+
       'Diagnóstico semanal personalizado con 7 secciones: Score de salud, Contexto macro, Diagnóstico del portfolio, Entradas y salidas con precios concretos, Práctica de la semana y Plan de acción.'+
       '</div>'+
@@ -3802,7 +3804,7 @@ function renderRadar(){
 
     // PDF header (only visible on print)
     '<div class="radar-pdf-header" style="display:none">'+
-    '<div class="radar-pdf-logo">📡 MAXNOVA Invest</div>'+
+    '<div class="radar-pdf-logo">📡 FinanceOS Invest</div>'+
     '<div class="radar-pdf-meta">Radar Financiero Semanal<br>'+(RADAR.report?RADAR.report.dateLabel:'')+'<br>'+
     (S.user?S.user.name||S.user.email:'')+'</div>'+
     '</div>'+
@@ -3853,7 +3855,7 @@ var ONBOARD={step:0,shown:false};
 function showOnboarding(){
   var steps=[
     {icon:'💼',title:'Tu portfolio, en tiempo real',
-     desc:'Agrega tus posiciones y MAXNOVA las conecta con precios reales de Yahoo Finance. Ve tu P&L actualizado al minuto.',
+     desc:'Agrega tus posiciones y FinanceOS Invest las conecta con precios reales de Yahoo Finance. Ve tu P&L actualizado al minuto.',
      action:'Ver Portfolio',page:'port'},
     {icon:'⚡',title:'Señales inteligentes',
      desc:'20 activos analizados con 4 indicadores técnicos. Score compuesto 0-100. Señales BUY/HOLD/SELL actualizadas con el mercado.',
@@ -3961,7 +3963,7 @@ function showShortcuts(){
     '<div class="modal" style="max-width:380px" onclick="event.stopPropagation()">'+
     '<button class="mx" onclick="document.getElementById(\'mroot\').innerHTML=\'\'">✕</button>'+
     '<h2 style="margin-bottom:3px">⌨️ Atajos de teclado</h2>'+
-    '<p class="msub">Navega MAXNOVA sin el mouse</p>'+
+    '<p class="msub">Navega FinanceOS Invest sin el mouse</p>'+
     '<div style="display:flex;flex-direction:column;gap:2px">'+
     rows.map(function(r){
       return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">'+
@@ -4052,7 +4054,7 @@ function mUpgrade(mr){
     '<div style="background:linear-gradient(135deg,#1a0a00,#2d1500);padding:28px 28px 24px;position:relative;overflow:hidden">'+
     '<div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:var(--orange);border-radius:50%;opacity:.08"></div>'+
     '<button class="mx" onclick="closeModal()" style="color:rgba(255,255,255,.5)">✕</button>'+
-    '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);font-family:\'JetBrains Mono\',monospace;margin-bottom:8px">MAXNOVA PRO</div>'+
+    '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);font-family:\'JetBrains Mono\',monospace;margin-bottom:8px">FINANCEOS INVEST PRO</div>'+
     '<h2 style="font-size:22px;color:#fff;margin-bottom:8px">Invierte como un profesional</h2>'+
     '<p style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6">AI Advisor · Precios reales · Herramientas que InvestingPro cobra $40/mes</p>'+
     '</div>'+
@@ -4118,8 +4120,8 @@ function startTrial(){
       '<div class="modal" style="max-width:340px;text-align:center" onclick="event.stopPropagation()">'+
       '<div style="font-size:48px;margin-bottom:14px">🎉</div>'+
       '<h2 style="margin-bottom:8px">¡Trial activado!</h2>'+
-      '<p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px">Tienes 14 días de acceso completo a MAXNOVA Invest Pro. Explora el AI Advisor, los Indicadores Pro, el Comparador y Chile/LATAM.</p>'+
-      '<button class="btn-big" onclick="document.getElementById(\'mroot\').innerHTML=\'\';renderMain()" style="width:100%">Explorar MAXNOVA Pro →</button>'+
+      '<p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px">Tienes 14 días de acceso completo a FinanceOS Invest Pro. Explora el AI Advisor, los Indicadores Pro, el Comparador y Chile/LATAM.</p>'+
+      '<button class="btn-big" onclick="document.getElementById(\'mroot\').innerHTML=\'\';renderMain()" style="width:100%">Explorar FinanceOS Invest Pro →</button>'+
       '</div></div>';
   }
 }
@@ -4860,7 +4862,7 @@ function renderDisclaimer(){
   var d=document.createElement('div');
   d.id='disclaimer-bar';
   d.className='disclaimer-bar';
-  d.innerHTML='⚠ Las señales e indicadores son de carácter educativo e informativo. No constituyen asesoría financiera, recomendación de inversión ni garantía de rentabilidad. Siempre consulta con un asesor financiero certificado. · MAXNOVA & LUCI Global LLC';
+  d.innerHTML='⚠ Los indicadores y análisis mostrados son herramientas educativas basadas en datos históricos. No constituyen asesoría financiera, recomendación de inversión, ni garantía de rentabilidad. Siempre consulta con un asesor financiero certificado antes de tomar decisiones de inversión. · MAXNOVA & LUCI Global LLC';
   document.body.appendChild(d);
 }
 
@@ -5036,7 +5038,7 @@ radarCheckSharedLink();
 renderDisclaimer();
 
 (async function boot(){
-  document.getElementById('main').innerHTML='<div class="dload"><div class="spin"></div>Cargando MAXNOVA Invest...</div>';
+  document.getElementById('main').innerHTML='<div class="dload"><div class="spin"></div>Cargando FinanceOS Invest...</div>';
   try{
     var sess=await sb.auth.getSession();
     if(sess.data.session&&sess.data.session.user){
