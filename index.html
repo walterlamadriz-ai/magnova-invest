@@ -956,7 +956,6 @@ const PAGES=[
   {id:"ind",      icon:"📈",label:"Indicadores",pro:true},
   {id:"risk",     icon:"🛡️",label:"Risk",pro:true},
   {id:"back",     icon:"📉",label:"Backtest",pro:true},
-  {id:"latam",    icon:"🇨🇱",label:"Chile/LATAM"},
   {id:"divs",     icon:"💰",label:"Dividendos"},
   {id:"rebal",    icon:"🔀",label:"Rebalanceo"},
   {id:"alert",    icon:"🔔",label:"Alertas"}
@@ -1493,7 +1492,7 @@ function renderSidebar(){
 
   // Section: Herramientas
   html+='<div class="sb-section"><div class="sb-section-label">Herramientas</div>';
-  var tools=["latam","divs","rebal","alert"];
+  var tools=["divs","rebal","alert"];
   PAGES.filter(function(p){return tools.indexOf(p.id)>=0;}).forEach(function(p){
     var act=S.page===p.id?" act":"";
     var actionT="setPage('"+p.id+"')";
@@ -1533,7 +1532,7 @@ function renderMain(){
   if(!S.user){renderWelcome();return;}
   var plan=planOf();
   if(plan.locked.indexOf(S.page)>=0){renderPaywall();return;}
-  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:renderSentimentWidget,radar:renderRadar,ind:renderInd,risk:renderRisk,back:renderBack,latam:renderLatam,divs:renderDivs,rebal:renderRebal,alert:renderAlert};
+  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:renderSentimentWidget,radar:renderRadar,ind:renderInd,risk:renderRisk,back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert};
   (pages[S.page]||renderDash)();
 }
 
@@ -3873,9 +3872,6 @@ function showOnboarding(){
     {icon:'🤖',title:'AI Advisor — tu coach personal',
      desc:'Pregúntale a Claude sobre tu portfolio. Conoce tus posiciones exactas, el sentimiento del mercado y las noticias del día.',
      action:'Hablar con AI',fn:'toggleAI'},
-    {icon:'🇨🇱',title:'Hecho para Chile y LATAM',
-     desc:'Tipo de cambio USD/CLP en tiempo real. IPSA. Calculadora APV Régimen A vs B. Sin herramienta gringa tiene esto.',
-     action:'Ver Chile/LATAM',page:'latam'},
   ];
 
   var step=steps[ONBOARD.step];
@@ -3910,7 +3906,7 @@ function showOnboarding(){
 }
 
 function onboardNext(){
-  var steps=[{page:'port'},{page:'sig'},{page:'pb'},{fn:'toggleAI'},{page:'latam'}];
+  var steps=[{page:'port'},{page:'sig'},{page:'pb'},{fn:'toggleAI'}];
   var s=steps[ONBOARD.step];
   if(s.fn) window[s.fn]&&window[s.fn]();
   else if(s.page) S.page=s.page;
@@ -3939,7 +3935,7 @@ document.addEventListener('keydown',function(e){
   if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
   var map={
     'n':'news','d':'dash','p':'port','w':'watch','s':'sig',
-    'b':'pb','c':'comp','m':'sentiment','a':'coach','l':'latam',
+    'b':'pb','c':'comp','m':'sentiment','a':'coach',
     'i':'ind','r':'risk','k':'back','t':'alert'
   };
   if(e.key==='?' ){showShortcuts();return;}
@@ -3987,8 +3983,7 @@ function renderHelp(){
      a:'Yahoo Finance limita las requests. Si ves el badge naranja "Caché", los precios son de la última actualización exitosa (máx 2h). Presiona ↻ para intentar actualizar.'},
     {icon:'📐',q:'¿Cómo funciona el Position Builder?',
      a:'Ingresa ticker, precio de entrada, capital disponible y stop loss. Calcula automáticamente el tamaño de posición usando la Regla del 2% — nunca arriesgues más del 2% de tu capital en una sola operación.'},
-    {icon:'🇨🇱',q:'¿Cómo funciona la calculadora APV?',
-     a:'Ingresa tu renta bruta anual y aporte mensual. Régimen A te da un crédito fiscal del 15% ahora. Régimen B te permite retirar libre de impuestos al jubilarte. La recomendación se calcula según tu tramo de impuesto.'},
+    
     {icon:'🤖',q:'¿Cómo funciona el AI Advisor?',
      a:'El asistente conoce tu portfolio real (posiciones, P&L, señales activas, noticias). Hazle preguntas específicas como "¿Debo reducir NVDA?" o "¿Cómo me afecta la decisión de la Fed?".'},
     {icon:'💰',q:'¿Cuándo se actualizan los dividendos?',
@@ -4035,9 +4030,9 @@ function mUpgrade(mr){
     {name:"Carlos M.",role:"Trader independiente, Santiago",
      text:"El Position Builder me salvó de sobredimensionar una operación en NVDA. Nunca había tenido una herramienta así en español."},
     {name:"Valentina R.",role:"Inversora retail, Bogotá",
-     text:"La calculadora APV me mostró que el Régimen B era mejor para mi tramo. Ahorro $4M CLP al año en impuestos."},
+     text:"FinanceOS Invest me ayudó a entender cómo se comportan mis ETFs históricamente. Por fin tengo contexto real para tomar decisiones."},
     {name:"Diego F.",role:"Portafolio familiar, Lima",
-     text:"El AI Advisor me ayuda a entender cada noticia en contexto de MI portafolio. Antes leía Bloomberg sin entender el impacto."},
+     text:"El Análisis Comparativo me dio contexto que nunca había tenido sobre mis posiciones. Ahora entiendo el por qué detrás de cada movimiento."},
   ];
 
   var proFeatures=[
@@ -4051,7 +4046,7 @@ function mUpgrade(mr){
     ['📉','Backtesting Engine','Prueba estrategias históricas'],
     ['💰','Dividend Calendar','Proyección 12 meses de ingresos'],
     ['🔀','Rebalancing Tool','Calcula trades exactos'],
-    ['🇨🇱','Chile/LATAM','APV, IPSA, USD/CLP en tiempo real'],
+    
     ['⬇️','Export CSV','Datos para tu contador'],
   ];
 
@@ -4407,7 +4402,6 @@ async function compLoad(){
   COMP.loading=false;renderComp();
 }
 
-// ── CHILE / LATAM + APV ──────────────────────────────────────────
 var LATAM={usdClp:958,loading:false,lastUpdate:null};
 
 async function fetchUsdClpLatam(){
@@ -4450,163 +4444,6 @@ async function fetchUsdClpLatam(){
       }
     }
   }
-}
-
-function renderLatam(){
-  var fx=LATAM.usdClp;
-  var port=S.portfolio;
-  var totM=port.reduce(function(s,h){return s+h.sh*(getLivePrice(h.t)||h.cur||0);},0);
-  var totC=port.reduce(function(s,h){return s+h.sh*h.cost;},0);
-  var pnl=totM-totC;
-
-  var IPSA=[
-    {t:'SQM-B.SN',  name:'SQM B',       sector:'Minería'},
-    {t:'COPEC.SN',  name:'Copec',        sector:'Energía'},
-    {t:'FALABELLA.SN',name:'Falabella',  sector:'Retail'},
-    {t:'BCI.SN',    name:'BCI',          sector:'Banca'},
-    {t:'ECL.SN',    name:'ECL',          sector:'Utilities'},
-    {t:'CENCOSUD.SN',name:'Cencosud',    sector:'Retail'},
-    {t:'ENELAM.SN', name:'Enel Américas',sector:'Utilities'},
-    {t:'CCU.SN',    name:'CCU',          sector:'Consumo'},
-  ];
-
-  var ipsaRows=IPSA.map(function(s){
-    var lq=LIVE[s.t];var price=lq?lq.price:0;
-    var clp=price?fmt(Math.round(price*fx)):'—';
-    var chg=lq?((lq.changePct||0)*100).toFixed(2):null;
-    var pos=chg!==null&&parseFloat(chg)>=0;
-    var inW=S.watchlist.indexOf(s.t)>=0;
-    return '<tr class="trow"><td style="font-weight:600;color:var(--bright)">'+s.name+'</td>'+
-      '<td style="color:var(--text2);font-size:10px">'+s.t+'</td>'+
-      '<td style="color:var(--text2)">'+s.sector+'</td>'+
-      '<td style="font-weight:600;color:var(--white)">'+(price?'$'+fmtD(price):'—')+'</td>'+
-      '<td style="font-weight:600;color:var(--white)">'+(price?'$'+clp+' CLP':'—')+'</td>'+
-      (chg!==null?'<td style="color:'+(pos?'var(--green)':'var(--red)')+'">'+( pos?'+':'')+chg+'%</td>':'<td style="color:var(--text3)">—</td>')+
-      '<td><button class="btn" style="padding:2px 7px;font-size:10px" onclick="'+(inW?"rmWatch('"+s.t+"')":"addWatch('"+s.t+"')")+'">'+(inW?'✓ En lista':'+ Watch')+'</button></td></tr>';
-  }).join('');
-
-  var portClpRows=port.slice(0,8).map(function(h){
-    var cur=getLivePrice(h.t)||h.cur||0;
-    var mktCLP=h.sh*cur*fx;var pnlCLP=h.sh*(cur-h.cost)*fx;
-    return '<tr class="trow"><td style="font-weight:600;color:var(--bright)">'+h.t+'</td>'+
-      '<td>$'+fmtD(cur)+'</td>'+
-      '<td style="font-weight:600;color:var(--white)">$'+fmt(Math.round(mktCLP))+' CLP</td>'+
-      '<td style="color:'+(pnlCLP>=0?'var(--green)':'var(--red)')+';font-weight:600">'+
-      (pnlCLP>=0?'+':'')+fmt(Math.round(pnlCLP))+' CLP</td></tr>';
-  }).join('');
-
-  document.getElementById('main').innerHTML=
-    '<div class="ph"><div><h1>Chile / LATAM</h1>'+
-    '<p class="sub-txt">// Bolsa de Santiago · APV · USD/CLP · Mercado local</p></div>'+
-    '<div class="ph-right">'+
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 12px;display:flex;align-items:center;gap:8px">'+
-    '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">USD/CLP</span>'+
-    '<span style="font-size:16px;font-weight:700;color:var(--white);font-family:\'JetBrains Mono\',monospace">$'+fmt(Math.round(fx))+'</span>'+
-    '<button onclick="fetchUsdClpLatam().then(renderLatam)" class="btn" style="padding:2px 8px;font-size:10px">↻</button>'+
-    '</div></div></div>'+
-    '<div class="krow">'+
-    kpi('Portfolio USD',D(totM),(pnl>=0?'+':'')+D(pnl),pnl>=0?'g':'r')+
-    kpi('Portfolio CLP','$'+fmt(Math.round(totM*fx)),'Tipo cambio $'+fmt(Math.round(fx)),'b')+
-    kpi('P&L CLP','$'+(pnl>=0?'+':'')+fmt(Math.round(pnl*fx)),(pnl>=0?'+':'')+pct(pnl/(totC||1)),pnl>=0?'g':'r')+
-    kpi('Cash CLP','$'+fmt(Math.round((S.capital-totC)*fx)),'Disponible','a')+
-    '</div>'+
-    '<div class="cb" style="margin-bottom:14px">'+
-    '<div class="st"><div class="stbar"></div>Calculadora APV — Régimen A vs B</div>'+
-    '<div style="background:var(--orange-bg);border:1px solid var(--orange-bd);border-radius:8px;padding:11px;margin-bottom:14px;font-size:11px;color:var(--orange);font-family:\'JetBrains Mono\',monospace">'+
-    '💡 Régimen A = crédito 15% anual · Régimen B = retiro libre de impuestos al jubilarse</div>'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">'+
-    '<div><label style="display:block;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:\'JetBrains Mono\',monospace;margin-bottom:5px">Renta bruta anual ($CLP)</label>'+
-    '<input id="apv-renta" class="inp" style="width:100%" type="number" placeholder="30000000" value="30000000" oninput="calcAPV()"/></div>'+
-    '<div><label style="display:block;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:\'JetBrains Mono\',monospace;margin-bottom:5px">Aporte mensual APV ($CLP)</label>'+
-    '<input id="apv-aporte" class="inp" style="width:100%" type="number" placeholder="200000" value="200000" oninput="calcAPV()"/></div>'+
-    '<div><label style="display:block;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:\'JetBrains Mono\',monospace;margin-bottom:5px">Rentabilidad esperada (%)</label>'+
-    '<input id="apv-rent" class="inp" style="width:100%" type="number" placeholder="7" value="7" step="0.5" oninput="calcAPV()"/></div>'+
-    '</div>'+
-    '<div id="apv-results"></div>'+
-    '</div>'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+
-    '<div><div class="st"><div class="stbar"></div>Portfolio en Pesos Chilenos</div>'+
-    '<div class="tw"><table><thead><tr><th>Ticker</th><th>USD</th><th>Valor CLP</th><th>P&L CLP</th></tr></thead><tbody>'+portClpRows+'</tbody></table></div></div>'+
-    '<div><div class="st"><div class="stbar"></div>IPSA — Bolsa de Santiago</div>'+
-    '<div class="tw"><table><thead><tr><th>Empresa</th><th>Ticker</th><th>Sector</th><th>USD</th><th>CLP</th><th>Cambio</th><th></th></tr></thead><tbody>'+ipsaRows+'</tbody></table></div>'+
-    '<button onclick="loadIPSA()" class="btn" style="margin-top:8px">↻ Cargar precios IPSA</button>'+
-    '</div></div>';
-
-  setTimeout(calcAPV,50);
-  if(!LATAM.lastUpdate) fetchUsdClpLatam().then(renderLatam);
-}
-
-function calcAPV(){
-  var renta=parseFloat((document.getElementById('apv-renta')||{}).value)||30000000;
-  var aporte=parseFloat((document.getElementById('apv-aporte')||{}).value)||200000;
-  var rentPct=(parseFloat((document.getElementById('apv-rent')||{}).value)||7)/100;
-  var anual=aporte*12;
-  var tasa=renta>107000000?0.40:renta>80000000?0.35:renta>54000000?0.30:
-           renta>43000000?0.25:renta>21000000?0.20:renta>13000000?0.15:
-           renta>8000000?0.10:0.04;
-  var creditoA=anual*0.15;
-  var years=30;
-  var fondo=rentPct>0?anual*((Math.pow(1+rentPct,years)-1)/rentPct):anual*years;
-  var ahorroTotalA=creditoA*years;
-  var ahorroTotalB=fondo*tasa;
-  var recommended=tasa>=0.20?'Régimen B — Tu tramo hace el ahorro al retiro mayor':'Régimen A — El crédito del 15% es más conveniente';
-  var recColor=tasa>=0.20?'var(--green)':'var(--orange)';
-  var el=document.getElementById('apv-results');
-  if(!el) return;
-  el.innerHTML=
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'+
-    '<div style="background:var(--card2);border:1px solid '+(tasa<0.20?'var(--orange-bd)':'var(--border)')+';border-radius:9px;padding:14px">'+
-    '<div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:8px">Régimen A</div>'+
-    '<div style="display:flex;justify-content:space-between;font-size:11px;border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:5px"><span style="color:var(--text2)">Crédito anual</span><span style="font-weight:700;color:var(--green);font-family:\'JetBrains Mono\',monospace">+$'+fmt(Math.round(creditoA))+' CLP</span></div>'+
-    '<div style="display:flex;justify-content:space-between;font-size:11px;border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:5px"><span style="color:var(--text2)">Fondo a 30 años</span><span style="font-weight:700;color:var(--white);font-family:\'JetBrains Mono\',monospace">$'+fmt(Math.round(fondo/1e6))+'M CLP</span></div>'+
-    '<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text2)">Ahorro total</span><span style="font-weight:700;color:var(--green);font-family:\'JetBrains Mono\',monospace">$'+fmt(Math.round(ahorroTotalA/1e6))+'M CLP</span></div>'+
-    '</div>'+
-    '<div style="background:var(--card2);border:1px solid '+(tasa>=0.20?'var(--orange-bd)':'var(--border)')+';border-radius:9px;padding:14px">'+
-    '<div style="font-size:13px;font-weight:700;color:var(--white);margin-bottom:8px">Régimen B</div>'+
-    '<div style="display:flex;justify-content:space-between;font-size:11px;border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:5px"><span style="color:var(--text2)">Tu tramo impuesto</span><span style="font-weight:700;color:var(--white);font-family:\'JetBrains Mono\',monospace">'+(tasa*100).toFixed(0)+'%</span></div>'+
-    '<div style="display:flex;justify-content:space-between;font-size:11px;border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:5px"><span style="color:var(--text2)">Fondo a 30 años</span><span style="font-weight:700;color:var(--white);font-family:\'JetBrains Mono\',monospace">$'+fmt(Math.round(fondo/1e6))+'M CLP</span></div>'+
-    '<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--text2)">Impuesto ahorrado</span><span style="font-weight:700;color:var(--green);font-family:\'JetBrains Mono\',monospace">$'+fmt(Math.round(ahorroTotalB/1e6))+'M CLP</span></div>'+
-    '</div></div>'+
-    '<div style="background:var(--card2);border:1px solid var(--orange-bd);border-radius:8px;padding:11px;display:flex;align-items:center;gap:10px">'+
-    '<div style="font-size:22px">💡</div>'+
-    '<div><div style="font-size:12px;font-weight:700;color:'+recColor+';margin-bottom:2px">'+recommended+'</div>'+
-    '<div style="font-size:10px;color:var(--text2);font-family:\'JetBrains Mono\',monospace">Renta: $'+fmt(Math.round(renta/1e6))+'M · Aporte: $'+fmt(aporte)+'/mes · Rentabilidad: '+(rentPct*100).toFixed(1)+'%</div>'+
-    '</div></div>';
-}
-
-async function loadIPSA(){
-  var tickers=["SQM-B.SN","COPEC.SN","FALABELLA.SN","BCI.SN","ECL.SN","CENCOSUD.SN","ENELAM.SN","CCU.SN"];
-  var promises=tickers.map(function(t){return fetchQuote(t).then(function(q){if(q) LIVE[t]=q;}).catch(function(){});});
-  await Promise.all(promises);
-  renderLatam();
-}
-
-// ── DIVIDEND CALENDAR ────────────────────────────────────────────
-var DIVS={data:{},loading:false};
-
-async function loadDivData(){
-  if(DIVS.loading) return;
-  DIVS.loading=true;
-  var port=S.portfolio;
-  var promises=port.map(function(h){
-    if(DIVS.data[h.t]) return Promise.resolve();
-    var url='https://query1.finance.yahoo.com/v8/finance/chart/'+h.t+'?interval=1d&range=1y&events=dividends';
-    return fetchYF(url).then(function(json){
-      if(!json) return;
-      var res=json.chart&&json.chart.result&&json.chart.result[0];
-      if(!res) return;
-      var divs=res.events&&res.events.dividends;
-      var meta=res.meta||{};
-      DIVS.data[h.t]={
-        dividends:divs?Object.values(divs):[],
-        trailingAnnualDividendRate:meta.trailingAnnualDividendRate||0,
-        dividendRate:meta.dividendRate||0,
-      };
-    }).catch(function(){});
-  });
-  await Promise.all(promises);
-  DIVS.loading=false;
-  renderDivs();
 }
 
 function renderDivs(){
