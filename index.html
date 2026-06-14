@@ -1081,6 +1081,7 @@ function fetchWithTimeout(url,ms){
 async function fetchYF(url){
   var isVercel=window.location.hostname.includes('vercel.app')||
                window.location.hostname.includes('magnova.app')||
+               window.location.hostname.includes('financeospro.com')||
                window.location.hostname.includes('magnova-invest');
 
   // On Vercel: use our Edge Function proxy (fast, no CORS)
@@ -1201,6 +1202,7 @@ async function refreshLive(tickers,manual){
     var gotAny=false;
     var isVercel=window.location.hostname.includes('vercel.app')||
                  window.location.hostname.includes('magnova.app')||
+               window.location.hostname.includes('financeospro.com')||
                  window.location.hostname.includes('magnova-invest');
 
     if(isVercel){
@@ -4016,7 +4018,7 @@ function renderHelp(){
     '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>¿Necesitas más ayuda?</div>'+
     '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
-    '<a href="mailto:soporte@magnova.app" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);text-decoration:none;font-size:12px;font-family:\'JetBrains Mono\',monospace;transition:.15s" onmouseover="this.style.borderColor=\'var(--orange-bd)\'" onmouseout="this.style.borderColor=\'var(--border)\'">📧 soporte@magnova.app</a>'+
+    '<a href="mailto:maxnovaluciglobal@gmail.com" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);text-decoration:none;font-size:12px;font-family:\'JetBrains Mono\',monospace;transition:.15s" onmouseover="this.style.borderColor=\'var(--orange-bd)\'" onmouseout="this.style.borderColor=\'var(--border)\'">📧 maxnovaluciglobal@gmail.com</a>'+
     '<button onclick="showOnboarding()" class="btn">🎓 Re-iniciar tour</button>'+
     '<button onclick="showShortcuts()" class="btn">⌨️ Ver atajos</button>'+
     '</div></div>';
@@ -4408,6 +4410,7 @@ async function fetchUsdClpLatam(){
   // Try our Edge Function first on Vercel
   var isVercelFx=window.location.hostname.includes('vercel.app')||
                  window.location.hostname.includes('magnova.app')||
+               window.location.hostname.includes('financeospro.com')||
                  window.location.hostname.includes('magnova-invest');
   if(isVercelFx){
     try{
