@@ -664,11 +664,77 @@ tr:last-child td { border-bottom: none; }
 .welcome-wrap {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
   background: var(--bg);
-  padding: 24px;
+  padding: 0 24px 40px;
 }
+.welcome-hero {
+  width: 100%;
+  max-width: 900px;
+  padding: 64px 0 40px;
+  text-align: center;
+}
+.welcome-hero h1 {
+  font-size: clamp(28px, 5vw, 52px);
+  font-weight: 700;
+  color: var(--bright);
+  letter-spacing: -.03em;
+  line-height: 1.15;
+  margin-bottom: 14px;
+}
+.welcome-hero h1 span { color: var(--grn); }
+.welcome-hero p {
+  font-size: 16px;
+  color: var(--text2);
+  line-height: 1.65;
+  max-width: 520px;
+  margin: 0 auto 32px;
+}
+.welcome-feats {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 48px;
+}
+.welcome-feat {
+  background: var(--card);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  max-width: 220px;
+  text-align: left;
+  box-shadow: var(--shadow-sm);
+}
+.welcome-feat-icon { font-size: 22px; margin-bottom: 10px; }
+.welcome-feat h3 { font-size: 13px; font-weight: 600; color: var(--bright); margin-bottom: 5px; }
+.welcome-feat p { font-size: 12px; color: var(--text2); line-height: 1.5; margin: 0; }
+.welcome-plans {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 48px;
+}
+.welcome-plan {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-lg);
+  padding: 22px 24px;
+  min-width: 200px;
+  text-align: center;
+}
+.welcome-plan.featured {
+  border-color: var(--grn);
+  background: var(--grn-bg);
+}
+.welcome-plan-name { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 8px; }
+.welcome-plan.featured .welcome-plan-name { color: var(--grn); }
+.welcome-plan-price { font-size: 28px; font-weight: 700; color: var(--bright); letter-spacing: -.02em; }
+.welcome-plan-price sup { font-size: 14px; font-weight: 500; }
+.welcome-plan-price small { font-size: 13px; font-weight: 400; color: var(--text2); }
+.welcome-plan-desc { font-size: 12px; color: var(--text2); margin: 8px 0 0; line-height: 1.5; }
 .welcome-box {
   background: var(--card);
   border: 0.5px solid var(--border2);
@@ -876,6 +942,18 @@ tr:last-child td { border-bottom: none; }
 </style>
 </head>
 <body>
+<!-- Suite nav -->
+<div style="background:#0f1f17;border-bottom:0.5px solid rgba(255,255,255,.07);padding:7px 20px;display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:11px;position:sticky;top:0;z-index:9999">
+  <div style="display:flex;align-items:center;gap:16px">
+    <a href="https://financeospro.com" style="color:rgba(255,255,255,.45);text-decoration:none;letter-spacing:.3px" title="Volver al inicio">← financeospro.com</a>
+    <span style="color:rgba(255,255,255,.15)">·</span>
+    <span style="color:rgba(255,255,255,.6);letter-spacing:.5px">INVEST</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <a href="https://financeospro.com" style="color:rgba(255,255,255,.35);text-decoration:none;font-size:10px">FinanceOS Personal →</a>
+    <a href="https://demo.financeospro.com/app/?demo=true" target="_blank" style="color:rgba(255,255,255,.35);text-decoration:none;font-size:10px">Demo →</a>
+  </div>
+</div>
 <div class="app">
   <nav class="sb" id="sb"></nav>
   <div style="display:flex;flex-direction:column;flex:1">
@@ -901,7 +979,7 @@ tr:last-child td { border-bottom: none; }
 // ── USERS & PLANS ──────────────────────────────────────────────
 // USERS[] migrado a Supabase Auth — ver migrate-test-users.md
 const PLANS={
-  free:{label:"Free",maxT:5,maxA:3,maxS:5,locked:["ind","risk","back"],
+  free:{label:"Free",maxT:5,maxA:3,maxS:5,locked:["decision","ind","risk","back"],
     price:0,desc:"Portafolio básico · 5 activos · Señales limitadas"},
   trial:{label:"Trial",maxT:999,maxA:999,maxS:999,locked:[],
     price:0,desc:"14 días gratis · Todo incluido",trialDays:14},
@@ -953,12 +1031,14 @@ const PAGES=[
   {id:"comp",     icon:"⚖️",label:"Comparador"},
   {id:"sentiment",icon:"🌡",label:"Sentiment"},
   {id:"radar",    icon:"📡",label:"Radar Financiero"},
+  {id:"decision", icon:"🎯",label:"Decision Engine",pro:true},
   {id:"ind",      icon:"📈",label:"Indicadores",pro:true},
   {id:"risk",     icon:"🛡️",label:"Risk",pro:true},
   {id:"back",     icon:"📉",label:"Backtest",pro:true},
   {id:"divs",     icon:"💰",label:"Dividendos"},
   {id:"rebal",    icon:"🔀",label:"Rebalanceo"},
-  {id:"alert",    icon:"🔔",label:"Alertas"}
+  {id:"alert",    icon:"🔔",label:"Alertas"},
+  {id:"bitacora", icon:"📋",label:"Bitácora"}
 ];
 const NEWS_DATA=[
   {id:1,cat:"Fed",impact:"critical",breaking:true,
@@ -1046,8 +1126,43 @@ const S={
   sigFilter:"ALL",
   newsFilter:"Todo",
   modal:null,editPos:null,
-  nextId:10
+  nextId:10,
+  // ── BITÁCORA ──
+  trades:[],          // {id,ticker,type,date,price,qty,amount,rsi,note,pnl}
+  tradeFilter:{ticker:"ALL",type:"ALL"},
+  tradeNextId:1,
 };
+
+// ── TRADE PERSISTENCE (localStorage — no schema change needed) ──
+function persistTrades(){
+  try{var k='it_'+(S.user&&S.user.id||'demo');localStorage.setItem(k,JSON.stringify(S.trades));localStorage.setItem(k+'_nid',S.tradeNextId);}catch(e){}
+}
+function loadTrades(){
+  try{var k='it_'+(S.user&&S.user.id||'demo');S.trades=JSON.parse(localStorage.getItem(k)||'[]');S.tradeNextId=parseInt(localStorage.getItem(k+'_nid')||'1');}catch(e){S.trades=[];S.tradeNextId=1;}
+}
+
+// ── COST BASIS — weighted average per ticker from trade log ──
+function avgCostFromTrades(ticker){
+  var buys=S.trades.filter(function(t){return t.ticker===ticker&&t.type==='buy';});
+  if(!buys.length) return null;
+  var ts=0,tc=0;
+  buys.forEach(function(t){ts+=t.qty;tc+=t.amount;});
+  S.trades.filter(function(t){return t.ticker===ticker&&t.type==='sell';}).forEach(function(t){ts-=t.qty;});
+  return ts>0?tc/buys.reduce(function(s,t){return s+t.qty;},0):null;
+}
+function sharesFromTrades(ticker){
+  var s=0;
+  S.trades.forEach(function(t){if(t.ticker!==ticker)return;if(t.type==='buy')s+=t.qty;else if(t.type==='sell')s-=t.qty;});
+  return Math.max(0,s);
+}
+function realizedPnlFor(ticker){
+  var avgCost=null,shares=0,realized=0,buyCosts=[];
+  S.trades.filter(function(t){return t.ticker===ticker;}).sort(function(a,b){return a.id-b.id;}).forEach(function(t){
+    if(t.type==='buy'){buyCosts.push({qty:t.qty,price:t.amount/t.qty});shares+=t.qty;}
+    else if(t.type==='sell'){var cost=buyCosts.length?buyCosts.reduce(function(s,b){return s+b.price*b.qty;},0)/buyCosts.reduce(function(s,b){return s+b.qty;},0):0;realized+=(t.amount/t.qty-cost)*t.qty;shares-=t.qty;}
+  });
+  return realized;
+}
 
 
 
@@ -1316,6 +1431,18 @@ var TI={
       var std=Math.sqrt(sl.reduce(function(s,v){return s+(v-avg)*(v-avg);},0)/sl.length);
       return{mid:avg,upper:avg+m*std,lower:avg-m*std};
     });
+  },
+  atr:function(highs,lows,closes,n){
+    n=n||14;
+    var tr=highs.map(function(h,i){
+      if(i===0)return h-lows[i];
+      return Math.max(h-lows[i],Math.abs(h-closes[i-1]),Math.abs(lows[i]-closes[i-1]));
+    });
+    var result=[null];
+    var atr0=tr.slice(0,n).reduce(function(a,b){return a+b;},0)/n;
+    result.push(atr0);
+    for(var i=n;i<tr.length;i++){atr0=(atr0*(n-1)+tr[i])/n;result.push(atr0);}
+    return result;
   }
 };
 
@@ -1478,7 +1605,7 @@ function renderSidebar(){
 
   // Section: Analytics (Pro)
   html+='<div class="sb-section"><div class="sb-section-label">Análisis</div>';
-  var analytics=["ind","risk","back"];
+  var analytics=["decision","ind","risk","back"];
   PAGES.filter(function(p){return analytics.indexOf(p.id)>=0;}).forEach(function(p){
     var locked=u&&plan&&plan.locked.indexOf(p.id)>=0;
     var act=S.page===p.id?" act":"";
@@ -1529,12 +1656,208 @@ function renderSidebar(){
   document.getElementById("sb").innerHTML=html;
 }
 
+// ── DECISION ENGINE ────────────────────────────────────────────
+var DE_CACHE={regime:null,scores:{},lastFetch:0};
+
+async function deGetRegime(){
+  // Return from cache if < 30 min old
+  if(DE_CACHE.regime&&(Date.now()-DE_CACHE.lastFetch)<1800000)return DE_CACHE.regime;
+  var hist=await fetchHistory('SPY','1y');
+  if(!hist||hist.length<55){return{regime:'neutral',label:'Sin datos',color:'var(--text2)',spy:null,sma200:null};}
+  var closes=hist.map(function(d){return d.close;});
+  var sma200arr=TI.sma(closes,Math.min(200,closes.length));
+  var sma50arr =TI.sma(closes,Math.min(50,closes.length));
+  var last=closes[closes.length-1];
+  var s200=sma200arr[sma200arr.length-1];
+  var s50 =sma50arr[sma50arr.length-1];
+  var regime,label,color,emoji,desc;
+  var pct200=(last-s200)/s200;
+  if(last>s200&&s50>s200&&pct200>0.01){
+    regime='risk_on';label='Risk On';color='var(--green)';emoji='🟢';
+    desc='Precio y SMA50 sobre SMA200. Tendencia alcista confirmada.';
+  }else if(last<s200&&s50<s200){
+    regime='risk_off';label='Risk Off';color='var(--red)';emoji='🔴';
+    desc='Precio y SMA50 bajo SMA200. Mercado en tendencia bajista.';
+  }else{
+    regime='neutral';label='Neutral';color='var(--orange)';emoji='🟡';
+    desc='SPY entre SMA50 y SMA200. Zona de transición — mayor cautela.';
+  }
+  var result={regime:regime,label:label,color:color,emoji:emoji,desc:desc,spy:last,sma200:s200,sma50:s50,pct200:pct200,hist:hist};
+  DE_CACHE.regime=result;DE_CACHE.lastFetch=Date.now();
+  return result;
+}
+
+async function deScoreTicker(ticker){
+  if(DE_CACHE.scores[ticker]&&(Date.now()-DE_CACHE.lastFetch)<1800000)return DE_CACHE.scores[ticker];
+  var hist=await fetchHistory(ticker,'1y');
+  if(!hist||hist.length<30)return null;
+  var closes=hist.map(function(d){return d.close;});
+  var highs=hist.map(function(d){return d.high;});
+  var lows=hist.map(function(d){return d.low;});
+  var vols=hist.map(function(d){return d.vol;});
+  var last=closes[closes.length-1];
+  var score=0;var signals=[];
+
+  // 1. Trend vs SMA200 (30pts)
+  if(closes.length>=200){
+    var s200=TI.sma(closes,200);var v200=s200[s200.length-1];
+    var pct=(last-v200)/v200;
+    if(last>v200){
+      var pts=pct>0.15?15:pct>0.05?22:30;score+=pts;
+      signals.push(pct<0.05?'✅ Sobre SMA200 (cerca)':'✅ Sobre SMA200');
+    }else{score+=5;signals.push('⚠️ Bajo SMA200');}
+  }
+
+  // 2. RSI position (25pts — ideal 40-60)
+  var rsiArr=TI.rsi(closes);var rsi=rsiArr[rsiArr.length-1];
+  if(rsi>=40&&rsi<=60){score+=25;signals.push('✅ RSI neutro ('+rsi.toFixed(0)+')');}
+  else if(rsi<40){score+=20;signals.push('✅ RSI oversold ('+rsi.toFixed(0)+') — posible rebote');}
+  else if(rsi>70){score+=5;signals.push('⚠️ RSI sobrecomprado ('+rsi.toFixed(0)+')');}
+  else{score+=12;signals.push('📊 RSI '+rsi.toFixed(0));}
+
+  // 3. MACD momentum (20pts)
+  var macd=TI.macd(closes);var mhist=macd.hist;
+  var mLast=mhist[mhist.length-1];var mPrev=mhist[mhist.length-2];
+  if(mLast>0&&mLast>mPrev){score+=20;signals.push('✅ MACD alcista y acelerando');}
+  else if(mLast>0){score+=14;signals.push('📊 MACD positivo');}
+  else if(mLast<0&&mLast>mPrev){score+=10;signals.push('📊 MACD recuperando');}
+  else{score+=3;signals.push('⚠️ MACD negativo');}
+
+  // 4. Volume confirmation (25pts)
+  var avgVol=vols.slice(-20).reduce(function(a,b){return a+b;},0)/20;
+  var lastVol=vols[vols.length-1];
+  var volRatio=lastVol/avgVol;
+  var priceUp=last>closes[closes.length-2];
+  if(priceUp&&volRatio>1.2){score+=25;signals.push('✅ Volumen alto en alza ('+volRatio.toFixed(1)+'x)');}
+  else if(!priceUp&&volRatio>1.2){score+=8;signals.push('⚠️ Volumen alto en baja');}
+  else{score+=15;signals.push('📊 Volumen normal ('+volRatio.toFixed(1)+'x)');}
+
+  // ATR-based entry/stop/target
+  var atrArr=TI.atr(highs,lows,closes,14);var atr=atrArr[atrArr.length-1]||last*0.02;
+  var entry=parseFloat((last*(1-0.005)).toFixed(2));
+  var stop =parseFloat((last-atr*1.5).toFixed(2));
+  var target=parseFloat((last+atr*3).toFixed(2));
+  var rr=((target-entry)/(entry-stop)).toFixed(1);
+
+  var action=score>=75?'Acumular':score>=55?'Mantener/Vigilar':score>=35?'Esperar':'Evitar';
+  var actionColor=score>=75?'var(--green)':score>=55?'var(--blue)':score>=35?'var(--orange)':'var(--red)';
+
+  var result={ticker:ticker,score:Math.min(100,score),signals:signals,rsi:rsi.toFixed(0),action:action,actionColor:actionColor,entry:entry,stop:stop,target:target,rr:rr,last:last};
+  DE_CACHE.scores[ticker]=result;
+  return result;
+}
+
+function renderDecisionEngine(){
+  var main=document.getElementById('main');
+  main.innerHTML='<div class="ph"><div><h1>🎯 Decision Engine</h1><p class="sub-txt">// Régimen de mercado · Accumulation scores · Entry/Stop/Target por activo</p></div></div>'+
+    '<div id="de-body" style="padding:0 20px 40px"><div style="color:var(--text3);font-size:13px;padding:40px 0;text-align:center">Cargando datos de mercado…</div></div>';
+
+  var DEFAULT_TICKERS=['SPY','QQQ','AAPL','NVDA','MSFT','AMZN','GLD','BTC-USD'];
+  var tickers=[];
+  S.watchlist.forEach(function(w){if(tickers.indexOf(w.ticker)<0)tickers.push(w.ticker);});
+  S.portfolio.forEach(function(p){if(tickers.indexOf(p.t)<0)tickers.push(p.t);});
+  var usingDefaults=!tickers.length;
+  if(usingDefaults)tickers=DEFAULT_TICKERS;
+
+  Promise.all([deGetRegime()].concat(tickers.map(function(t){return deScoreTicker(t);})))
+  .then(function(results){
+    var regime=results[0];
+    var scores=results.slice(1).filter(Boolean).sort(function(a,b){return b.score-a.score;});
+    var regimeBg=regime.regime==='risk_on'?'rgba(15,180,100,.08)':regime.regime==='risk_off'?'rgba(220,50,50,.08)':'rgba(234,179,8,.08)';
+    var regimeBd=regime.regime==='risk_on'?'rgba(15,180,100,.25)':regime.regime==='risk_off'?'rgba(220,50,50,.25)':'rgba(234,179,8,.25)';
+
+    var spyLine='';
+    if(regime.spy){
+      spyLine='<div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:10px;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text2)">'+
+        '<span>SPY <b style="color:var(--bright)">$'+regime.spy.toFixed(2)+'</b></span>'+
+        '<span>SMA200 <b style="color:'+regime.color+'">$'+regime.sma200.toFixed(2)+'</b></span>'+
+        '<span>SMA50 <b style="color:var(--blue)">$'+regime.sma50.toFixed(2)+'</b></span>'+
+        '<span>Δ200 <b style="color:'+(regime.pct200>=0?'var(--green)':'var(--red)')+'">'+( regime.pct200>=0?'+':'')+( regime.pct200*100).toFixed(1)+'%</b></span>'+
+        '</div>';
+    }
+
+    var regimeCard='<div style="background:'+regimeBg+';border:1px solid '+regimeBd+';border-radius:14px;padding:20px 22px;margin-bottom:20px">'+
+      '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">'+
+      '<div style="font-size:36px">'+regime.emoji+'</div>'+
+      '<div>'+
+      '<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-bottom:3px">Régimen de Mercado (SPY)</div>'+
+      '<div style="font-size:22px;font-weight:700;color:'+regime.color+';letter-spacing:-.5px">'+regime.label+'</div>'+
+      '<div style="font-size:12px;color:var(--text2);margin-top:4px">'+regime.desc+'</div>'+
+      '</div>'+
+      '<div style="margin-left:auto;text-align:right">'+
+      '<div style="font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3)">Estrategia sugerida</div>'+
+      '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-top:3px">'+
+      (regime.regime==='risk_on'?'Acumular posiciones de calidad':regime.regime==='risk_off'?'Reducir exposición · Cash/Bonds':'Posiciones pequeñas · Selectivo')+
+      '</div></div></div>'+spyLine+'</div>';
+
+    var actionGuide='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">'+
+      [['🟢','Acumular','≥75','Señal fuerte de entrada'],['🔵','Vigilar','55–74','En watchlist activo'],['🟡','Esperar','35–54','No es momento'],['🔴','Evitar','<35','Fuera de criterio']].map(function(g){
+        return '<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center">'+
+          '<div style="font-size:18px;margin-bottom:4px">'+g[0]+'</div>'+
+          '<div style="font-size:11px;font-weight:600;color:var(--bright)">'+g[1]+'</div>'+
+          '<div style="font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3)">Score '+g[2]+'</div>'+
+          '<div style="font-size:10px;color:var(--text2);margin-top:2px">'+g[3]+'</div></div>';
+      }).join('')+'</div>';
+
+    var scoresHtml='<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Análisis por activo</div>';
+    if(usingDefaults){
+      scoresHtml+='<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:12px;padding:8px 12px;background:rgba(255,255,255,.03);border-radius:7px">'+
+        'Mostrando activos de referencia. <span onclick="setPage(\'watch\')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Agrega tu Watchlist</span> o Portfolio para ver tus propios activos.</div>';
+    }
+    if(!scores.length){
+      scoresHtml+='<div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;color:var(--text3);font-size:12px">No se pudieron cargar datos. Verifica tu conexión.</div>';
+    }else{
+      scoresHtml+='<div style="display:flex;flex-direction:column;gap:10px">';
+      scores.forEach(function(s){
+        var sc=s.score;
+        var barColor=sc>=75?'var(--green)':sc>=55?'var(--blue)':sc>=35?'var(--orange)':'var(--red)';
+        scoresHtml+='<div style="background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 16px">'+
+          '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'+
+          '<div style="font-size:15px;font-weight:700;color:var(--bright);min-width:52px;font-family:\'JetBrains Mono\',monospace">'+s.ticker+'</div>'+
+          '<div style="flex:1;min-width:100px">'+
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'+
+          '<span style="font-size:11px;color:var(--text3)">Score</span>'+
+          '<span style="font-size:13px;font-weight:700;color:'+barColor+'">'+sc+'/100</span>'+
+          '</div>'+
+          '<div style="height:5px;background:var(--card3,rgba(255,255,255,.06));border-radius:3px;overflow:hidden">'+
+          '<div style="height:100%;width:'+sc+'%;background:'+barColor+';border-radius:3px;transition:width .4s ease"></div>'+
+          '</div></div>'+
+          '<div style="text-align:center;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid;border-color:'+s.actionColor+';color:'+s.actionColor+'">'+s.action+'</div>'+
+          '<div style="margin-left:auto;text-align:right;font-family:\'JetBrains Mono\',monospace;font-size:10px">'+
+          '<div style="color:var(--text3)">Precio actual</div>'+
+          '<div style="color:var(--bright);font-size:12px;font-weight:600">$'+s.last.toFixed(2)+'</div>'+
+          '</div>'+
+          '</div>'+
+          // ATR levels row
+          '<div style="display:flex;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap">'+
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px"><span style="color:var(--text3)">Entrada</span><br><b style="color:var(--blue)">$'+s.entry+'</b></div>'+
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px"><span style="color:var(--text3)">Stop</span><br><b style="color:var(--red)">$'+s.stop+'</b></div>'+
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px"><span style="color:var(--text3)">Target</span><br><b style="color:var(--green)">$'+s.target+'</b></div>'+
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px"><span style="color:var(--text3)">R/R</span><br><b style="color:var(--bright)">'+s.rr+'x</b></div>'+
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px"><span style="color:var(--text3)">RSI</span><br><b style="color:var(--text2)">'+s.rsi+'</b></div>'+
+          '<div style="flex:1;font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--text3)">'+s.signals.slice(0,2).join(' · ')+'</div>'+
+          '</div>'+
+          '</div>';
+      });
+      scoresHtml+='</div>';
+    }
+
+    var disclaimer='<div style="margin-top:20px;padding:12px 16px;background:rgba(255,255,255,.03);border-radius:8px;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);line-height:1.6">'+
+      '⚠ Análisis educativo generado automáticamente con indicadores técnicos. No constituye asesoría financiera. '+
+      'Entry/Stop/Target son niveles de referencia basados en ATR(14), no señales de compra/venta. Siempre haz tu propia investigación.</div>';
+
+    document.getElementById('de-body').innerHTML=regimeCard+actionGuide+scoresHtml+disclaimer;
+  }).catch(function(err){
+    document.getElementById('de-body').innerHTML='<div style="color:var(--red);font-size:12px;padding:20px">Error al cargar datos: '+err.message+'</div>';
+  });
+}
+
 // ── MAIN ROUTER ────────────────────────────────────────────────
 function renderMain(){
   if(!S.user){renderWelcome();return;}
   var plan=planOf();
   if(plan.locked.indexOf(S.page)>=0){renderPaywall();return;}
-  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:renderSentimentWidget,radar:renderRadar,ind:renderInd,risk:renderRisk,back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert};
+  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:renderSentimentWidget,radar:renderRadar,decision:renderDecisionEngine,ind:renderInd,risk:renderRisk,back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora};
   (pages[S.page]||renderDash)();
 }
 
@@ -1542,17 +1865,49 @@ function renderMain(){
 function renderWelcome(){
   document.getElementById('main').innerHTML=
     '<div class="welcome-wrap">'+
-    '<div class="welcome-box">'+
+    // ── HERO ──
+    '<div class="welcome-hero">'+
+    '<div style="display:inline-flex;align-items:center;gap:8px;background:var(--grn-bg);border:1px solid var(--grn-lt);border-radius:20px;padding:5px 14px;margin-bottom:22px">'+
+    '<div style="width:7px;height:7px;border-radius:50%;background:var(--grn)"></div>'+
+    '<span style="font-size:11px;font-family:\'JetBrains Mono\',monospace;color:var(--grn);letter-spacing:.5px">BETA · LATAM</span>'+
+    '</div>'+
+    '<h1>Analiza. Decide.<br><span>Invierte con criterio.</span></h1>'+
+    '<p>Portfolio, señales técnicas, gestión de riesgo y contexto macro — en una sola plataforma para inversores de LATAM.</p>'+
+    '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:0">'+
+    '<button onclick="renderRegister()" class="btn-big" style="padding:12px 28px;font-size:14px">Empezar trial gratis — 14 días →</button>'+
+    '<button onclick="document.getElementById(\'login-anchor\').scrollIntoView({behavior:\'smooth\'})" class="btn" style="padding:12px 20px;font-size:14px">Ya tengo cuenta</button>'+
+    '</div>'+
+    '<p style="font-size:11px;color:var(--text3);margin:10px 0 0;font-family:\'JetBrains Mono\',monospace">Sin tarjeta de crédito · Cancela en 1 click</p>'+
+    '</div>'+
+    // ── FEATURES ──
+    '<div class="welcome-feats">'+
+    '<div class="welcome-feat"><div class="welcome-feat-icon">📊</div><h3>Portfolio Manager</h3><p>Seguimiento en tiempo real de tus posiciones, P&L y asset allocation.</p></div>'+
+    '<div class="welcome-feat"><div class="welcome-feat-icon">🎯</div><h3>Señales técnicas</h3><p>RSI, MACD, Bandas de Bollinger y más sobre datos reales de mercado.</p></div>'+
+    '<div class="welcome-feat"><div class="welcome-feat-icon">🛡️</div><h3>Gestión de riesgo</h3><p>Position sizing automático, Bull/Bear/Black Swan y R/R por activo.</p></div>'+
+    '<div class="welcome-feat"><div class="welcome-feat-icon">⚙️</div><h3>Backtesting</h3><p>Prueba tus estrategias sobre datos históricos reales antes de ejecutar.</p></div>'+
+    '</div>'+
+    // ── PLANS ──
+    '<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Planes</div>'+
+    '<div class="welcome-plans">'+
+    '<div class="welcome-plan">'+
+    '<div class="welcome-plan-name">Free</div>'+
+    '<div class="welcome-plan-price"><sup>$</sup>0<small>/mes</small></div>'+
+    '<div class="welcome-plan-desc">5 activos · 3 alertas · 5 señales<br>Sin indicadores avanzados</div>'+
+    '</div>'+
+    '<div class="welcome-plan featured">'+
+    '<div class="welcome-plan-name">Pro · 14 días gratis</div>'+
+    '<div class="welcome-plan-price"><sup>$</sup>29<small>.99/mes</small></div>'+
+    '<div class="welcome-plan-desc">Todo ilimitado · AI Advisor<br>Indicadores, Risk y Backtest</div>'+
+    '</div>'+
+    '</div>'+
+    // ── LOGIN BOX ──
+    '<div id="login-anchor" class="welcome-box">'+
     '<div class="welcome-logo">'+
     '<div class="welcome-icon">F</div>'+
     '<div>'+
-    '<div class="welcome-title">FinanceOS Invest</div>'+
-    '<div class="welcome-sub">by MAXNOVA & LUCI Global LLC</div>'+
+    '<div class="welcome-title">Iniciar sesión</div>'+
+    '<div class="welcome-sub">FinanceOS Invest</div>'+
     '</div></div>'+
-    '<div style="margin-bottom:22px">'+
-    '<div style="font-size:13px;font-weight:500;color:var(--bright);margin-bottom:4px">Bienvenido</div>'+
-    '<div style="font-size:11px;color:var(--text2);line-height:1.5">Plataforma de análisis de inversiones para LATAM. Señales técnicas, gestión de portfolio y contexto macro en un solo lugar.</div>'+
-    '</div>'+
     '<div class="form-group">'+
     '<label class="form-label">Email</label>'+
     '<input id="le" class="inp" type="email" placeholder="tu@email.com" onkeydown="if(event.keyCode===13)doLogin()"/>'+
@@ -1564,11 +1919,13 @@ function renderWelcome(){
     '</div>'+
     '<button id="lbtn" onclick="doLogin()" class="btn-big" style="width:100%;justify-content:center;padding:10px">Entrar</button>'+
     '<div style="margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border);text-align:center">'+
-    '<button onclick="renderRegister()" class="btn" style="width:100%;justify-content:center">Crear cuenta nueva</button>'+
+    '<button onclick="renderRegister()" class="btn" style="width:100%;justify-content:center">Crear cuenta — 14 días gratis →</button>'+
     '</div>'+
-    '<div style="margin-top:16px;font-size:10px;color:var(--text3);text-align:center;line-height:1.6;font-family:monospace">'+
-    'Las señales son educativas. No constituyen asesoría financiera.</div>'+
-    '</div></div>';
+    '<div style="margin-top:16px;font-size:10px;color:var(--text3);text-align:center;line-height:1.6;font-family:\'JetBrains Mono\',monospace">'+
+    'Análisis educativo. No constituye asesoría financiera.</div>'+
+    '</div>'+
+    '<div style="margin-top:32px;font-size:11px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">© 2026 MAXNOVA & LUCI Global LLC · <a href="https://financeospro.com" style="color:var(--text3)">financeospro.com</a></div>'+
+    '</div>';
 }
 
 function renderRegister(){
@@ -1579,7 +1936,7 @@ function renderRegister(){
     '<div class="welcome-icon">F</div>'+
     '<div>'+
     '<div class="welcome-title">Crear cuenta</div>'+
-    '<div class="welcome-sub">FinanceOS Invest · Plan Free</div>'+
+    '<div class="welcome-sub">14 días Pro gratis · sin tarjeta</div>'+
     '</div></div>'+
     '<div class="form-group">'+
     '<label class="form-label">Nombre</label>'+
@@ -1601,7 +1958,7 @@ function renderRegister(){
     'ni recomendación de inversión.</label>'+
     '</div>'+
     '<div id="rerr" class="form-error">Error</div>'+
-    '<button id="rbtn" onclick="doRegister()" class="btn-big" style="width:100%;justify-content:center;padding:10px">Crear cuenta</button>'+
+    '<button id="rbtn" onclick="doRegister()" class="btn-big" style="width:100%;justify-content:center;padding:10px">Activar trial gratis →</button>'+
     '<div style="margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border);text-align:center">'+
     '<button onclick="renderWelcome()" class="btn" style="width:100%;justify-content:center">Ya tengo cuenta</button>'+
     '</div>'+
@@ -1620,7 +1977,7 @@ function renderPaywall(){
     '<div class="pw"><div style="font-size:36px;margin-bottom:12px">🔒</div>'+
     '<h2 style="margin-bottom:6px">'+m.t+'</h2>'+
     '<div style="margin-bottom:20px">'+feats+'</div>'+
-    '<button class="btn-big" onclick="openModal(\'upgrade\')">⚡ Upgrade a Pro — $29.99/mes</button></div>';
+    '<button class="btn-big" onclick="openModal(\'upgrade\')">⚡ Upgrade a Pro — 14 días gratis</button></div>';
 }
 
 // ── DASHBOARD ──────────────────────────────────────────────────
@@ -1679,6 +2036,7 @@ function renderDash(){
     kpi("Cash",D(S.capital-totC),"Disponible","a")+
     kpi("Posiciones",port.length+(plan.maxT<999?"/"+S.portfolio.length:""),"","b")+
     '</div>'+
+    '<div id="de-regime-banner"></div>'+
     '<div class="st"><div class="stbar"></div>Top Señales</div>'+
     '<div class="tw"><table><thead><tr><th>Asset</th><th>Signal</th><th>Score</th><th>Fuerza</th><th>Precio</th><th>Stop</th></tr></thead>'+
     '<tbody>'+sigRows+'</tbody></table></div>'+
@@ -1692,7 +2050,7 @@ function renderDash(){
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
     [['📐','Position Builder','Nivel de referencia · R/R','pb'],
      ['🌡','Sentiment','Fear & Greed propio','sentiment'],
-     ['🤖','AI Coach','Reporte semanal IA','coach'],
+     ['🎯','Decision Engine','Régimen + scores de activos','decision'],
      ['📊','Indicadores Pro','RSI · MACD · BB','ind']
     ].map(function(item){
       return '<div onclick="setPage(\''+item[3]+'\')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor=\'var(--orange-bd)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
@@ -1701,6 +2059,23 @@ function renderDash(){
         '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">'+item[2]+'</div></div>';
     }).join('')+
     '</div></div></div>';
+
+  // Async regime banner — doesn't block dashboard render
+  if(S.user&&S.user.plan!=='free'){
+    deGetRegime().then(function(r){
+      var el=document.getElementById('de-regime-banner');
+      if(!el)return;
+      var bg=r.regime==='risk_on'?'rgba(15,180,100,.07)':r.regime==='risk_off'?'rgba(220,50,50,.07)':'rgba(234,179,8,.07)';
+      var bd=r.regime==='risk_on'?'rgba(15,180,100,.2)':r.regime==='risk_off'?'rgba(220,50,50,.2)':'rgba(234,179,8,.2)';
+      el.innerHTML='<div onclick="setPage(\'decision\')" style="cursor:pointer;display:flex;align-items:center;gap:10px;background:'+bg+';border:1px solid '+bd+';border-radius:10px;padding:10px 14px;margin-bottom:14px;transition:.15s" onmouseover="this.style.opacity=\'.8\'" onmouseout="this.style.opacity=\'1\'">'+
+        '<span style="font-size:18px">'+r.emoji+'</span>'+
+        '<div style="flex:1"><span style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Régimen de Mercado (SPY) · </span>'+
+        '<span style="font-size:12px;font-weight:700;color:'+r.color+'">'+r.label+'</span>'+
+        '<span style="font-size:11px;color:var(--text3)"> — '+r.desc+'</span></div>'+
+        '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Ver análisis →</span>'+
+        '</div>';
+    }).catch(function(){/* silently skip if no data */});
+  }
 }
 
 // ── PORTFOLIO ──────────────────────────────────────────────────
@@ -1762,6 +2137,7 @@ function renderPort(){
     '</tbody></table></div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
     '<button class="btn" onclick="openModal(\'addpos\')">+ Nueva posición</button>'+
+    '<button class="btn" onclick="openModal(\'addtrade\')">📋 Registrar operación</button>'+
     '<button class="btn" onclick="exportCSV()">⬇ Export CSV</button>'+
     '<button class="btn" style="border-color:var(--border);color:var(--text3)" onclick="resetPort()">↺ Restaurar demo</button>'+
     '</div>';
@@ -1777,6 +2153,129 @@ function resetPort(){
   }
 }
 
+// ── BITÁCORA (Transaction Log) ─────────────────────────────────
+function renderBitacora(){
+  loadTrades();
+  var trades=S.trades.slice().sort(function(a,b){return b.id-a.id;});
+
+  // Apply filters
+  if(S.tradeFilter.ticker!=="ALL") trades=trades.filter(function(t){return t.ticker===S.tradeFilter.ticker;});
+  if(S.tradeFilter.type!=="ALL") trades=trades.filter(function(t){return t.type===S.tradeFilter.type;});
+
+  // Summary stats
+  var totalInvested=S.trades.filter(function(t){return t.type==='buy';}).reduce(function(s,t){return s+t.amount;},0);
+  var totalRealized=S.trades.filter(function(t){return t.type==='sell'&&t.pnl;}).reduce(function(s,t){return s+(t.pnl||0);},0);
+  var totalDivs=S.trades.filter(function(t){return t.type==='dividend';}).reduce(function(s,t){return s+t.amount;},0);
+  var totalCash=S.trades.reduce(function(s,t){
+    if(t.type==='deposit') return s+t.amount;
+    if(t.type==='withdrawal') return s-t.amount;
+    if(t.type==='buy') return s-t.amount;
+    if(t.type==='sell') return s+t.amount;
+    if(t.type==='dividend') return s+t.amount;
+    return s;
+  },S.capital);
+
+  // Unique tickers for filter
+  var tickers=["ALL"].concat(Array.from(new Set(S.trades.map(function(t){return t.ticker||'—';}))).filter(function(x){return x!=='—';}));
+
+  var typeLabel={buy:'🟢 Compra',sell:'🔴 Venta',deposit:'💵 Depósito',withdrawal:'💸 Retiro',dividend:'💰 Dividendo'};
+  var typeColor={buy:'var(--grn)',sell:'var(--red)',deposit:'var(--blue)',withdrawal:'var(--amber)',dividend:'var(--grn)'};
+
+  var rows=trades.length?trades.map(function(t){
+    var tc=typeColor[t.type]||'var(--text)';
+    var tl=typeLabel[t.type]||t.type;
+    var pnlHtml=t.pnl!=null?'<span style="color:'+(t.pnl>=0?'var(--grn)':'var(--red)')+';">'+(t.pnl>=0?'+':'')+'$'+fmt(t.pnl)+'</span>':'—';
+    return '<tr>'+
+      '<td style="color:var(--text2);font-size:11px">'+t.date+'</td>'+
+      '<td style="font-weight:700;color:var(--bright)">'+(t.ticker||'—')+'</td>'+
+      '<td><span style="font-size:10px;font-weight:600;color:'+tc+'">'+tl+'</span></td>'+
+      '<td>'+(t.price?'$'+fmtD(t.price):'—')+'</td>'+
+      '<td>'+(t.qty?fmtD(t.qty):'—')+'</td>'+
+      '<td style="font-weight:600">$'+fmt(t.amount)+'</td>'+
+      '<td style="font-size:10px;color:var(--text3)">'+(t.rsi||'—')+'</td>'+
+      '<td>'+pnlHtml+'</td>'+
+      '<td style="font-size:10px;color:var(--text2);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(t.note||'')+'</td>'+
+      '<td><button class="btn btn-r" style="padding:2px 6px;font-size:10px" onclick="deleteTrade('+t.id+')">🗑</button></td>'+
+      '</tr>';
+  }).join(""):'<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text3)">Sin operaciones registradas todavía.<br><span style="font-size:11px">Usá el botón "Registrar operación" en Portfolio.</span></td></tr>';
+
+  document.getElementById("main").innerHTML=
+    '<div class="ph">'+
+    '<div><h1>📋 Bitácora</h1><p class="sub-txt">// Historial completo de operaciones · P&L realizado</p></div>'+
+    '<div class="ph-right">'+
+    '<button class="btn" onclick="openModal(\'addtrade\')">+ Registrar operación</button>'+
+    '<button class="btn" style="margin-left:6px" onclick="exportTradesCSV()">⬇ CSV</button>'+
+    '</div></div>'+
+
+    // KPI summary
+    '<div class="krow">'+
+    kpi("Total Invertido","$"+fmt(totalInvested),"acumulado","b")+
+    kpi("P&L Realizado",(totalRealized>=0?"+":"")+"$"+fmt(totalRealized),"ventas cerradas",totalRealized>=0?"g":"r")+
+    kpi("Dividendos Recib.","$"+fmt(totalDivs),"cobrados","g")+
+    kpi("Cash Disponible","$"+fmt(Math.max(0,totalCash)),"estimado","a")+
+    kpi("Operaciones",S.trades.length,"registradas","b")+
+    '</div>'+
+
+    // Filters
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">'+
+    '<span style="font-size:11px;color:var(--text2)">Filtrar:</span>'+
+    '<select class="inp" style="width:auto;padding:4px 8px;font-size:11px" onchange="S.tradeFilter.ticker=this.value;renderBitacora()">'+
+    tickers.map(function(t){return '<option value="'+t+'"'+(S.tradeFilter.ticker===t?' selected':'')+'>'+t+'</option>';}).join("")+
+    '</select>'+
+    '<select class="inp" style="width:auto;padding:4px 8px;font-size:11px" onchange="S.tradeFilter.type=this.value;renderBitacora()">'+
+    ['ALL','buy','sell','deposit','withdrawal','dividend'].map(function(v){
+      var l={ALL:'Todos los tipos',buy:'Compras',sell:'Ventas',deposit:'Depósitos',withdrawal:'Retiros',dividend:'Dividendos'};
+      return '<option value="'+v+'"'+(S.tradeFilter.type===v?' selected':'')+'>'+l[v]+'</option>';
+    }).join("")+
+    '</select>'+
+    (S.tradeFilter.ticker!=='ALL'||S.tradeFilter.type!=='ALL'?'<button class="btn" style="font-size:10px;padding:3px 8px" onclick="S.tradeFilter={ticker:\'ALL\',type:\'ALL\'};renderBitacora()">✕ Limpiar</button>':'')+
+    '</div>'+
+
+    // Table
+    '<div class="tw"><table><thead><tr>'+
+    '<th>Fecha</th><th>Ticker</th><th>Tipo</th><th>Precio</th><th>Qty</th><th>Monto</th><th>RSI</th><th>P&L</th><th>Nota</th><th></th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+
+    // Per-ticker cost basis summary
+    (S.trades.length?'<div style="margin-top:18px"><h3 style="font-size:13px;margin-bottom:10px;color:var(--text2)">Costo promedio ponderado por posición</h3>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+    Array.from(new Set(S.trades.filter(function(t){return t.type==='buy';}).map(function(t){return t.ticker;}))).map(function(tkr){
+      var buys=S.trades.filter(function(t){return t.ticker===tkr&&t.type==='buy';});
+      var sells=S.trades.filter(function(t){return t.ticker===tkr&&t.type==='sell';});
+      var totalQ=buys.reduce(function(s,t){return s+t.qty;},0)-sells.reduce(function(s,t){return s+t.qty;},0);
+      var totalAmt=buys.reduce(function(s,t){return s+t.amount;},0);
+      var avgCost=buys.reduce(function(s,t){return s+t.qty;},0)>0?totalAmt/buys.reduce(function(s,t){return s+t.qty;},0):0;
+      var realPnl=realizedPnlFor(tkr);
+      if(totalQ<=0&&realPnl===0) return '';
+      return '<div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:10px 14px;min-width:150px">'+
+        '<div style="font-weight:700;color:var(--bright);margin-bottom:4px">'+tkr+'</div>'+
+        '<div style="font-size:10px;color:var(--text2)">Costo prom: <b style="color:var(--bright)">$'+fmtD(avgCost)+'</b></div>'+
+        '<div style="font-size:10px;color:var(--text2)">Shares: <b>'+fmtD(totalQ)+'</b></div>'+
+        (realPnl!==0?'<div style="font-size:10px;color:'+(realPnl>=0?'var(--grn)':'var(--red)')+'">P&L real: '+(realPnl>=0?'+':'')+'$'+fmt(realPnl)+'</div>':'')+
+        '</div>';
+    }).join("")+
+    '</div></div>':'');
+}
+
+function deleteTrade(id){
+  if(!confirm("¿Eliminar esta operación?")) return;
+  S.trades=S.trades.filter(function(t){return t.id!==id;});
+  persistTrades();renderBitacora();
+}
+
+function exportTradesCSV(){
+  if(!S.trades.length){alert("No hay operaciones para exportar.");return;}
+  var rows=[["ID","Fecha","Ticker","Tipo","Precio","Qty","Monto","RSI","P&L","Nota"]];
+  S.trades.slice().sort(function(a,b){return b.id-a.id;}).forEach(function(t){
+    rows.push([t.id,t.date,t.ticker||'',t.type,t.price||'',t.qty||'',t.amount,t.rsi||'',t.pnl!=null?t.pnl:'',t.note||'']);
+  });
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+  var a=document.createElement("a");
+  a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
+  a.download="bitacora-"+new Date().toISOString().slice(0,10)+".csv";
+  a.click();
+}
+
 // ── WATCHLIST ──────────────────────────────────────────────────
 function renderWatch(){
   var wl=S.watchlist;
@@ -1786,11 +2285,16 @@ function renderWatch(){
     return '<span class="wtag" onclick="addWatch(\''+t+'\')">'+t+' +</span>';
   }).join("");
 
+  var isPro=S.user&&planOf().locked.indexOf('decision')<0;
+
   var wRows=wl.map(function(t){
     var s=ALL_SIG.find(function(x){return x.t===t;})||{sig:"HOLD",sc:60,p:100};
     var lp=getLivePrice(t);
     var lq=LIVE[t];
     var chg=lq?'<span style="font-size:9px;color:'+(lq.changePct>=0?"var(--green)":"var(--red)")+'"> '+(lq.changePct>=0?"+":"")+((lq.changePct||0)*100).toFixed(2)+'%</span>':'';
+    var deCell=isPro
+      ?'<td id="des-'+t+'" style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3)">…</td>'
+      :'<td style="color:var(--text3);font-size:10px">🔒</td>';
     return '<tr class="trow">'+
       '<td style="font-weight:600;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+t+'\','+lp+')">'+t+' <span style="font-size:9px;color:var(--text3)">↗</span></td>'+
       '<td>'+badge(s.sig)+'</td>'+
@@ -1798,11 +2302,16 @@ function renderWatch(){
       '<td>'+sbar(s.sc)+'</td>'+
       '<td><span style="font-weight:600">$'+fmtD(lp)+'</span>'+chg+'</td>'+
       '<td style="color:var(--red)">$'+fmtD(lp*.92)+'</td>'+
+      deCell+
       '<td><button class="btn btn-r" style="padding:2px 7px;font-size:10px" onclick="event.stopPropagation();rmWatch(\''+t+'\')">✕</button></td>'+
       '</tr>';
   }).join("");
 
-  var emptyMsg=wl.length===0?'<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px;font-family:\'Share Tech Mono\'">Lista vacía — agrega tickers arriba</td></tr>':'';
+  var emptyMsg=wl.length===0?'<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px;font-family:\'Share Tech Mono\'">Lista vacía — agrega tickers arriba</td></tr>':'';
+
+  var deHeader=isPro
+    ?'<th onclick="setPage(\'decision\')" style="cursor:pointer;color:var(--blue)" title="Ver Decision Engine completo">🎯 DE Score</th>'
+    :'<th style="color:var(--text3)">🎯 DE</th>';
 
   document.getElementById("main").innerHTML=
     '<div class="ph"><div><h1>Watchlist</h1><p class="sub-txt">// '+wl.length+' tickers · <span id="saved">✓ Guardado</span></p></div>'+liveBadge()+'</div>'+
@@ -1812,9 +2321,22 @@ function renderWatch(){
     '<div style="display:flex;gap:8px">'+
     '<input class="inp" id="wc" placeholder="Custom..." maxlength="6" style="width:120px;text-transform:uppercase" onkeydown="if(event.key===\'Enter\')addCustomW()"/>'+
     '<button class="btn" onclick="addCustomW()">+ Agregar</button></div></div>'+
-    '<div class="tw"><table><thead><tr><th>Ticker</th><th>Signal</th><th>Score</th><th>Fuerza</th><th>Precio Real</th><th>Stop</th><th>Quitar</th></tr></thead>'+
+    '<div class="tw"><table><thead><tr><th>Ticker</th><th>Signal</th><th>Score</th><th>Fuerza</th><th>Precio Real</th><th>Stop</th>'+deHeader+'<th>Quitar</th></tr></thead>'+
     '<tbody>'+emptyMsg+wRows+'</tbody></table></div>'+
     '<button class="btn" style="border-color:var(--border);color:var(--text3)" onclick="resetWatch()">↺ Restaurar default</button>';
+
+  // Async DE scores — update cells one by one as they load
+  if(isPro&&wl.length){
+    wl.forEach(function(t){
+      deScoreTicker(t).then(function(r){
+        var el=document.getElementById('des-'+t);
+        if(!r||!el)return;
+        var c=r.score>=75?'var(--green)':r.score>=55?'var(--blue)':r.score>=35?'var(--orange)':'var(--red)';
+        el.innerHTML='<span style="font-weight:700;color:'+c+'" title="'+r.action+'">'+r.score+'</span>'+
+          '<span style="color:var(--text3);font-size:9px;display:block">'+r.action+'</span>';
+      }).catch(function(){});
+    });
+  }
 }
 function addWatch(t){
   if(S.watchlist.indexOf(t)<0){
@@ -2369,7 +2891,7 @@ function renderAlert(){
   }).join("");
 
   var mono=[
-    {icon:"🎯",t:"Plan Pro",d:"Alertas ilimitadas + señales",p:"$29.99/mes"},
+    {icon:"🎯",t:"Plan Pro",d:"Decision Engine + señales ilimitadas",p:"14d gratis · $29.99/mes"},
     {icon:"🏢",t:"Teams",d:"Multi-usuario + API",p:"$99/mes"},
     {icon:"📚",t:"Curso",d:"Análisis técnico + Excel",p:"$199 único"},
     {icon:"🤖",t:"API",d:"Webhooks + brokers IBKR",p:"Custom"},
@@ -2405,16 +2927,17 @@ function renderModal(){
   if(S.modal==="upgrade") mUpgrade(mr);
   else if(S.modal==="addpos"||S.modal==="editpos") mPos(mr);
   else if(S.modal==="delpos") mDel(mr);
+  else if(S.modal==="addtrade") mTrade(mr);
 }
 
 
 function mUpgrade(mr){
-  var proFeats=["Tickers ilimitados","20+ señales real-time","Alertas ilimitadas","RSI · MACD · BB reales","Risk & sizing","Backtesting engine","Fundamentals reales","Soporte prioritario"];
+  var proFeats=["Tickers ilimitados","20+ señales real-time","Alertas ilimitadas","RSI · MACD · BB reales","Risk & sizing","Backtesting engine","🎯 Decision Engine","Soporte prioritario"];
   var freeFeats=["5 tickers","3 alertas","5 señales","Dashboard básico"];
   var freeLocked=["Indicadores","Risk","Backtesting","Fundamentals","20+ señales"];
   mr.innerHTML='<div class="overlay" onclick="closeModal()"><div class="modal" style="max-width:460px" onclick="event.stopPropagation()">'+
     '<button class="mx" onclick="closeModal()">✕</button>'+
-    '<h2>⚡ Upgrade a Pro</h2><p class="msub">Desbloquea el análisis completo — $29.99/mes</p>'+
+    '<h2>⚡ Upgrade a Pro</h2><p class="msub">Desbloquea el análisis completo — 14 días gratis, luego $29.99/mes</p>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'+
     '<div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:13px">'+
     '<div style="display:flex;justify-content:space-between;margin-bottom:9px"><span style="font-size:13px;font-weight:700;color:var(--bright)">Free</span><span style="font-size:10px;font-family:\'Share Tech Mono\';color:var(--text3)">$0/mes</span></div>'+
@@ -2422,14 +2945,36 @@ function mUpgrade(mr){
     freeLocked.map(function(f){return '<div style="font-size:10px;font-family:\'Share Tech Mono\';padding:3px 0;border-bottom:1px solid var(--border);color:var(--text3);display:flex;gap:5px"><span>✗</span>'+f+'</div>';}).join("")+
     '</div>'+
     '<div style="background:var(--abg);border:2px solid var(--orange);border-radius:9px;padding:13px">'+
-    '<div style="display:flex;justify-content:space-between;margin-bottom:9px"><span style="font-size:13px;font-weight:700;color:var(--bright)">Pro ⭐</span><span style="font-size:10px;font-family:\'Share Tech Mono\';color:var(--orange)">$29.99/mes</span></div>'+
+    '<div style="display:flex;justify-content:space-between;margin-bottom:9px"><span style="font-size:13px;font-weight:700;color:var(--bright)">Pro ⭐</span><span style="font-size:10px;font-family:\'Share Tech Mono\';color:var(--orange)">14 días gratis · $29.99/mes</span></div>'+
     proFeats.map(function(f){return '<div style="font-size:10px;font-family:\'Share Tech Mono\';padding:3px 0;border-bottom:1px solid var(--aborder);color:var(--green);display:flex;gap:5px"><span>✓</span>'+f+'</div>';}).join("")+
     '</div></div>'+
-    '<button class="btn-big" style="width:100%" onclick="doUpgrade()">🚀 Activar Pro (Demo — Sin pago real)</button>'+
-    '<div style="font-size:9px;color:var(--text3);text-align:center;margin-top:8px;font-family:\'Share Tech Mono\'">Demo instantáneo · En producción → Stripe + Supabase</div>'+
+    '<button class="btn-big" style="width:100%" onclick="doUpgrade()">⚡ Suscribirse a Pro — 14 días gratis</button>'+
+    '<div style="font-size:9px;color:var(--text3);text-align:center;margin-top:8px;font-family:\'Share Tech Mono\'">Sin tarjeta durante el trial · Cancela en 1 click</div>'+
     '</div></div>';
 }
-function doUpgrade(){if(S.user)S.user.plan="pro";persist();closeModal();}
+async function doUpgrade(){
+  var u=S.user;
+  if(!u)return;
+  try{
+    var res=await fetch('/api/create-checkout',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({product:'invest_pro',userId:u.id,email:u.email,
+        successUrl:window.location.origin+'/?upgraded=1',
+        cancelUrl:window.location.href})
+    });
+    var data=await res.json();
+    if(data.url){window.location.href=data.url;return;}
+    throw new Error(data.error||'Error');
+  }catch(e){
+    // Stripe not configured yet — show helpful message instead of crashing
+    if(e.message&&e.message.includes('not configured')){
+      alert('El pago con tarjeta estará disponible muy pronto. Por ahora usa el trial gratuito.');
+    }else{
+      alert('Error al conectar con el servidor de pagos. Intenta de nuevo.');
+    }
+  }
+}
 
 function mPos(mr){
   var ed=S.modal==="editpos";
@@ -2501,6 +3046,146 @@ function delPos(id){
   S.modal=null;S.editPos=null;
   document.getElementById("mroot").innerHTML="";
   renderMain();
+}
+
+// ── MODAL TRADE (Bitácora) ──────────────────────────────────────
+function mTrade(mr){
+  var tickers=S.portfolio.map(function(h){return h.t;}).concat(S.watchlist.filter(function(t){return typeof t==='string';}));
+  tickers=Array.from(new Set(tickers)).sort();
+  var today=new Date().toISOString().slice(0,10);
+  mr.innerHTML='<div class="overlay" onclick="closeModal()"><div class="modal" style="max-width:400px" onclick="event.stopPropagation()">'+
+    '<button class="mx" onclick="closeModal()">✕</button>'+
+    '<h2>📋 Registrar operación</h2>'+
+    '<p class="msub">Se guarda en tu Bitácora y actualiza el costo promedio</p>'+
+    '<div id="trerr" class="err" style="display:none"></div>'+
+
+    '<label class="fl">Tipo de operación</label>'+
+    '<select id="tr_type" class="inp ifu" onchange="mTradeTypeChange()" style="cursor:pointer">'+
+    '<option value="buy">🟢 Compra</option>'+
+    '<option value="sell">🔴 Venta</option>'+
+    '<option value="dividend">💰 Dividendo recibido</option>'+
+    '<option value="deposit">💵 Depósito de capital</option>'+
+    '<option value="withdrawal">💸 Retiro de capital</option>'+
+    '</select>'+
+
+    '<div id="tr_ticker_row">'+
+    '<label class="fl">Ticker</label>'+
+    '<input id="tr_ticker" class="inp ifu" placeholder="AAPL" style="text-transform:uppercase" list="tr_tklist"/>'+
+    '<datalist id="tr_tklist">'+tickers.map(function(t){return '<option value="'+t+'"/>';}).join("")+'</datalist>'+
+    '</div>'+
+
+    '<div id="tr_price_row">'+
+    '<label class="fl">Precio por acción</label>'+
+    '<input id="tr_price" class="inp ifu" type="number" placeholder="185.00" step="0.01" min="0.001" oninput="mTradeCalc()"/>'+
+    '</div>'+
+
+    '<div id="tr_qty_row">'+
+    '<label class="fl">Cantidad (shares)</label>'+
+    '<input id="tr_qty" class="inp ifu" type="number" placeholder="10" step="0.001" min="0.001" oninput="mTradeCalc()"/>'+
+    '</div>'+
+
+    '<label class="fl">Monto total <span style="font-size:10px;color:var(--text3)">(auto-calculado)</span></label>'+
+    '<input id="tr_amount" class="inp ifu" type="number" placeholder="1850.00" step="0.01" min="0" oninput="mTradeAmtChange()"/>'+
+
+    '<label class="fl">Fecha</label>'+
+    '<input id="tr_date" class="inp ifu" type="date" value="'+today+'"/>'+
+
+    '<div id="tr_rsi_row">'+
+    '<label class="fl">RSI al momento <span style="font-size:10px;color:var(--text3)">(opcional)</span></label>'+
+    '<input id="tr_rsi" class="inp ifu" type="number" placeholder="52" min="0" max="100" step="0.1"/>'+
+    '</div>'+
+
+    '<label class="fl">Nota <span style="font-size:10px;color:var(--text3)">(opcional)</span></label>'+
+    '<input id="tr_note" class="inp ifu" placeholder="Ej: Entrada en soporte SMA50"/>'+
+
+    '<button class="btn-big" style="width:100%;margin-top:14px" onclick="saveTrade()">✅ Registrar operación</button>'+
+    '</div></div>';
+  setTimeout(function(){var el=document.getElementById("tr_ticker");if(el)el.focus();},100);
+}
+
+function mTradeTypeChange(){
+  var type=document.getElementById("tr_type").value;
+  var showTicker=["buy","sell","dividend"].indexOf(type)>=0;
+  var showPrice=["buy","sell"].indexOf(type)>=0;
+  var showQty=["buy","sell"].indexOf(type)>=0;
+  var showRsi=["buy","sell"].indexOf(type)>=0;
+  document.getElementById("tr_ticker_row").style.display=showTicker?"":"none";
+  document.getElementById("tr_price_row").style.display=showPrice?"":"none";
+  document.getElementById("tr_qty_row").style.display=showQty?"":"none";
+  document.getElementById("tr_rsi_row").style.display=showRsi?"":"none";
+  if(!showTicker){document.getElementById("tr_ticker").value="";}
+}
+function mTradeCalc(){
+  var p=parseFloat(document.getElementById("tr_price").value||"");
+  var q=parseFloat(document.getElementById("tr_qty").value||"");
+  if(p>0&&q>0) document.getElementById("tr_amount").value=(p*q).toFixed(2);
+}
+function mTradeAmtChange(){
+  var a=parseFloat(document.getElementById("tr_amount").value||"");
+  var p=parseFloat(document.getElementById("tr_price").value||"");
+  if(a>0&&p>0){document.getElementById("tr_qty").value=(a/p).toFixed(3);}
+}
+
+function saveTrade(){
+  var type=document.getElementById("tr_type").value;
+  var ticker=(document.getElementById("tr_ticker").value||"").toUpperCase().trim();
+  var price=parseFloat(document.getElementById("tr_price").value||"");
+  var qty=parseFloat(document.getElementById("tr_qty").value||"");
+  var amount=parseFloat(document.getElementById("tr_amount").value||"");
+  var date=document.getElementById("tr_date").value;
+  var rsi=parseFloat(document.getElementById("tr_rsi").value||"")||null;
+  var note=document.getElementById("tr_note").value.trim();
+  var err=document.getElementById("trerr");
+
+  var needsTicker=["buy","sell","dividend"].indexOf(type)>=0;
+  if(needsTicker&&!ticker){err.style.display="block";err.textContent="Ingresá el ticker.";return;}
+  if(!amount||amount<=0){err.style.display="block";err.textContent="Ingresá el monto total.";return;}
+  if(!date){err.style.display="block";err.textContent="Ingresá la fecha.";return;}
+
+  // For buy/sell compute qty if missing
+  if(["buy","sell"].indexOf(type)>=0&&(!qty||qty<=0)&&price>0) qty=amount/price;
+
+  // Calculate P&L for sells
+  var pnl=null;
+  if(type==='sell'&&ticker&&price>0){
+    var buys=S.trades.filter(function(t){return t.ticker===ticker&&t.type==='buy';});
+    if(buys.length){
+      var totalB=buys.reduce(function(s,t){return s+t.qty;},0);
+      var totalC=buys.reduce(function(s,t){return s+t.amount;},0);
+      var avgC=totalC/totalB;
+      pnl=(price-avgC)*(qty||0);
+    }
+  }
+
+  loadTrades();
+  S.trades.push({
+    id:S.tradeNextId++,
+    ticker:needsTicker?ticker:null,
+    type:type,
+    date:date,
+    price:price||null,
+    qty:qty||null,
+    amount:amount,
+    rsi:rsi,
+    note:note,
+    pnl:pnl,
+  });
+  persistTrades();
+
+  // Auto-update portfolio avg_cost if buy/sell matches existing position
+  if(type==='buy'||type==='sell'){
+    var pos=S.portfolio.find(function(h){return h.t===ticker;});
+    if(pos){
+      var allBuys=S.trades.filter(function(t){return t.ticker===ticker&&t.type==='buy';});
+      if(allBuys.length){
+        pos.cost=allBuys.reduce(function(s,t){return s+t.amount;},0)/allBuys.reduce(function(s,t){return s+t.qty;},0);
+        sbUpdateHolding(pos);persist();
+      }
+    }
+  }
+
+  closeModal();
+  setPage("bitacora");
 }
 
 // ── DRAWER ─────────────────────────────────────────────────────
@@ -4755,12 +5440,14 @@ async function sbLoadUserData(authUser){
       S.nextId=10;
     }
     S.watchlist=watch.length>0?watch:[...DEF_WATCH];
+    loadTrades();
   }catch(e){
     console.error("sbLoadUserData failed",e);
     // Fallback to defaults so the app still renders
     S.user={id:authUser.id,email:authUser.email,name:authUser.email.split("@")[0],plan:"free"};
     S.portfolio=JSON.parse(JSON.stringify(DEF_PORT));
     S.watchlist=[...DEF_WATCH];
+    loadTrades();
   }
 }
 
@@ -4815,6 +5502,8 @@ async function doRegister(){
     return;
   }
   if(res.data.session){
+    // Activate 14-day trial for new accounts
+    await sb.from("profiles").update({plan:"trial",trial_started_at:new Date().toISOString()}).eq("id",res.data.user.id);
     await sbLoadUserData(res.data.user);
     document.getElementById("mroot").innerHTML="";
     render();
