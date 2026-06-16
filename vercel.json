@@ -1,12 +1,4 @@
 {
-  "redirects": [
-    {
-      "source": "/(.*)",
-      "has": [{ "type": "host", "value": "magnova-invest.vercel.app" }],
-      "destination": "https://invest.financeospro.com/$1",
-      "permanent": true
-    }
-  ],
   "rewrites": [
     { "source": "/test",    "destination": "/test.html"    },
     { "source": "/app",     "destination": "/index.html"   },
