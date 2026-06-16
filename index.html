@@ -5618,7 +5618,7 @@ function renderHelp(){
     '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>¿Necesitas más ayuda?</div>'+
     '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
-    '<a href="mailto:maxnovaluciglobal@gmail.com" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);text-decoration:none;font-size:12px;font-family:\'JetBrains Mono\',monospace;transition:.15s" onmouseover="this.style.borderColor=\'var(--orange-bd)\'" onmouseout="this.style.borderColor=\'var(--border)\'">📧 maxnovaluciglobal@gmail.com</a>'+
+    '<a href="mailto:invest@financeospro.com" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);text-decoration:none;font-size:12px;font-family:\'JetBrains Mono\',monospace;transition:.15s" onmouseover="this.style.borderColor=\'var(--orange-bd)\'" onmouseout="this.style.borderColor=\'var(--border)\'">📧 invest@financeospro.com</a>'+
     '<button onclick="showOnboarding()" class="btn">🎓 Re-iniciar tour</button>'+
     '<button onclick="showShortcuts()" class="btn">⌨️ Ver atajos</button>'+
     '</div></div>';
@@ -6505,6 +6505,8 @@ sb.auth.onAuthStateChange(function(event,session){
   if(event==="SIGNED_OUT"){
     S.user=null;S.page="news";
     render();
+  } else if(event==="SIGNED_IN"&&session&&session.user){
+    sbLoadUserData(session.user).then(function(){ render(); });
   }
 });
 
