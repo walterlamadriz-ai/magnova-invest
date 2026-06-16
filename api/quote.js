@@ -61,7 +61,7 @@ async function fetchYahooQuote(ticker) {
 
   const res = await fetch(url, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; MAGNOVA/1.0)',
+      'User-Agent': 'Mozilla/5.0 (compatible; FINANCEOS/1.0)',
       'Accept': 'application/json',
     },
     signal: AbortSignal.timeout(5000),
@@ -110,7 +110,7 @@ async function fetchMarketCap(ticker) {
 
   const res = await fetch(url, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; MAGNOVA/1.0)',
+      'User-Agent': 'Mozilla/5.0 (compatible; FINANCEOS/1.0)',
       'Accept': 'application/json',
     },
     signal: AbortSignal.timeout(4000),

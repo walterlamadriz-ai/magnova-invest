@@ -1,51 +1,38 @@
 {
-  "routes": [
+  "redirects": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/sw.js",
-      "dest": "/sw.js"
-    },
-    {
-      "src": "/test",
-      "dest": "/test.html"
-    },
-    {
-      "src": "/app",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/landing",
-      "dest": "/landing.html"
-    },
-    {
-      "src": "/",
-      "dest": "/landing.html"
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "magnova-invest.vercel.app" }],
+      "destination": "https://invest.financeospro.com/$1",
+      "permanent": true
     }
+  ],
+  "rewrites": [
+    { "source": "/test",    "destination": "/test.html"    },
+    { "source": "/app",     "destination": "/index.html"   },
+    { "source": "/landing", "destination": "/landing.html" },
+    { "source": "/",        "destination": "/landing.html" }
   ],
   "headers": [
     {
       "source": "/sw.js",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache"
-        },
-        {
-          "key": "Content-Type",
-          "value": "application/javascript"
-        }
+        { "key": "Cache-Control", "value": "no-cache" },
+        { "key": "Content-Type",  "value": "application/javascript" }
       ]
     },
     {
       "source": "/api/(.*)",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, s-maxage=60"
-        }
+        { "key": "Cache-Control", "value": "public, s-maxage=60" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options",        "value": "SAMEORIGIN" },
+        { "key": "Referrer-Policy",        "value": "strict-origin-when-cross-origin" }
       ]
     }
   ]

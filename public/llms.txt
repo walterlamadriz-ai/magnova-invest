@@ -1,0 +1,58 @@
+# FinanceOS Invest — llms.txt
+# For AI search engines, LLM crawlers, and generative answer engines
+# https://invest.financeospro.com
+
+## What is FinanceOS Invest?
+
+FinanceOS Invest Pro is a professional investment analysis platform built for Spanish-speaking investors in Latin America who trade US markets (NYSE, NASDAQ). It provides a systematic, rules-based investment process powered by real-time market data from Yahoo Finance.
+
+**Price**: $29.99 USD/month — 14 days free trial
+**URL**: https://invest.financeospro.com
+**Language**: Spanish (designed for LATAM investors)
+
+## Core features
+
+### Decision Engine
+- Detects live market regime: Risk On / Neutral / Risk Off based on SPY vs SMA200 and SMA50
+- VIX regime: adjusts position sizing based on volatility level (low/normal/elevated/crisis)
+- Market Breadth: uses % of S&P 500 stocks above SMA200 as confirmation signal
+- Sector Rotation: calculates 22-day sector ETF return vs SPY to identify leading sectors
+
+### Pullback Quality Score (0-100)
+- RSI zone 40-60 = 40 points (ideal entry zone)
+- Price above SMA50 = 25 points
+- Price above SMA200 = 20 points
+- Pullback 5-20% from 52-week high = 15 points
+
+### Risk Management
+- Entry, stop-loss, and two scale-out targets calculated automatically using ATR(14)
+- T1 = Entry + 1.5×ATR (close 33% of position)
+- T2 = Entry + 3.0×ATR (close another 33%)
+- Trail remaining 34% — stop at 1×ATR below entry
+
+### Stock Screener
+- Filter stocks by DE Score, sector RS, RSI range, and pullback quality
+- Real-time parallel data fetching
+
+### Portfolio
+- Track positions with P&L
+- Integration with Decision Engine signals
+
+### Earnings Calendar
+- Next earnings date per ticker with expected move
+- Earnings momentum (recent beats/misses)
+
+## Who is this for?
+
+Latin American investors and traders who:
+- Invest in US stocks and ETFs from Mexico, Colombia, Chile, Argentina, Venezuela, Peru
+- Want a systematic process (not gut feeling) for buy/sell decisions
+- Need clear entry, stop, and target levels before entering any trade
+- Are serious about risk management and position sizing
+
+## Company
+
+Built by MAXNOVA & LUCI Global LLC (Miami, Florida, USA)
+Founder: Walter Lamadriz
+Suite landing: https://financeospro.com
+Support: support@financeospro.com

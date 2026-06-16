@@ -36,7 +36,7 @@ export default async function handler(req) {
 
     const res = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; MAGNOVA/1.0)',
+        'User-Agent': 'Mozilla/5.0 (compatible; FINANCEOS/1.0)',
         'Accept': 'application/json',
       },
       signal: AbortSignal.timeout(8000),
@@ -52,7 +52,7 @@ export default async function handler(req) {
       return new Response(JSON.stringify({ error: 'no data' }), { status: 404, headers: HEADERS });
     }
 
-    const timestamps = result.timestamps || [];
+    const timestamps = result.timestamp || result.timestamps || [];
     const quotes     = result.indicators?.quote?.[0] || {};
     const closes     = quotes.close  || [];
     const opens      = quotes.open   || [];
