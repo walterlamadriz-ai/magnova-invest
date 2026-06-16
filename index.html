@@ -1831,10 +1831,10 @@ function renderDecisionEngine(){
           // ATR levels row
           '<div style="display:flex;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap">'+
           '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px"><span style="color:var(--text3)">Entrada</span><br><b style="color:var(--blue)">$'+s.entry+'</b></div>'+
-          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px"><span style="color:var(--text3)">Stop</span><br><b style="color:var(--red)">$'+s.stop+'</b></div>'+
-          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px"><span style="color:var(--text3)">Target</span><br><b style="color:var(--green)">$'+s.target+'</b></div>'+
-          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px"><span style="color:var(--text3)">R/R</span><br><b style="color:var(--bright)">'+s.rr+'x</b></div>'+
-          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px"><span style="color:var(--text3)">RSI</span><br><b style="color:var(--text2)">'+s.rsi+'</b></div>'+
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px"><span style="color:var(--text3)">Stop</span><br><b style="color:var(--red)">$'+s.stop+'</b><div style="font-size:9px;color:var(--text3)">'+(((s.entry-s.stop)/s.entry)*100).toFixed(1)+'% riesgo</div></div>'+
+          '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px"><span style="color:var(--text3)">Target</span><br><b style="color:var(--green)">$'+s.target+'</b><div style="font-size:9px;color:var(--text3)">+'+(((s.target-s.entry)/s.entry)*100).toFixed(1)+'%</div></div>'+
+          (function(){var rr=parseFloat(s.rr);var rrColor=rr>=2?'var(--green)':rr>=1?'var(--amber)':'var(--red)';return '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px"><span style="color:var(--text3)">R:R</span><br><b style="color:'+rrColor+'">'+s.rr+'x</b><div style="font-size:9px;color:'+rrColor+'">'+(rr>=2?'✓ Bueno':rr>=1?'⚠ Justo':'✗ Bajo')+'</div></div>';})()+
+          (function(){var r=parseFloat(s.rsi);var rc=r>=70?'var(--red)':r<=30?'var(--green)':'var(--text2)';var rl=r>=70?'⚠ Sobrecomprado':r<=30?'💡 Sobrevendido':r>=50?'Momentum +':'Momentum −';return '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px"><span style="color:var(--text3)">RSI</span><br><b style="color:'+rc+'">'+s.rsi+'</b><div style="font-size:9px;color:'+rc+'">'+rl+'</div></div>';})()+
           '<div style="flex:1;font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--text3)">'+s.signals.slice(0,2).join(' · ')+'</div>'+
           '</div>'+
           '</div>';
