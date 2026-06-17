@@ -1339,7 +1339,7 @@ const PLANS={
   trial:{label:"Trial",maxT:999,maxA:999,maxS:999,locked:[],
     price:0,desc:"14 días gratis · Todo incluido",trialDays:14},
   pro:{label:"Pro",maxT:999,maxA:999,maxS:999,locked:[],
-    price:29.99,desc:"Todo ilimitado · AI Advisor · Soporte prioritario"},
+    price:29.99,desc:"Todo ilimitado · Análisis IA · Soporte prioritario"},
   teams:{label:"Teams",maxT:999,maxA:999,maxS:999,locked:[],
     price:99,desc:"Multi-usuario · API access · SLA 99.9%"},
 };
@@ -2108,10 +2108,22 @@ function kpi(l,v,s,c){
   var sc=s?(s.charAt(0)==="+")?"pos":(s.charAt(0)==="-")?"neg":"neu":"";
   return '<div class="kpi k'+c+'"><div class="kl">'+l+'</div><div class="kv">'+v+'</div>'+(s?'<div class="ks '+sc+'">'+s+'</div>':'')+'</div>';
 }
+function sigLabel(sig){
+  if(sig==="BUY")  return "Alcista";
+  if(sig==="SELL") return "Bajista";
+  return "Neutro";
+}
 function badge(sig){
   var c=sig==="BUY"?"buy":sig==="SELL"?"sell":"hold";
-  var label=sig==="BUY"?"ALTO":sig==="SELL"?"BAJO":"MEDIO";
-  return '<span class="badge '+c+'">'+label+'</span>';
+  return '<span class="badge '+c+'">'+sigLabel(sig)+'</span>';
+}
+function timeAgo(ts){
+  if(!ts) return '';
+  var d=Date.now()-ts, m=Math.floor(d/60000), h=Math.floor(d/3600000);
+  if(m<1) return 'ahora mismo';
+  if(m<60) return 'hace '+m+'m';
+  if(h<24) return 'hace '+h+'h';
+  return 'hace '+(Math.floor(h/24))+'d';
 }
 function sbar(sc){
   var c=sc>=72?"var(--green)":sc>=52?"var(--orange)":"var(--red)";
@@ -2327,7 +2339,7 @@ function renderSidebar(){
 
   // AI Advisor button
   if(u){
-    var aiBtn='<div style="padding:0 10px;margin-bottom:6px"><button onclick="toggleAI()" style="width:100%;display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;border:1px solid var(--orange-bd);background:var(--orange-bg);color:var(--orange);cursor:pointer;font-size:12px;font-weight:600">&#129302; <span class="nb-label">AI Advisor</span><span style="margin-left:auto;font-size:8px;background:var(--orange);color:#fff;padding:1px 5px;border-radius:4px">Early Access</span></button></div>';
+    var aiBtn='<div style="padding:0 10px;margin-bottom:6px"><button onclick="toggleAI()" style="width:100%;display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;border:1px solid var(--orange-bd);background:var(--orange-bg);color:var(--orange);cursor:pointer;font-size:12px;font-weight:600">&#129302; <span class="nb-label">Análisis IA</span><span style="margin-left:auto;font-size:8px;background:var(--orange);color:#fff;padding:1px 5px;border-radius:4px">Early Access</span></button></div>';
     html+=aiBtn;
   }
 
@@ -3137,7 +3149,7 @@ function renderWelcome(){
     '<div class="welcome-plan featured">'+
     '<div class="welcome-plan-name">Pro · 14 días gratis</div>'+
     '<div class="welcome-plan-price"><sup>$</sup>29<small>.99/mes</small></div>'+
-    '<div class="welcome-plan-desc">Todo ilimitado · AI Advisor<br>Indicadores, Riesgo y Simulación</div>'+
+    '<div class="welcome-plan-desc">Todo ilimitado · Análisis IA<br>Indicadores, Riesgo y Simulación</div>'+
     '</div>'+
     '</div>'+
     // ── LOGIN BOX ──
@@ -3869,7 +3881,12 @@ function renderSig(){
     kpi("Señal Baja",sigs.filter(function(s){return s.sig==="SELL";}).length,"","r")+
     '</div>'+
     '<div class="tw"><table id="tbl-sig"><thead><tr><th>Ticker</th><th>Señal</th>'+sortTh("sig","sc","Score")+'<th>Fuerza</th>'+sortTh("sig","price","Precio")+sortTh("sig","chg","Δ Hoy")+'<th>Stop –8%</th><th>Watch</th></tr></thead>'+
-    '<tbody>'+rows+'</tbody></table></div>';
+    '<tbody>'+rows+'</tbody></table></div>'+
+    '<div style="margin-top:12px;padding:8px 10px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">'+
+    '⚠ Los sesgos mostrados resultan de modelos técnicos automatizados (Trend×30% · Vol×20% · RSI×25% · MACD×25%). '+
+    'No son recomendaciones personalizadas de inversión. Datos con posible retraso · Fuente: Yahoo Finance. '+
+    'Toda inversión implica riesgo de pérdida parcial o total del capital.'+
+    '</div>';
 }
 function setSigF(f){S.sigFilter=f;renderMain();}
 
@@ -4243,7 +4260,7 @@ function renderNews(){
         '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:\'Share Tech Mono\';margin-bottom:8px">Score Global</div>'+
         '<div style="font-size:52px;font-weight:800;color:'+sentColor+';line-height:1;font-family:\'Share Tech Mono\'">'+d.value+'</div>'+
         '<div style="font-size:14px;font-weight:700;color:'+sentColor+';margin-top:6px">'+d.label+'</div>'+
-        '<div style="font-size:10px;color:var(--text3);margin-top:4px;font-family:\'JetBrains Mono\',monospace">'+buy+' BUY · '+(t-buy-sell)+' HOLD · '+sell+' SELL</div>'+
+        '<div style="font-size:10px;color:var(--text3);margin-top:4px;font-family:\'JetBrains Mono\',monospace">'+buy+' Alcistas · '+(t-buy-sell)+' Neutros · '+sell+' Bajistas</div>'+
         '</div>'+
         '<div class="cb"><div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:10px">Componentes</div>'+compRows+'</div>'+
         '</div>';
@@ -4279,7 +4296,7 @@ function renderInd(){
     var col=s.sig==="BUY"?"var(--green)":s.sig==="SELL"?"var(--red)":"var(--orange)";
     return '<div onclick="openDrawer(\''+t+'\','+lp+')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;transition:.15s;text-align:center;min-width:76px;box-shadow:var(--shadow)" onmouseover="this.style.borderColor=\'var(--aborder)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
       '<div style="font-size:12px;font-weight:700;color:var(--bright);font-family:\'Share Tech Mono\'">'+t+'</div>'+
-      '<div style="font-size:10px;color:'+col+';font-family:\'Share Tech Mono\';margin-top:1px">'+s.sig+'</div>'+
+      '<div style="font-size:10px;color:'+col+';font-family:\'Share Tech Mono\';margin-top:1px">'+sigLabel(s.sig)+'</div>'+
       '<div style="font-size:10px;color:var(--text3);font-family:\'Share Tech Mono\'">$'+fmtD(lp)+'</div></div>';
   }).join("");
 
@@ -5308,7 +5325,7 @@ function renderDrawerBody(){
   } else {
     // Fundamentals
     var f=fund;
-    var recLabel={'strongbuy':'Compra fuerte','buy':'Compra','hold':'Neutral','sell':'Venta','strongsell':'Venta fuerte','neutral':'Sin consenso','strong buy':'Compra fuerte','strong sell':'Venta fuerte'};
+    var recLabel={'strongbuy':'Sesgo alcista fuerte','buy':'Sesgo alcista','hold':'Neutro','sell':'Sesgo bajista','strongsell':'Sesgo bajista fuerte','neutral':'Sin consenso','strong buy':'Sesgo alcista fuerte','strong sell':'Sesgo bajista fuerte'};
     var recColor={'strongbuy':'var(--green)','buy':'var(--green)','hold':'var(--amber)','sell':'var(--red)','strongsell':'var(--red)','neutral':'var(--text2)','strong buy':'var(--green)','strong sell':'var(--red)'};
     var rec=f&&(f.recommendationKey||f.analystRating)?(f.recommendationKey||f.analystRating).toLowerCase():null;
     var mktCap=f&&f.marketCap?f.marketCap:(lq&&lq.marketCap?lq.marketCap:null);
@@ -5414,13 +5431,18 @@ function renderDrawerBody(){
       [["Ref. Baja (-8%)","$"+(cur*.92).toFixed(2),"var(--red)"],["SMA 20","$"+s20Last.toFixed(2),"var(--orange)"],["Precio actual","$"+cur.toFixed(2),"var(--bright)"],["Ref. Alta (+12%)","$"+(cur*1.12).toFixed(2),"var(--green)"]].map(function(r){
         return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;font-family:\'Share Tech Mono\'"><span style="color:var(--text3)">'+r[0]+'</span><span style="color:'+r[2]+';font-weight:500">'+r[1]+'</span></div>';
       }).join("")+
+      '</div>'+
+      '<div style="margin-top:12px;padding:8px 10px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">'+
+      '📊 Datos del último trimestre reportado · Fuente: Finnhub / FMP'+
+      (f&&f.fetchedAt?' · Actualizado: '+timeAgo(f.fetchedAt):'')+
+      '<br>Pueden diferir del dato oficial. No constituyen asesoría financiera ni recomendación de inversión.'+
       '</div>';
   }
 
   document.getElementById("drwb").innerHTML=
     '<div class="sigb '+sigClass+'">'+
     '<div style="font-size:24px">'+sigIcon+'</div>'+
-    '<div><div style="font-size:13px;font-weight:700;color:'+sigColor+'">'+sig.sig+' — Score '+sig.sc+'/100</div>'+
+    '<div><div style="font-size:13px;font-weight:700;color:'+sigColor+'">'+sigLabel(sig.sig)+' — Score '+sig.sc+'/100</div>'+
     '<div style="font-size:11px;font-family:\'Share Tech Mono\';color:var(--text);margin-top:2px">'+
     (sig.sig==="BUY"?"Tendencia histórica alcista · Indicador alto":sig.sig==="SELL"?"Presión vendedora histórica · Indicador bajo":"Sin tendencia clara · Indicador medio")+
     '</div></div></div>'+
@@ -5491,7 +5513,7 @@ async function sendAIMessage(userMsg){
 
   try{
     await new Promise(function(r){setTimeout(r,600);});
-    var reply="🔧 El AI Advisor está en mantenimiento mientras migramos a un servidor seguro. Estará disponible muy pronto con mejoras importantes. Mientras tanto usa el Radar Financiero (📡) para análisis de tu portfolio.";
+    var reply="🔧 El Análisis IA está en mantenimiento mientras migramos a un servidor seguro. Estará disponible muy pronto con mejoras importantes. Mientras tanto usa el Radar Financiero (📡) para análisis de tu portfolio.";
     AI.messages.push({role:"assistant",content:reply});
   }catch(e){
     AI.messages.push({role:"assistant",content:"❌ Error de conexión. Verifica tu acceso a la API de Claude."});
@@ -6264,7 +6286,7 @@ async function generateRadarReport(){
       date:new Date().toISOString(),
       dateLabel:new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),
       score:health.total,subs:health.subs,profile:RADAR.profile,
-      summary:'Diagnóstico local del portfolio — AI Advisor disponible próximamente.',
+      summary:'Diagnóstico local del portfolio — Análisis IA disponible próximamente.',
       sections:[
         {id:'health',title:'Score de Salud',content:'Tu portfolio tiene un score de '+health.total+'/100. Diversificación: '+health.subs.div+' · Momentum: '+health.subs.mom+' · Riesgo: '+health.subs.risk+' · Correlación: '+health.subs.corr+' · Valoración: '+health.subs.val+'.'},
         {id:'macro',title:'Análisis AI en Mantenimiento',content:'🔧 El análisis con inteligencia artificial está temporalmente en mantenimiento mientras migramos a infraestructura segura. Los sub-scores del Health Score son precisos y calculados localmente. El análisis narrativo completo con Claude estará disponible muy pronto.'},
@@ -6655,8 +6677,8 @@ function showOnboarding(){
     {icon:'📐',title:'Position Builder',
      desc:'Calcula el tamaño óptimo de cada operación basado en tu capital y tolerancia al riesgo. Nunca más sobredimensiones una posición.',
      action:'Calcular entrada',page:'pb'},
-    {icon:'🤖',title:'AI Advisor — tu coach personal',
-     desc:'Pregúntale a Claude sobre tu portfolio. Conoce tus posiciones exactas, el sentimiento del mercado y las noticias del día.',
+    {icon:'🤖',title:'Análisis IA — síntesis educativa de tu portfolio',
+     desc:'Pregúntale al asistente sobre tu portfolio. Conoce tus posiciones exactas, el sentimiento del mercado y las noticias del día.',
      action:'Hablar con AI',fn:'toggleAI'},
   ];
 
@@ -6769,8 +6791,8 @@ function renderHelp(){
     {icon:'📐',q:'¿Cómo funciona el Position Builder?',
      a:'Ingresa ticker, precio de entrada, capital disponible y stop loss. Calcula automáticamente el tamaño de posición usando la Regla del 2% — nunca arriesgues más del 2% de tu capital en una sola operación.'},
     
-    {icon:'🤖',q:'¿Cómo funciona el AI Advisor?',
-     a:'El asistente conoce tu portfolio real (posiciones, P&L, señales activas, noticias). Hazle preguntas específicas como "¿Debo reducir NVDA?" o "¿Cómo me afecta la decisión de la Fed?".'},
+    {icon:'🤖',q:'¿Cómo funciona el Análisis IA?',
+     a:'El asistente conoce tu portfolio real (posiciones, P&L, señales activas, noticias). Hazle preguntas sobre el contexto de tus activos. Es análisis educativo, no asesoría personalizada.'},
     {icon:'💰',q:'¿Cuándo se actualizan los dividendos?',
      a:'Presiona "Cargar dividendos" en el módulo Dividendos. Se obtienen de Yahoo Finance y se proyectan para los próximos 12 meses según la frecuencia histórica de cada posición.'},
     {icon:'⚖️',q:'¿Qué significa la correlación en el Comparador?',
@@ -6824,7 +6846,7 @@ function mUpgrade(mr){
     ['📐','Position Builder Pro','Cálculo R/R + 8 escenarios'],
     ['⚖️','Comparador head-to-head','Correlación + Sharpe ratio real'],
     ['🌡️','Market Sentiment Gauge','Fear & Greed propio + historial'],
-    ['🤖','AI Advisor ilimitado','Chat con Claude + contexto real'],
+    ['🤖','Análisis IA ilimitado','Síntesis educativa con contexto real'],
     ['🤖','AI Coach semanal','Reporte personalizado automático'],
     ['📈','Indicadores Pro','RSI, MACD, BB sobre datos reales'],
     ['🛡️','Gestión de Riesgo','Position sizing + escenarios macro'],
@@ -6843,7 +6865,7 @@ function mUpgrade(mr){
     '<button class="mx" onclick="closeModal()" style="color:rgba(255,255,255,.5)">✕</button>'+
     '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);font-family:\'JetBrains Mono\',monospace;margin-bottom:8px">FINANCEOS INVEST PRO</div>'+
     '<h2 style="font-size:22px;color:#fff;margin-bottom:8px">Invierte como un profesional</h2>'+
-    '<p style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6">AI Advisor · Precios reales · Herramientas que InvestingPro cobra $40/mes</p>'+
+    '<p style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6">Análisis IA · Precios reales · Herramientas que InvestingPro cobra $40/mes</p>'+
     '</div>'+
 
     // Pricing section
@@ -6865,7 +6887,7 @@ function mUpgrade(mr){
     ['5 posiciones en portfolio','3 alertas de precio','5 señales activas','Dashboard básico','Noticias del mercado'].map(function(f){
       return '<div style="font-size:11px;color:var(--text2);padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center"><span style="color:var(--green)">✓</span>'+f+'</div>';
     }).join('')+
-    ['Indicadores Pro','Gestión de Riesgo','Simulación','AI Advisor','Comparador','Chile/LATAM'].map(function(f){
+    ['Indicadores Pro','Gestión de Riesgo','Simulación','Análisis IA','Comparador','Chile/LATAM'].map(function(f){
       return '<div style="font-size:11px;color:var(--text3);padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;text-decoration:line-through"><span>✗</span>'+f+'</div>';
     }).join('')+
     '</div>'+
@@ -6916,7 +6938,7 @@ function startTrial(){
       '<div class="modal" style="max-width:340px;text-align:center" onclick="event.stopPropagation()">'+
       '<div style="font-size:48px;margin-bottom:14px">🎉</div>'+
       '<h2 style="margin-bottom:8px">¡Trial activado!</h2>'+
-      '<p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px">Tienes 14 días de acceso completo a FinanceOS Invest Pro. Explora el AI Advisor, los Indicadores Pro, el Comparador y Chile/LATAM.</p>'+
+      '<p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px">Tienes 14 días de acceso completo a FinanceOS Invest Pro. Explora el Análisis IA, los Indicadores Pro, el Comparador y Chile/LATAM.</p>'+
       '<button class="btn-big" onclick="document.getElementById(\'mroot\').innerHTML=\'\';renderMain()" style="width:100%">Explorar FinanceOS Invest Pro →</button>'+
       '</div></div>';
   }
