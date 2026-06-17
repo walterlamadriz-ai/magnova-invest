@@ -7551,6 +7551,70 @@ function rowToHolding(r){
   return {id:r.id, t:r.ticker, type:r.asset_type, sh:Number(r.shares), cost:Number(r.avg_cost), note:r.note||""};
 }
 
+// ── CONSENT FUNCTIONS (F1-07) ─────────────────────────────────
+// These functions are defined here but NOT called yet.
+// Integration into the login flow is a separate approved commit.
+
+// Versions currently required for full access
+function getRequiredConsents(){
+  return [
+    {document_type:'terms',                 version:'v1'},
+    {document_type:'privacy',               version:'v1'},
+    {document_type:'investment_disclaimer', version:'v1'}
+  ];
+}
+
+// Read all consent records for the authenticated user from Supabase
+async function readUserConsents(userId){
+  try{
+    var res=await sb.from('consents')
+      .select('document_type,version')
+      .eq('user_id',userId);
+    if(res.error) throw res.error;
+    return res.data||[];
+  }catch(e){
+    console.error('readUserConsents failed',e);
+    return [];
+  }
+}
+
+// Return which required consents are missing given the existing ones
+function getMissingConsents(existing){
+  var required=getRequiredConsents();
+  return required.filter(function(req){
+    return !existing.some(function(e){
+      return e.document_type===req.document_type && e.version===req.version;
+    });
+  });
+}
+
+// Insert only the missing consents — no upsert, no update needed
+async function recordUserConsents(userId,source){
+  try{
+    var existing=await readUserConsents(userId);
+    var missing=getMissingConsents(existing);
+    if(missing.length===0) return {ok:true,inserted:0};
+    var ua=navigator.userAgent.slice(0,200);
+    var rows=missing.map(function(c){
+      return {
+        user_id:      userId,
+        document_type:c.document_type,
+        version:      c.version,
+        source:       source||'unknown',
+        user_agent:   ua
+      };
+    });
+    var res=await sb.from('consents').insert(rows);
+    if(res.error) throw res.error;
+    return {ok:true,inserted:rows.length};
+  }catch(e){
+    console.error('recordUserConsents failed',e);
+    return {ok:false,error:e.message||'insert_failed'};
+  }
+}
+
+// ── END CONSENT FUNCTIONS ──────────────────────────────────────
+
 // Load profile + portfolio + watchlist from Supabase for the logged-in user
 async function sbLoadUserData(authUser){
   try{
