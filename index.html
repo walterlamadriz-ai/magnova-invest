@@ -1386,10 +1386,10 @@ const PAGES=[
   {id:"comp",     icon:"⚖️",label:"Comparador"},
   {id:"sentiment",icon:"🌡",label:"Sentimiento",hidden:true},
   {id:"radar",    icon:"📡",label:"Radar Financiero"},
-  {id:"decision", icon:"🎯",label:"Decision Engine",pro:true},
+  {id:"decision", icon:"🎯",label:"Motor de Análisis",pro:true},
   {id:"ind",      icon:"📈",label:"Indicadores",pro:true},
   {id:"risk",     icon:"🛡️",label:"Riesgo",pro:true},
-  {id:"back",     icon:"📉",label:"Simulación",pro:true},
+  {id:"back",     icon:"📉",label:"Simulación Histórica",pro:true},
   {id:"screener", icon:"🔍",label:"Buscador",pro:true},
   {id:"divs",     icon:"💰",label:"Dividendos"},
   {id:"rebal",    icon:"🔀",label:"Rebalanceo"},
@@ -2625,7 +2625,7 @@ async function deGetEarnings(ticker){
 
 function renderDecisionEngine(){
   var main=document.getElementById('main');
-  main.innerHTML='<div class="ph"><div><h1>🎯 Decision Engine</h1><p class="sub-txt">// Régimen de mercado · Accumulation scores · Entry/Stop/Target por activo</p></div></div>'+
+  main.innerHTML='<div class="ph"><div><h1>🎯 Motor de Análisis</h1><p class="sub-txt">// Régimen de mercado · Accumulation scores · Entry/Stop/Target por activo</p></div></div>'+
     '<div id="de-body" style="padding:0 20px 40px">'+
     // Skeleton screens — show structure immediately, data fills in
     '<div class="de-skeleton">'+
@@ -3136,7 +3136,7 @@ function renderWelcome(){
     '<div class="welcome-feat"><div class="welcome-feat-icon">📊</div><h3>Portfolio Manager</h3><p>Seguimiento de tus posiciones, P&L y asset allocation con datos registrados.</p></div>'+
     '<div class="welcome-feat"><div class="welcome-feat-icon">🎯</div><h3>Señales técnicas</h3><p>RSI, MACD, Bandas de Bollinger y más sobre datos reales de mercado.</p></div>'+
     '<div class="welcome-feat"><div class="welcome-feat-icon">🛡️</div><h3>Gestión de riesgo</h3><p>Position sizing automático, Bull/Bear/Black Swan y R/R por activo.</p></div>'+
-    '<div class="welcome-feat"><div class="welcome-feat-icon">⚙️</div><h3>Simulación</h3><p>Prueba tus estrategias sobre datos históricos reales antes de ejecutar.</p></div>'+
+    '<div class="welcome-feat"><div class="welcome-feat-icon">⚙️</div><h3>Simulación Histórica</h3><p>Prueba tus estrategias sobre datos históricos reales antes de ejecutar.</p></div>'+
     '</div>'+
     // ── PLANS ──
     '<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Planes</div>'+
@@ -3149,7 +3149,7 @@ function renderWelcome(){
     '<div class="welcome-plan featured">'+
     '<div class="welcome-plan-name">Pro · 14 días gratis</div>'+
     '<div class="welcome-plan-price"><sup>$</sup>29<small>.99/mes</small></div>'+
-    '<div class="welcome-plan-desc">Todo ilimitado · Análisis IA<br>Indicadores, Riesgo y Simulación</div>'+
+    '<div class="welcome-plan-desc">Todo ilimitado · Análisis IA<br>Indicadores, Riesgo y Simulación Histórica</div>'+
     '</div>'+
     '</div>'+
     // ── LOGIN BOX ──
@@ -3303,7 +3303,7 @@ function renderPaywall(){
   var map={
     ind:{t:"Indicadores Técnicos",f:["RSI, MACD, BB sobre OHLCV reales","Fundamentals: P/E, EPS, ROE, Beta","Gráficos históricos hasta 6 meses"]},
     risk:{t:"Gestión de Riesgo",f:["Position sizing automático (2%)","Análisis Bull/Bear/Black Swan","R/R ratio por activo"]},
-    back:{t:"Simulación & Análisis",f:["SMA Crossover sobre datos reales","Equity curve + Win Rate","Analizador de Bitácora"]}
+    back:{t:"Simulación Histórica",f:["SMA Crossover sobre datos reales","Equity curve + Win Rate","Analizador de Bitácora"]}
   };
   var m=map[S.page]||{t:"Módulo Pro",f:[]};
   var feats=m.f.map(function(f){return '<div style="display:flex;gap:8px;font-size:12px;font-family:\'Share Tech Mono\';color:var(--text);padding:4px 0"><span style="color:var(--green);font-weight:700">✓</span>'+f+'</div>';}).join("");
@@ -3377,7 +3377,7 @@ function renderDash(){
       '<div style="margin-top:32px;display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left">'+
       '<div onclick="setPage(\'decision\')" style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer" onmouseover="this.style.borderColor=\'var(--grn)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
       '<div style="font-size:20px;margin-bottom:6px">🎯</div>'+
-      '<div style="font-size:12px;font-weight:600;color:var(--bright)">Decision Engine</div>'+
+      '<div style="font-size:12px;font-weight:600;color:var(--bright)">Motor de Análisis</div>'+
       '<div style="font-size:10px;color:var(--text3);margin-top:2px">Régimen de mercado + scores</div></div>'+
       '<div onclick="setPage(\'screener\')" style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer" onmouseover="this.style.borderColor=\'var(--grn)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
       '<div style="font-size:20px;margin-bottom:6px">🔍</div>'+
@@ -3408,7 +3408,7 @@ function renderDash(){
     '<div><h1>Dashboard</h1><p class="sub-txt">'+S.user.name+' · Plan '+plan.label+' · '+port.length+' posiciones · P&L <span style="color:'+(pnl>=0?"var(--green)":"var(--red)")+';font-weight:700">'+(pnl>=0?"+":"")+D(pnl)+'</span></p></div>'+
     '<div class="ph-right">'+liveBadge()+'<span id="saved">✓ Guardado</span>'+(S.user.plan==="free"?'<button class="btn btn-up" onclick="openModal(\'upgrade\')">⚡ Upgrade</button>':'')+
     '</div></div>'+
-    freeBanner("Plan Free: "+plan.maxT+"/"+S.portfolio.length+" tickers. Indicadores, Riesgo y Simulación bloqueados.")+
+    freeBanner("Plan Free: "+plan.maxT+"/"+S.portfolio.length+" tickers. Indicadores, Riesgo y Simulación Histórica bloqueados.")+
     '<div class="krow">'+
     kpi("Valor Portafolio",D(totM),(pnl>=0?"+":"")+pct(pnl/(totC||1))+" vs costo","g")+
     kpi("P&L Total",D(pnl),pnl>=0?"+Positivo":"Negativo",pnl>=0?"b":"r")+
@@ -3429,7 +3429,7 @@ function renderDash(){
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
     [['📐','Position Builder','Nivel de referencia · R/R','pb'],
      ['🌡','Sentiment','Fear & Greed propio','sentiment'],
-     ['🎯','Decision Engine','Régimen + scores de activos','decision'],
+     ['🎯','Motor de Análisis','Régimen + scores de activos','decision'],
      ['📊','Indicadores Pro','RSI · MACD · BB','ind']
     ].map(function(item){
       return '<div onclick="setPage(\''+item[3]+'\')" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor=\'var(--orange-bd)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
@@ -3796,7 +3796,7 @@ function renderWatch(){
   var emptyMsg=wl.length===0?'<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px;font-family:\'Share Tech Mono\'">Lista vacía — agrega tickers arriba</td></tr>':'';
 
   var deHeader=isPro
-    ?'<th onclick="setPage(\'decision\')" style="cursor:pointer;color:var(--blue)" title="Ver Decision Engine completo">🎯 DE Score</th>'
+    ?'<th onclick="setPage(\'decision\')" style="cursor:pointer;color:var(--blue)" title="Ver Motor de Análisis completo">🎯 DE Score</th>'
     :'<th style="color:var(--text3)">🎯 DE</th>';
 
   document.getElementById("main").innerHTML=
@@ -4425,8 +4425,8 @@ function renderBack(){
   var plan=planOf();
   if(plan.locked&&plan.locked.indexOf('back')>=0){
     document.getElementById("main").innerHTML=
-      '<div class="ph"><div><h1>Simulación & Análisis</h1><p class="sub-txt">// Backtest real + Analizador de Bitácora</p></div></div>'+
-      lockedBanner("Simulación & Análisis","Ejecuta estrategias reales sobre datos históricos y analiza el rendimiento de tus trades.");
+      '<div class="ph"><div><h1>Simulación Histórica</h1><p class="sub-txt">// Simulación Histórica + Analizador de Bitácora</p></div></div>'+
+      lockedBanner("Simulación Histórica","Ejecuta estrategias reales sobre datos históricos y analiza el rendimiento de tus trades.");
     return;
   }
   var sells=S.trades.filter(function(t){return t.type==='sell'&&t.pnl!=null;});
@@ -4436,10 +4436,10 @@ function renderBack(){
   };
   var tabs='<div style="display:flex;gap:8px;margin-bottom:18px">'+
     '<button style="'+tabStyle('journal')+'" onclick="BT.tab=\'journal\';renderBack()">📋 Analizador de Bitácora</button>'+
-    '<button style="'+tabStyle('sim')+'" onclick="BT.tab=\'sim\';renderBack()">⚡ Simulación de Estrategia</button>'+
+    '<button style="'+tabStyle('sim')+'" onclick="BT.tab=\'sim\';renderBack()">⚡ Simulación Histórica</button>'+
     '</div>';
 
-  var html='<div class="ph"><div><h1>Simulación & Análisis</h1><p class="sub-txt">// Backtest real + análisis de tus operaciones</p></div></div>'+tabs;
+  var html='<div class="ph"><div><h1>Simulación Histórica</h1><p class="sub-txt">// Simulación Histórica + análisis de tus operaciones</p></div></div>'+tabs;
 
   if(BT.tab==='journal'){
     html+=btRenderJournal(sells);
@@ -4525,7 +4525,7 @@ function btRenderSim(){
   var res=BT.result;
   var formHtml=
     '<div class="cb" style="margin-bottom:16px">'+
-    '<div class="st"><div class="stbar"></div>Parámetros de Simulación</div>'+
+    '<div class="st"><div class="stbar"></div>Parámetros de Simulación Histórica</div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px">'+
     '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Ticker</label>'+
     '<input id="bt-ticker" class="inp" style="width:100%" value="'+BT.ticker+'" placeholder="SPY" oninput="BT.ticker=this.value.toUpperCase().trim()"/></div>'+
@@ -4542,7 +4542,7 @@ function btRenderSim(){
     '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">SMA Lenta (días)</label>'+
     '<input id="bt-slow" class="inp" style="width:100%" type="number" value="'+BT.slow+'" min="20" max="200" oninput="BT.slow=parseInt(this.value)||50"/></div>'+
     '</div>'+
-    '<button class="btn-big" style="width:100%;margin-top:14px" onclick="btRunSim()" '+(BT.running?'disabled':'')+'>'+(BT.running?'⟳ Ejecutando...':'▶ Ejecutar Simulación')+'</button>'+
+    '<button class="btn-big" style="width:100%;margin-top:14px" onclick="btRunSim()" '+(BT.running?'disabled':'')+'>'+(BT.running?'⟳ Ejecutando...':'▶ Ejecutar Simulación Histórica')+'</button>'+
     '</div>';
 
   if(!res) return formHtml+'<div style="text-align:center;padding:30px;color:var(--text3);font-size:12px">Configura los parámetros y ejecuta la simulación para ver resultados.</div>';
@@ -4681,7 +4681,7 @@ function renderAlert(){
   }).join("");
 
   var mono=[
-    {icon:"🎯",t:"Plan Pro",d:"Decision Engine + señales ilimitadas",p:"14d gratis · $29.99/mes"},
+    {icon:"🎯",t:"Plan Pro",d:"Motor de Análisis + señales ilimitadas",p:"14d gratis · $29.99/mes"},
     {icon:"🏢",t:"Teams",d:"Multi-usuario + API",p:"$99/mes"},
     {icon:"📚",t:"Curso",d:"Análisis técnico + Excel",p:"$199 único"},
     {icon:"🤖",t:"API",d:"Webhooks + brokers IBKR",p:"Custom"},
@@ -6852,7 +6852,7 @@ function mUpgrade(mr){
     ['🤖','AI Coach semanal','Reporte personalizado automático'],
     ['📈','Indicadores Pro','RSI, MACD, BB sobre datos reales'],
     ['🛡️','Gestión de Riesgo','Position sizing + escenarios macro'],
-    ['📉','Simulación','Prueba estrategias históricas'],
+    ['📉','Simulación Histórica','Prueba estrategias históricas'],
     ['💰','Dividend Calendar','Proyección 12 meses de ingresos'],
     ['🔀','Rebalancing Tool','Calcula trades exactos'],
     
@@ -6889,7 +6889,7 @@ function mUpgrade(mr){
     ['5 posiciones en portfolio','3 alertas de precio','5 señales activas','Dashboard básico','Noticias del mercado'].map(function(f){
       return '<div style="font-size:11px;color:var(--text2);padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center"><span style="color:var(--green)">✓</span>'+f+'</div>';
     }).join('')+
-    ['Indicadores Pro','Gestión de Riesgo','Simulación','Análisis IA','Comparador','Chile/LATAM'].map(function(f){
+    ['Indicadores Pro','Gestión de Riesgo','Simulación Histórica','Análisis IA','Comparador','Chile/LATAM'].map(function(f){
       return '<div style="font-size:11px;color:var(--text3);padding:3px 0;border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center;text-decoration:line-through"><span>✗</span>'+f+'</div>';
     }).join('')+
     '</div>'+
