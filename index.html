@@ -1399,6 +1399,17 @@ var liveFromCache=false;
 // Falls back to public CORS proxies for local dev only.
 var fetchStats={ok:0,fail:0,lastErr:null,lastOk:null};
 
+// ── APP CONSTANTS ────────────────────────────────────────────────
+var TRIAL_DAYS=14;
+var TRIAL_MS=TRIAL_DAYS*24*60*60*1000;
+var PRO_PRICE_USD=29.99;
+var DE_CACHE_TTL=30*60*1000;
+var LIVE_CACHE_TTL=2*60*60*1000;
+var FX_CACHE_TTL=24*60*60*1000;
+var LIVE_REFRESH_MS=5*60*1000;
+var STOP_LOSS_DEFAULT=0.08;
+var DEFAULT_CAPITAL=100000;
+
 var _USE_EDGE=['vercel.app','financeospro.com','magnova.app','magnova-invest']
   .some(function(h){return window.location.hostname.includes(h);});
 
@@ -1603,7 +1614,7 @@ async function refreshLive(tickers,manual){
       // Load from cache on complete failure
       try{
         var c=JSON.parse(localStorage.getItem('mv_prices_cache')||'null');
-        if(c&&(Date.now()-c.ts)<2*60*60*1000){
+        if(c&&(Date.now()-c.ts)<LIVE_CACHE_TTL){
           Object.assign(LIVE,c.live);
           liveFromCache=true;liveUpdated=c.ts;
           S.portfolio.forEach(function(h){if(LIVE[h.t])h.cur=LIVE[h.t].price;});
@@ -1933,6 +1944,15 @@ function renderSidebar(){
       '</div>'+
       '<span style="font-size:11px;color:var(--text3)">⏻</span>'+
       '</div></div>';
+  }
+
+  // Trial countdown in sidebar
+  var trialDays=getTrialDaysLeft();
+  if(trialDays!==null){
+    var trialColor=trialDays<=3?'var(--red)':trialDays<=7?'var(--orange)':'var(--blue)';
+    html+='<div style="margin:0 10px 8px;padding:8px 10px;border-radius:8px;border:1px solid '+trialColor+';background:rgba(0,0,0,.15);font-size:10px;font-family:\'JetBrains Mono\',monospace;color:'+trialColor+'">'+
+      '⏰ Trial: '+trialDays+' día'+(trialDays!==1?'s':'')+' restante'+(trialDays!==1?'s':'')+
+      '<button onclick="openModal(\'upgrade\')" style="display:block;margin-top:5px;width:100%;background:'+trialColor+';border:none;border-radius:5px;padding:3px 0;color:#fff;font-size:9px;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Activar Pro →</button></div>';
   }
 
   document.getElementById("sb").innerHTML=html;
@@ -2958,6 +2978,10 @@ function renderPort(){
     '<div class="ph-right">'+liveBadge()+
     (plan.maxT>=999||S.portfolio.length<plan.maxT?'<button class="btn" onclick="openModal(\'addpos\')">+ Agregar</button>':'<span style="font-size:10px;color:var(--amber);font-family:\'Share Tech Mono\'">Límite Free ('+plan.maxT+')</span>')+
     '</div></div>'+
+    (S.portfolio.length>0&&S.portfolio[0]&&S.portfolio[0].id<=10&&!localStorage.getItem('mv_demo_dismissed')?
+      '<div style="background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.35);border-radius:8px;padding:10px 14px;margin:0 20px 14px;display:flex;align-items:center;gap:10px;font-size:11px;font-family:\'JetBrains Mono\',monospace">'+
+      '<span>⚠️</span><span style="flex:1;color:var(--amber)">Estás viendo un <b>portfolio de ejemplo</b>. Elimina estas posiciones y agrega las tuyas reales.</span>'+
+      '<button onclick="localStorage.setItem(\'mv_demo_dismissed\',\'1\');renderPort()" style="background:transparent;border:1px solid var(--amber);border-radius:5px;padding:3px 8px;color:var(--amber);font-size:10px;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Entendido</button></div>':'')+
     freeBanner("Plan Free: máximo "+plan.maxT+" posiciones.")+
     '<div class="krow">'+
     kpi("Capital",D(S.capital),"","g")+
@@ -3914,27 +3938,6 @@ function renderModal(){
 }
 
 
-function mUpgrade(mr){
-  var proFeats=["Tickers ilimitados","20+ señales real-time","Alertas ilimitadas","RSI · MACD · BB reales","Risk & sizing","Backtesting engine","🎯 Decision Engine","Soporte prioritario"];
-  var freeFeats=["5 tickers","3 alertas","5 señales","Dashboard básico"];
-  var freeLocked=["Indicadores","Risk","Backtesting","Fundamentals","20+ señales"];
-  mr.innerHTML='<div class="overlay" onclick="closeModal()"><div class="modal" style="max-width:460px" onclick="event.stopPropagation()">'+
-    '<button class="mx" onclick="closeModal()">✕</button>'+
-    '<h2>⚡ Upgrade a Pro</h2><p class="msub">Desbloquea el análisis completo — 14 días gratis, luego $29.99/mes</p>'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'+
-    '<div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:13px">'+
-    '<div style="display:flex;justify-content:space-between;margin-bottom:9px"><span style="font-size:13px;font-weight:700;color:var(--bright)">Free</span><span style="font-size:10px;font-family:\'Share Tech Mono\';color:var(--text3)">$0/mes</span></div>'+
-    freeFeats.map(function(f){return '<div style="font-size:10px;font-family:\'Share Tech Mono\';padding:3px 0;border-bottom:1px solid var(--border);color:var(--green);display:flex;gap:5px"><span>✓</span>'+f+'</div>';}).join("")+
-    freeLocked.map(function(f){return '<div style="font-size:10px;font-family:\'Share Tech Mono\';padding:3px 0;border-bottom:1px solid var(--border);color:var(--text3);display:flex;gap:5px"><span>✗</span>'+f+'</div>';}).join("")+
-    '</div>'+
-    '<div style="background:var(--abg);border:2px solid var(--orange);border-radius:9px;padding:13px">'+
-    '<div style="display:flex;justify-content:space-between;margin-bottom:9px"><span style="font-size:13px;font-weight:700;color:var(--bright)">Pro ⭐</span><span style="font-size:10px;font-family:\'Share Tech Mono\';color:var(--orange)">14 días gratis · $29.99/mes</span></div>'+
-    proFeats.map(function(f){return '<div style="font-size:10px;font-family:\'Share Tech Mono\';padding:3px 0;border-bottom:1px solid var(--aborder);color:var(--green);display:flex;gap:5px"><span>✓</span>'+f+'</div>';}).join("")+
-    '</div></div>'+
-    '<button class="btn-big" style="width:100%" onclick="doUpgrade()">⚡ Suscribirse a Pro — 14 días gratis</button>'+
-    '<div style="font-size:9px;color:var(--text3);text-align:center;margin-top:8px;font-family:\'Share Tech Mono\'">Sin tarjeta durante el trial · Cancela en 1 click</div>'+
-    '</div></div>';
-}
 async function doUpgrade(){
   var u=S.user;
   if(!u)return;
@@ -5535,7 +5538,7 @@ function getTrialDaysLeft(){
   if(!S.user||S.user.plan!=='trial') return null;
   var started=S.user.trialStarted||Date.now();
   var elapsed=(Date.now()-started)/(1000*60*60*24);
-  return Math.max(0,Math.ceil(14-elapsed));
+  return Math.max(0,Math.ceil(TRIAL_DAYS-elapsed));
 }
 
 function trialBanner(){
@@ -5625,7 +5628,6 @@ function checkOnboarding(){
 }
 
 // ── KEYBOARD SHORTCUTS ─────────────────────────────────────────
-var KS_SHOWN=false;
 document.addEventListener('keydown',function(e){
   if(!S.user) return;
   if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
@@ -6319,7 +6321,7 @@ async function bootLiveData(){
   // ① Show cached prices instantly — user sees something immediately
   try{
     var _c=JSON.parse(localStorage.getItem('mv_prices_cache')||'null');
-    if(_c&&_c.live&&(Date.now()-_c.ts)<2*60*60*1000){
+    if(_c&&_c.live&&(Date.now()-_c.ts)<LIVE_CACHE_TTL){
       Object.assign(LIVE,_c.live);
       liveFromCache=true;liveUpdated=_c.ts;
       S.portfolio.forEach(function(h){if(LIVE[h.t])h.cur=LIVE[h.t].price;});
@@ -6345,7 +6347,7 @@ async function bootLiveData(){
       updateLiveBadge();
       updateLivePricesInDOM();
     }).catch(function(){});
-  },5*60*1000);
+  },LIVE_REFRESH_MS);
 }
 
 function stopBoot(){
