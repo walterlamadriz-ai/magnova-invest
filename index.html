@@ -1016,7 +1016,7 @@ tr:last-child td { border-bottom: none; }
     z-index: 400;
   }
   .sb.mobile-open { transform: translateX(0); }
-  .main { margin-left: 0; padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)); }
+  .main { margin-left: 0; padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
   .ph { padding: 14px 16px 12px; }
   .page-body { padding: 16px; }
   .g2, .g3 { grid-template-columns: 1fr; }
@@ -1028,8 +1028,30 @@ tr:last-child td { border-bottom: none; }
   .hbg-btn { display:flex!important; }
   .sb-backdrop { display:block; }
   #mobile-header { display: flex!important; }
-  .disclaimer-bar { left: 0; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+  .disclaimer-bar { left: 0; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+  #mob-tab-bar { display: flex!important; }
 }
+#mob-tab-bar {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  z-index: 350;
+  align-items: center;
+  justify-content: space-around;
+}
+.mob-tab {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; flex: 1; height: 100%; cursor: pointer; padding: 6px 0;
+  color: var(--text3); font-size: 9px; font-family: 'Share Tech Mono', monospace;
+  border: none; background: transparent; transition: color .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mob-tab.act { color: var(--blue); }
+.mob-tab svg { width: 20px; height: 20px; }
 @media (min-width: 769px) {
   #mobile-header { display: none!important; }
 }
@@ -3253,13 +3275,14 @@ function renderDash(){
 
   var sigRows=top.map(function(s){
     var lp=getLivePrice(s.t);
-    return '<tr class="trow" onclick="openDrawer(\''+s.t+'\','+lp+')">'+
+    var lqd=LIVE[s.t];
+    return '<tr class="trow" data-sc="'+s.sc+'" data-price="'+lp+'" data-chg="'+(lqd?(lqd.changePct||0):0)+'" onclick="openDrawer(\''+s.t+'\','+lp+')">'+
       '<td style="font-weight:600;color:var(--bright)">'+s.t+' <span style="font-size:9px;color:var(--text3)">↗</span></td>'+
       '<td>'+badge(s.sig)+'</td>'+
       '<td style="font-weight:700;color:'+(s.sc>=72?"var(--green)":s.sc>=52?"var(--orange)":"var(--red)")+'">'+s.sc+'</td>'+
       '<td>'+sbar(s.sc)+'</td>'+
       '<td style="font-weight:600">$'+fmtD(lp)+'</td>'+
-      '<td>'+chgCell(LIVE[s.t])+'</td>'+
+      '<td>'+chgCell(lqd)+'</td>'+
       '<td>'+distCell(lp,lp*.92)+'</td>'+
       '</tr>';
   }).join("");
@@ -3343,7 +3366,7 @@ function renderDash(){
     '</div>'+
     '<div id="de-regime-banner"></div>'+
     '<div class="st"><div class="stbar"></div>Top Señales</div>'+
-    '<div class="tw"><table><thead><tr><th>Activo</th><th>Señal</th><th>Score</th><th>Fuerza</th><th>Precio</th><th>Δ Hoy</th><th title="Distancia al stop –8% desde precio actual">Stop –8%</th></tr></thead>'+
+    '<div class="tw"><table id="tbl-dash"><thead><tr><th>Activo</th><th>Señal</th>'+sortTh("dash","sc","Score")+'<th>Fuerza</th>'+sortTh("dash","price","Precio")+sortTh("dash","chg","Δ Hoy")+'<th title="Distancia al stop –8%">Stop –8%</th></tr></thead>'+
     '<tbody>'+sigRows+'</tbody></table></div>'+
     '<div class="grid2">'+
     '<div class="cb"><div class="st"><div class="stbar"></div>Allocation</div>'+allocRows+'</div>'+
@@ -3734,7 +3757,7 @@ function renderWatch(){
     '<div style="display:flex;gap:8px">'+
     '<input class="inp" id="wc" placeholder="Custom..." maxlength="6" style="width:120px;text-transform:uppercase" onkeydown="if(event.key===\'Enter\')addCustomW()"/>'+
     '<button class="btn" onclick="addCustomW()">+ Agregar</button></div></div>'+
-    '<div class="tw"><table><thead><tr><th>Ticker</th><th>Señal</th><th>Score</th><th>Fuerza</th><th>Precio</th><th>Δ Hoy</th><th title="Distancia al stop –8%">Stop –8%</th>'+deHeader+'<th>Quitar</th></tr></thead>'+
+    '<div class="tw"><table id="tbl-watch"><thead><tr><th>Ticker</th><th>Señal</th>'+sortTh("watch","sc","Score")+'<th>Fuerza</th>'+sortTh("watch","price","Precio")+sortTh("watch","chg","Δ Hoy")+'<th title="Distancia al stop –8%">Stop –8%</th>'+deHeader+'<th>Quitar</th></tr></thead>'+
     '<tbody>'+emptyMsg+wRows+'</tbody></table></div>'+
     '';
 
@@ -3787,7 +3810,7 @@ function renderSig(){
     var inW=S.watchlist.indexOf(s.t)>=0;
     var chg=lq?'<span style="font-size:9px;color:'+(lq.changePct>=0?"var(--green)":"var(--red)")+'"> '+(lq.changePct>=0?"+":"")+((lq.changePct||0)*100).toFixed(2)+'%</span>':'';
     var wbtn='<button class="btn" style="padding:2px 7px;font-size:10px;'+(inW?"border-color:var(--orange);color:var(--orange)":"border-color:var(--text3);color:var(--text3)")+'" onclick="event.stopPropagation();'+(inW?"rmWatch('"+s.t+"')":"addWatch('"+s.t+"')")+'">'+(inW?"✓":"+")+' Watch</button>';
-    return '<tr class="trow">'+
+    return '<tr class="trow" data-sc="'+s.sc+'" data-price="'+lp+'" data-chg="'+(lq?(lq.changePct||0):0)+'">'+
       '<td style="font-weight:600;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+s.t+'\','+lp+')">'+s.t+' <span style="font-size:9px;color:var(--text3)">↗</span></td>'+
       '<td>'+badge(s.sig)+'</td>'+
       '<td style="font-weight:700;color:'+(s.sc>=72?"var(--green)":s.sc>=52?"var(--orange)":"var(--red)")+'">'+s.sc+'</td>'+
@@ -3808,7 +3831,7 @@ function renderSig(){
     kpi("Señal Media",sigs.filter(function(s){return s.sig==="HOLD";}).length,"","a")+
     kpi("Señal Baja",sigs.filter(function(s){return s.sig==="SELL";}).length,"","r")+
     '</div>'+
-    '<div class="tw"><table><thead><tr><th>Ticker</th><th>Señal</th><th>Score</th><th>Fuerza</th><th>Precio</th><th>Δ Hoy</th><th>Stop –8%</th><th>Watch</th></tr></thead>'+
+    '<div class="tw"><table id="tbl-sig"><thead><tr><th>Ticker</th><th>Señal</th>'+sortTh("sig","sc","Score")+'<th>Fuerza</th>'+sortTh("sig","price","Precio")+sortTh("sig","chg","Δ Hoy")+'<th>Stop –8%</th><th>Watch</th></tr></thead>'+
     '<tbody>'+rows+'</tbody></table></div>';
 }
 function setSigF(f){S.sigFilter=f;renderMain();}
@@ -5190,7 +5213,21 @@ function renderDrawerBody(){
             '<div style="font-size:13px;font-weight:700;color:'+(f.targetPrice>0?'var(--green)':'var(--red)')+'">'+( f.targetPrice>0?'+':'')+fmtD(f.targetPrice)+'</div></div>':'')+
           '</div>':'')+
       '')+
-      '<div class="cha">'+
+      // Margins visual bar
+      (f&&(f.grossMargin!=null||f.netMargin!=null)?
+        '<div class="cha" style="margin-bottom:10px">'+
+        '<div class="chl">Estructura de márgenes</div>'+
+        [['Margen Bruto',f.grossMargin,'var(--blue)'],['Margen Operativo',f.operatingMargin,'var(--orange)'],['Margen Neto',f.netMargin,'var(--green)']].filter(function(r){return r[1]!=null;}).map(function(r){
+          var pv=Math.max(0,Math.min(100,(r[1]*100)));
+          var neg=r[1]<0;
+          return '<div style="margin-bottom:7px">'+
+            '<div style="display:flex;justify-content:space-between;font-size:10px;font-family:\'JetBrains Mono\',monospace;margin-bottom:3px">'+
+            '<span style="color:var(--text3)">'+r[0]+'</span>'+
+            '<span style="color:'+(neg?'var(--red)':r[2])+';font-weight:700">'+(neg?'':'')+pct(r[1])+'</span></div>'+
+            '<div style="height:6px;background:var(--card3);border-radius:3px">'+
+            '<div style="height:100%;width:'+pv.toFixed(1)+'%;background:'+(neg?'var(--red)':r[2])+';border-radius:3px;transition:width .4s"></div></div>';
+        }).join('')+
+        '</div>':'')+'<div class="cha">'+
       '<div class="chl">Rango 52 semanas</div>'+
       (lq&&lq.high52?
         '<div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-bottom:5px"><span>$'+fmtD(lq.low52)+'</span><span style="font-weight:600;color:var(--bright)">$'+fmtD(cur)+'</span><span>$'+fmtD(lq.high52)+'</span></div>'+
@@ -6721,7 +6758,7 @@ function installPWA(){
 
 
 // ── COMPARADOR DE ACTIVOS ────────────────────────────────────────
-var COMP={tickers:["AAPL","MSFT"],range:60,data:{},loading:false};
+var COMP={tickers:["AAPL","MSFT"],range:60,data:{},loading:false,spy:null,showSPY:true};
 
 function compSet(t1,t2,t3,t4){
   COMP.tickers=[t1,t2];
@@ -6807,15 +6844,24 @@ function renderComp(){
       series.push({t:t,pts:pts,color:colors[ti]});
     });
 
+    // Build SPY benchmark series (base-100 normalized)
+    var spySeries=null;
+    if(COMP.showSPY&&COMP.spy&&COMP.spy.length>0&&COMP.tickers.indexOf('SPY')<0){
+      var spyBase=COMP.spy[0].close;
+      spySeries={pts:COMP.spy.map(function(d,i){return{x:i,y:(d.close/spyBase-1)*100};})};
+    }
+
     if(series.length>0){
       var W=520,H=200;
       var allY=[];
       series.forEach(function(s){s.pts.forEach(function(p){allY.push(p.y);});});
+      if(spySeries) spySeries.pts.forEach(function(p){allY.push(p.y);});
       var minY=Math.min.apply(null,allY)-3;
       var maxY=Math.max.apply(null,allY)+3;
       var rng=maxY-minY||1;
       var nPts=series[0].pts.length;
-      var xS=function(i){return(i/Math.max(nPts-1,1))*W;};
+      var spyPts=spySeries?spySeries.pts.length:nPts;
+      var xS=function(i,total){return(i/Math.max((total||nPts)-1,1))*W;};
       var yS=function(v){return H-((v-minY)/rng)*H;};
 
       var grid='';
@@ -6827,16 +6873,27 @@ function renderComp(){
         grid+="<text x='3' y='"+(parseFloat(y)-2).toFixed(1)+"' fill='var(--text3)' font-size='8' font-family='JetBrains Mono,monospace'>"+(v>=0?'+':'')+v+"%</text>";
       });
 
+      // SPY dashed benchmark line (drawn first, behind tickers)
+      var spySvg='';
+      if(spySeries){
+        var spts=spySeries.pts;
+        var spyStr=spts.map(function(p,i){return xS(i,spyPts).toFixed(1)+','+yS(p.y).toFixed(1);}).join(' ');
+        var spyLast=spts[spts.length-1];
+        var slx=xS(spyPts-1,spyPts);var sly=yS(spyLast.y);
+        spySvg="<polyline points='"+spyStr+"' fill='none' stroke='rgba(156,163,175,.5)' stroke-width='1.5' stroke-dasharray='5,3'/>"+
+          "<text x='"+(slx+5).toFixed(1)+"' y='"+(sly+3).toFixed(1)+"' fill='rgba(156,163,175,.7)' font-size='8' font-family='JetBrains Mono,monospace'>SPY "+(spyLast.y>=0?'+':'')+spyLast.y.toFixed(1)+"%</text>";
+      }
+
       var lines_svg=series.map(function(s){
-        var pts_str=s.pts.map(function(p){return xS(p.x).toFixed(1)+','+yS(p.y).toFixed(1);}).join(' ');
+        var pts_str=s.pts.map(function(p){return xS(p.x,nPts).toFixed(1)+','+yS(p.y).toFixed(1);}).join(' ');
         var last=s.pts[s.pts.length-1];
-        var lx=xS(last.x);var ly=yS(last.y);
+        var lx=xS(last.x,nPts);var ly=yS(last.y);
         return "<polyline points='"+pts_str+"' fill='none' stroke='"+s.color+"' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/>"+
           "<circle cx='"+lx.toFixed(1)+"' cy='"+ly.toFixed(1)+"' r='3' fill='"+s.color+"'/>"+
           "<text x='"+(lx+5).toFixed(1)+"' y='"+(ly+3).toFixed(1)+"' fill='"+s.color+"' font-size='9' font-weight='700' font-family='JetBrains Mono,monospace'>"+s.t+" "+(last.y>=0?'+':'')+last.y.toFixed(1)+"%</text>";
       }).join('');
 
-      chartContent='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:'+H+'px">'+grid+lines_svg+'</svg>';
+      chartContent='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:'+H+'px">'+grid+spySvg+lines_svg+'</svg>';
 
       // Stats
       var tickerStats=series.map(function(s){
@@ -6916,7 +6973,12 @@ function renderComp(){
     return '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px">'+
       '<span style="width:16px;height:2px;background:'+colors[i]+';display:inline-block;border-radius:1px;flex-shrink:0"></span>'+
       '<span style="font-size:10px;font-weight:600;color:'+colors[i]+';font-family:\'JetBrains Mono\',monospace">'+t+'</span></span>';
-  }).join('');
+  }).join('')+
+  (COMP.tickers.indexOf('SPY')<0?
+    '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;cursor:pointer;opacity:'+(COMP.showSPY?1:.4)+'" onclick="COMP.showSPY=!COMP.showSPY;renderComp()">'+
+    '<svg width="16" height="2" style="flex-shrink:0"><line x1="0" y1="1" x2="16" y2="1" stroke="rgba(156,163,175,.7)" stroke-width="1.5" stroke-dasharray="4,2"/></svg>'+
+    '<span style="font-size:10px;color:rgba(156,163,175,.8);font-family:\'JetBrains Mono\',monospace">SPY Benchmark</span></span>':'')+
+  '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-left:8px">Retorno acumulado base-100</span>';
 
   document.getElementById('main').innerHTML=
     '<div class="ph"><div><h1>Comparador de Activos</h1>'+
@@ -6951,7 +7013,7 @@ async function compLoad(){
   if(COMP.loading) return;
   COMP.tickers=COMP.tickers.filter(function(t){return t&&t.trim().length>0;});
   if(COMP.tickers.length<2){alert('Selecciona al menos 2 tickers');return;}
-  COMP.loading=true;COMP.data={};COMP.synthetic=[];renderComp();
+  COMP.loading=true;COMP.data={};COMP.spy=null;COMP.synthetic=[];renderComp();
   var rangeMap={30:'1mo',60:'2mo',90:'3mo',130:'6mo',365:'1y',1095:'3y'};
   var rng=rangeMap[COMP.range]||'3mo';
   try{
@@ -6962,7 +7024,11 @@ async function compLoad(){
         if(!LIVE[t]) return fetchQuote(t).then(function(q){if(q) LIVE[t]=q;});
       }).catch(function(){COMP.data[t]=genFallback(getLivePrice(t)||100,COMP.range);if(COMP.synthetic.indexOf(t)<0)COMP.synthetic.push(t);});
     });
-    await Promise.all(promises);
+    // Fetch SPY benchmark unless already comparing it
+    var spyPromise=COMP.tickers.indexOf('SPY')<0
+      ?fetchHistory('SPY',rng).then(function(h){if(h&&h.length>5)COMP.spy=h;}).catch(function(){})
+      :Promise.resolve();
+    await Promise.all(promises.concat([spyPromise]));
   }catch(e){/* silent */}
   COMP.loading=false;renderComp();
 }
@@ -7478,6 +7544,42 @@ sb.auth.onAuthStateChange(function(event,session){
 
 
 
+</script>
+
+<!-- Mobile bottom tab bar -->
+<nav id="mob-tab-bar">
+  <button class="mob-tab" id="mbt-dash" onclick="setPage('dash');updateMobTabs()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Dashboard
+  </button>
+  <button class="mob-tab" id="mbt-port" onclick="setPage('port');updateMobTabs()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    Portfolio
+  </button>
+  <button class="mob-tab" id="mbt-watch" onclick="setPage('watch');updateMobTabs()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    Watchlist
+  </button>
+  <button class="mob-tab" id="mbt-sig" onclick="setPage('sig');updateMobTabs()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Señales
+  </button>
+  <button class="mob-tab" id="mbt-news" onclick="setPage('news');updateMobTabs()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><path d="M4 11h8"/><path d="M4 7h4"/><path d="M4 15h4"/><rect x="2" y="7" width="6" height="13" rx="1"/></svg>
+    Noticias
+  </button>
+</nav>
+<script>
+function updateMobTabs(){
+  ['dash','port','watch','sig','news'].forEach(function(p){
+    var el=document.getElementById('mbt-'+p);
+    if(el) el.classList.toggle('act',S.page===p);
+  });
+}
+// Patch setPage to keep tabs in sync
+var _origSetPage=setPage;
+setPage=function(p){_origSetPage(p);updateMobTabs();};
+updateMobTabs();
 </script>
 </body>
 </html>
