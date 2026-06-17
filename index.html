@@ -1673,40 +1673,45 @@ async function fetchHistory(ticker,range){
 }
 async function fetchFundamentals(ticker){
   try{
-  var ckey='fund_'+ticker;
-  var cached=_cacheGet(ckey);
-  if(cached) return cached;
-  var json=null;
-  try{
-    var modules='summaryDetail,defaultKeyStatistics,financialData,calendarEvents,financialHighlights';
-    var res=_USE_EDGE
-      ? await fetchWithTimeout('/api/quoteSummary?ticker='+encodeURIComponent(ticker)+'&modules='+modules,8000)
-      : await fetchWithTimeout('https://api.allorigins.win/raw?url='+encodeURIComponent('https://query1.finance.yahoo.com/v10/finance/quoteSummary/'+ticker+'?modules='+modules),10000);
-    if(res&&res.ok) json=await res.json();
-  }catch(e){}
-  if(!json) return null;
-  var s=json&&json.quoteSummary&&json.quoteSummary.result&&json.quoteSummary.result[0];
-  if(!s) return null;
-  var result={
-    peRatio:s.summaryDetail&&s.summaryDetail.trailingPE&&s.summaryDetail.trailingPE.raw,
-    forwardPE:s.summaryDetail&&s.summaryDetail.forwardPE&&s.summaryDetail.forwardPE.raw,
-    eps:s.defaultKeyStatistics&&s.defaultKeyStatistics.trailingEps&&s.defaultKeyStatistics.trailingEps.raw,
-    roe:s.financialData&&s.financialData.returnOnEquity&&s.financialData.returnOnEquity.raw,
-    grossMargin:s.financialData&&s.financialData.grossMargins&&s.financialData.grossMargins.raw,
-    revenueGrowth:s.financialData&&s.financialData.revenueGrowth&&s.financialData.revenueGrowth.raw,
-    beta:s.summaryDetail&&s.summaryDetail.beta&&s.summaryDetail.beta.raw,
-    dividendYield:s.summaryDetail&&s.summaryDetail.dividendYield&&s.summaryDetail.dividendYield.raw,
-    priceToBook:s.defaultKeyStatistics&&s.defaultKeyStatistics.priceToBook&&s.defaultKeyStatistics.priceToBook.raw,
-    targetMeanPrice:s.financialData&&s.financialData.targetMeanPrice&&s.financialData.targetMeanPrice.raw,
-    recommendationKey:s.financialData&&s.financialData.recommendationKey,
-    numberOfAnalysts:s.financialData&&s.financialData.numberOfAnalystOpinions&&s.financialData.numberOfAnalystOpinions.raw,
-    earningsDate:(s.calendarEvents&&s.calendarEvents.earnings&&s.calendarEvents.earnings.earningsDate&&s.calendarEvents.earnings.earningsDate[0]&&s.calendarEvents.earnings.earningsDate[0].raw)?new Date(s.calendarEvents.earnings.earningsDate[0].raw*1000).toLocaleDateString('es',{day:'numeric',month:'short',year:'numeric'}):null,
-    netMargin:s.financialData&&s.financialData.profitMargins&&s.financialData.profitMargins.raw,
-    debtToEquity:s.financialData&&s.financialData.debtToEquity&&s.financialData.debtToEquity.raw
-  };
-  _cacheSet(ckey,result);
-  return result;
-  }catch(e){console.error("fetchFundamentals failed",ticker,e);return null;}
+    var ckey='fund_'+ticker;
+    var cached=_cacheGet(ckey);
+    if(cached) return cached;
+    if(!_USE_EDGE) return null; // no CORS-safe fallback for FMP
+    var res=await fetchWithTimeout('/api/fundamentals?ticker='+encodeURIComponent(ticker),9000);
+    if(!res||!res.ok) return null;
+    var json=await res.json();
+    // /api/fundamentals returns { TICKER: {...} }
+    var d=json&&json[ticker.toUpperCase()];
+    if(!d) return null;
+    // Normalize to the shape the drawer expects
+    var result={
+      peRatio:      d.peRatio,
+      forwardPE:    d.forwardPE,
+      eps:          d.eps,
+      roe:          d.roe,
+      grossMargin:  d.grossMargin,
+      revenueGrowth:d.revenueGrowth,
+      beta:         d.beta,
+      dividendYield:d.dividendYield,
+      priceToBook:  d.priceToBook,
+      netMargin:    d.netMargin,
+      debtToEquity: d.debtToEquity,
+      marketCap:    d.marketCap,
+      // Analyst data (FMP free tier best-effort)
+      targetMeanPrice:   d.targetPrice||null,
+      recommendationKey: d.analystRating?d.analystRating.toLowerCase():null,
+      numberOfAnalysts:  null,
+      earningsDate:      null,
+      // Company info (new — not in Yahoo version)
+      sector:      d.sector,
+      industry:    d.industry,
+      description: d.description,
+      country:     d.country,
+      employees:   d.employees,
+    };
+    _cacheSet(ckey,result);
+    return result;
+  }catch(e){console.error('fetchFundamentals failed',ticker,e);return null;}
 }
 
 
@@ -4768,55 +4773,70 @@ function renderDrawerBody(){
   } else {
     // Fundamentals
     var f=fund;
-    var recLabel={'strongBuy':'Compra Fuerte','buy':'Comprar','hold':'Mantener','sell':'Vender','strongSell':'Venta Fuerte'};
-    var recColor={'strongBuy':'var(--green)','buy':'var(--green)','hold':'var(--amber)','sell':'var(--red)','strongSell':'var(--red)'};
-    var rec=f&&f.recommendationKey;
+    var recLabel={'strongbuy':'Compra Fuerte','buy':'Comprar','hold':'Mantener','sell':'Vender','strongsell':'Venta Fuerte','neutral':'Neutral'};
+    var recColor={'strongbuy':'var(--green)','buy':'var(--green)','hold':'var(--amber)','sell':'var(--red)','strongsell':'var(--red)','neutral':'var(--text2)'};
+    var rec=f&&f.recommendationKey?f.recommendationKey.toLowerCase():null;
+    var mktCap=f&&f.marketCap?f.marketCap:(lq&&lq.marketCap?lq.marketCap:null);
     var fi=[
-      ["P/E Trailing",f&&f.peRatio?f.peRatio.toFixed(1)+"x":"..."],
-      ["P/E Forward",f&&f.forwardPE?f.forwardPE.toFixed(1)+"x":"..."],
-      ["EPS (TTM)",f&&f.eps?"$"+fmtD(f.eps):"..."],
-      ["ROE",f&&f.roe?pct(f.roe):"..."],
-      ["Gross Margin",f&&f.grossMargin?pct(f.grossMargin):"..."],
-      ["Net Margin",f&&f.netMargin?pct(f.netMargin):"..."],
-      ["Beta",f&&f.beta?f.beta.toFixed(2):"..."],
-      ["Div. Yield",f&&f.dividendYield?pct(f.dividendYield):"N/A"],
-      ["Price/Book",f&&f.priceToBook?f.priceToBook.toFixed(2):"..."],
-      ["Rev. Growth",f&&f.revenueGrowth?pct(f.revenueGrowth):"..."],
-      ["Deuda/Capital",f&&f.debtToEquity?f.debtToEquity.toFixed(1)+"x":"..."],
-      ["Mkt Cap",lq&&lq.marketCap?fmtM(lq.marketCap):"—"]
+      ["P/E (TTM)",       f&&f.peRatio!=null       ? f.peRatio.toFixed(1)+"x"  : "—"],
+      ["P/E Forward",     f&&f.forwardPE!=null      ? f.forwardPE.toFixed(1)+"x": "—"],
+      ["EPS (TTM)",       f&&f.eps!=null            ? "$"+fmtD(f.eps)           : "—"],
+      ["P/Book",          f&&f.priceToBook!=null    ? f.priceToBook.toFixed(2)+"x":"—"],
+      ["ROE",             f&&f.roe!=null            ? pct(f.roe)                : "—"],
+      ["Margen Bruto",    f&&f.grossMargin!=null    ? pct(f.grossMargin)        : "—"],
+      ["Margen Neto",     f&&f.netMargin!=null      ? pct(f.netMargin)          : "—"],
+      ["Crec. Ingresos",  f&&f.revenueGrowth!=null  ? pct(f.revenueGrowth)      : "—"],
+      ["Beta",            f&&f.beta!=null           ? f.beta.toFixed(2)         : "—"],
+      ["Deuda/Capital",   f&&f.debtToEquity!=null   ? f.debtToEquity.toFixed(1)+"x":"—"],
+      ["Div. Yield",      f&&f.dividendYield!=null&&f.dividendYield>0 ? pct(f.dividendYield) : "N/A"],
+      ["Mkt Cap",         mktCap                    ? fmtM(mktCap)              : "—"]
     ];
     var fundCards=fi.map(function(item){
-      return '<div class="fi"><div class="fl2">'+item[0]+'</div><div class="fv" style="color:'+(item[1]==="..."?"var(--text3)":"var(--bright)")+'">'+item[1]+'</div></div>';
+      var noData=item[1]==="—"||item[1]==="N/A";
+      return '<div class="fi"><div class="fl2">'+esc(item[0])+'</div><div class="fv" style="color:'+(noData?'var(--text3)':'var(--bright)')+'">'+esc(item[1])+'</div></div>';
     }).join("");
+
+    // Company info block (new — from FMP profile)
+    var companyInfo='';
+    if(f&&(f.sector||f.industry)){
+      companyInfo=
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">'+
+        (f.sector?'<span style="font-size:9px;padding:3px 8px;border-radius:12px;background:var(--card2);border:1px solid var(--border);color:var(--text2);font-family:\'JetBrains Mono\',monospace">'+esc(f.sector)+'</span>':'')+
+        (f.industry?'<span style="font-size:9px;padding:3px 8px;border-radius:12px;background:var(--card2);border:1px solid var(--border);color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+esc(f.industry)+'</span>':'')+
+        (f.country?'<span style="font-size:9px;padding:3px 8px;border-radius:12px;background:var(--card2);border:1px solid var(--border);color:var(--text3);font-family:\'JetBrains Mono\',monospace">🌍 '+esc(f.country)+'</span>':'')+
+        (f.employees?'<span style="font-size:9px;padding:3px 8px;border-radius:12px;background:var(--card2);border:1px solid var(--border);color:var(--text3);font-family:\'JetBrains Mono\',monospace">👥 '+fmt(f.employees)+'</span>':'')+
+        '</div>'+
+        (f.description?'<p style="font-size:10px;color:var(--text3);line-height:1.6;font-family:\'JetBrains Mono\',monospace;margin:0 0 12px">'+esc(f.description)+'</p>':'');
+    }
+
     var pct52=lq&&lq.high52&&lq.low52?((cur-lq.low52)/(lq.high52-lq.low52)*100).toFixed(0):50;
     content=
-      '<div class="fund3">'+fundCards+'</div>'+
+      (!f?
+        '<div style="display:flex;align-items:center;gap:10px;padding:14px;background:var(--card2);border:1px solid var(--border);border-radius:8px;margin-bottom:14px">'+
+        '<div class="spin"></div>'+
+        '<span style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Cargando fundamentals vía FMP...</span>'+
+        '</div>'
+        :
+        companyInfo+
+        '<div class="fund3">'+fundCards+'</div>'+
+        // Analyst target price
+        (f.targetMeanPrice?
+          '<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">'+
+          '<div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-family:\'JetBrains Mono\',monospace;margin-bottom:3px">Precio objetivo</div>'+
+          '<div style="font-size:16px;font-weight:700;color:'+(f.targetMeanPrice>cur?'var(--green)':'var(--red)')+'">$'+fmtD(f.targetMeanPrice)+'</div></div>'+
+          (rec?'<span style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:6px;background:'+(recColor[rec]||'var(--card3)')+';color:#fff;font-family:\'JetBrains Mono\',monospace">'+(recLabel[rec]||rec)+'</span>':'')+
+          '</div>':'')+
+      '')+
       '<div class="cha">'+
       '<div class="chl">Rango 52 semanas</div>'+
       (lq&&lq.high52?
-        '<div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:\'Share Tech Mono\';margin-bottom:5px"><span>$'+fmtD(lq.low52)+'</span><span style="font-weight:600;color:var(--bright)">$'+fmtD(cur)+'</span><span>$'+fmtD(lq.high52)+'</span></div>'+
+        '<div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-bottom:5px"><span>$'+fmtD(lq.low52)+'</span><span style="font-weight:600;color:var(--bright)">$'+fmtD(cur)+'</span><span>$'+fmtD(lq.high52)+'</span></div>'+
         '<div style="height:8px;background:var(--card3);border-radius:4px;position:relative">'+
         '<div style="height:100%;width:'+pct52+'%;background:linear-gradient(90deg,var(--red),var(--amber),var(--green));border-radius:4px"></div>'+
         '<div style="position:absolute;top:-2px;left:'+pct52+'%;transform:translateX(-50%);width:12px;height:12px;border-radius:50%;background:var(--bright);border:2px solid var(--border)"></div></div>'+
-        '<div style="font-size:10px;color:var(--text3);text-align:center;margin-top:5px;font-family:\'Share Tech Mono\'">Percentil '+pct52+'% de su rango 52W</div></div>':
-        '<div style="color:var(--text3);font-size:11px;font-family:\'Share Tech Mono\'">Cargando datos...</div>')+
+        '<div style="font-size:10px;color:var(--text3);text-align:center;margin-top:5px;font-family:\'JetBrains Mono\',monospace">Percentil '+pct52+'% del rango 52W</div></div>':
+        '<div style="color:var(--text3);font-size:11px;font-family:\'JetBrains Mono\',monospace">Cargando rango...</div>')+
       '</div>'+
-      (!f?'<div style="font-size:11px;color:var(--text3);font-family:\'Share Tech Mono\';text-align:center;padding:8px">Cargando fundamentals de Yahoo Finance...</div>':
-        ((f.targetMeanPrice||f.earningsDate)?
-        '<div style="display:grid;grid-template-columns:'+(f.targetMeanPrice&&f.earningsDate?'1fr 1fr':'1fr')+';gap:10px;margin:10px 0">'+
-        (f.targetMeanPrice?
-          '<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px">'+
-          '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-family:\'Share Tech Mono\';margin-bottom:4px">Target analistas ('+( f.numberOfAnalysts||'?')+' analistas)</div>'+
-          '<div style="font-size:16px;font-weight:700;color:'+(f.targetMeanPrice>cur?'var(--green)':'var(--red)')+'">$'+fmtD(f.targetMeanPrice)+'</div>'+
-          '<div style="font-size:10px;color:var(--text3)">'+(recLabel[rec]||rec||'—')+'</div>'+
-          '</div>':'')+
-        (f.earningsDate?
-          '<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 12px">'+
-          '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-family:\'Share Tech Mono\';margin-bottom:4px">Próximos resultados</div>'+
-          '<div style="font-size:14px;font-weight:700;color:var(--amber)">'+f.earningsDate+'</div>'+
-          '<div style="font-size:10px;color:var(--text3)">Earnings call</div>'+
-          '</div>':'')+
-        '</div>':''))+
       '<div class="cha" style="margin-top:0">'+
       '<div style="font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-family:\'Share Tech Mono\';margin-bottom:8px">Niveles clave</div>'+
       [["Ref. Baja (-8%)","$"+(cur*.92).toFixed(2),"var(--red)"],["SMA 20","$"+s20Last.toFixed(2),"var(--orange)"],["Precio actual","$"+cur.toFixed(2),"var(--bright)"],["Ref. Alta (+12%)","$"+(cur*1.12).toFixed(2),"var(--green)"]].map(function(r){

@@ -29,25 +29,58 @@ export default async function handler(req) {
   }
 }
 async function fetchFundamentals(ticker, apiKey) {
-  const [quoteRes, profileRes] = await Promise.allSettled([
+  const [quoteRes, profileRes, ratiosRes, metricsRes] = await Promise.allSettled([
     fmpFetch(`/v3/quote/${encodeURIComponent(ticker)}`, apiKey),
     fmpFetch(`/v3/profile/${encodeURIComponent(ticker)}`, apiKey),
+    fmpFetch(`/v3/ratios-ttm/${encodeURIComponent(ticker)}`, apiKey),
+    fmpFetch(`/v3/key-metrics-ttm/${encodeURIComponent(ticker)}`, apiKey),
   ]);
   const quote   = quoteRes.status   === 'fulfilled' ? quoteRes.value?.[0]   : null;
   const profile = profileRes.status === 'fulfilled' ? profileRes.value?.[0] : null;
+  // ratios and metrics return a single object (not array) in some FMP versions
+  const ratiosRaw = ratiosRes.status === 'fulfilled' ? ratiosRes.value : null;
+  const ratios  = Array.isArray(ratiosRaw) ? ratiosRaw[0] : ratiosRaw;
+  const metricsRaw = metricsRes.status === 'fulfilled' ? metricsRes.value : null;
+  const metrics = Array.isArray(metricsRaw) ? metricsRaw[0] : metricsRaw;
+
   if (!quote?.symbol && !profile?.symbol) return null;
+
+  const lastDiv = numOrNull(profile?.lastDividend || profile?.lastDiv);
+  const price   = numOrNull(quote?.price || profile?.price);
+
   return {
     ticker,
-    pe:            numOrNull(quote?.pe),
-    eps:           numOrNull(quote?.eps),
-    marketCap:     numOrNull(quote?.marketCap),
-    price:         numOrNull(quote?.price),
-    beta:          numOrNull(profile?.beta),
-    dividendYield: numOrNull(profile?.lastDiv && profile?.price ? (profile.lastDiv / profile.price) * 100 : null),
-    sector:        profile?.sector   || null,
-    industry:      profile?.industry || null,
-    fetchedAt:     Date.now(),
-    source:        'fmp',
+    // Valuation
+    peRatio:        numOrNull(quote?.pe        || ratios?.peRatioTTM),
+    forwardPE:      numOrNull(ratios?.priceEarningsRatioTTM || metrics?.peRatioTTM),
+    priceToBook:    numOrNull(ratios?.priceToBookRatioTTM   || metrics?.pbRatioTTM),
+    eps:            numOrNull(quote?.eps       || ratios?.epsTTM),
+    // Profitability
+    grossMargin:    numOrNull(ratios?.grossProfitMarginTTM),
+    netMargin:      numOrNull(ratios?.netProfitMarginTTM),
+    roe:            numOrNull(ratios?.returnOnEquityTTM),
+    // Growth
+    revenueGrowth:  numOrNull(metrics?.revenueGrowth || ratios?.revenueGrowthTTM),
+    // Risk
+    beta:           numOrNull(profile?.beta),
+    debtToEquity:   numOrNull(ratios?.debtEquityRatioTTM),
+    // Dividend
+    dividendYield:  numOrNull(ratios?.dividendYieldTTM || (lastDiv && price ? lastDiv / price : null)),
+    // Market data
+    marketCap:      numOrNull(quote?.marketCap || profile?.mktCap),
+    price:          price,
+    // Company info
+    sector:         profile?.sector   || null,
+    industry:       profile?.industry || null,
+    description:    profile?.description ? profile.description.slice(0, 280) + '…' : null,
+    website:        profile?.website  || null,
+    employees:      numOrNull(profile?.fullTimeEmployees),
+    country:        profile?.country  || null,
+    // Analyst targets from FMP
+    targetPrice:    numOrNull(quote?.targetPrice || quote?.priceAvg50),
+    analystRating:  quote?.analystRating || null,
+    fetchedAt:      Date.now(),
+    source:         'fmp',
   };
 }
 async function fmpFetch(path, apiKey) {
@@ -55,7 +88,10 @@ async function fmpFetch(path, apiKey) {
   const res = await fetch(url, { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(5000) });
   if (!res.ok) return null;
   const json = await res.json();
-  return Array.isArray(json) ? json : null;
+  // Some endpoints return array, others return object directly
+  if (Array.isArray(json)) return json;
+  if (json && typeof json === 'object' && !json.error) return json;
+  return null;
 }
 function numOrNull(v) {
   if (v === null || v === undefined) return null;
