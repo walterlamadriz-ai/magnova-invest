@@ -4127,62 +4127,236 @@ function renderRisk(){
 }
 
 // ── BACKTEST (Pro) ─────────────────────────────────────────────
+// ── BACKTEST STATE ──────────────────────────────────────────────
+var BT={tab:'journal',ticker:'SPY',range:'1y',fast:20,slow:50,capital:10000,running:false,result:null};
+
 function renderBack(){
-  var trades=[
-    {id:1,date:"2024-01-15",entry:468,exit:487},
-    {id:2,date:"2024-02-05",entry:472,exit:493},
-    {id:3,date:"2024-03-01",entry:481,exit:497},
-    {id:4,date:"2024-04-10",entry:488,exit:476},
-    {id:5,date:"2024-05-08",entry:491,exit:510},
-    {id:6,date:"2024-06-18",entry:498,exit:519},
-    {id:7,date:"2024-07-15",entry:505,exit:496},
-    {id:8,date:"2024-08-20",entry:512,exit:531},
-    {id:9,date:"2024-09-18",entry:524,exit:518},
-    {id:10,date:"2024-10-10",entry:537,exit:556}
-  ];
-  var cum=0;
-  var rows=trades.map(function(t){
-    var pnl=(t.exit-t.entry)*10;cum+=pnl;
-    return {id:t.id,date:t.date,entry:t.entry,exit:t.exit,pnl:pnl,ret:(t.exit-t.entry)/t.entry,cum:cum};
+  var plan=planOf();
+  if(!plan.back){
+    document.getElementById("main").innerHTML=
+      '<div class="ph"><div><h1>Simulación & Análisis</h1><p class="sub-txt">// Backtest real + Analizador de Bitácora</p></div></div>'+
+      lockedBanner("Simulación & Análisis","Ejecuta estrategias reales sobre datos históricos y analiza el rendimiento de tus trades.");
+    return;
+  }
+  var sells=S.trades.filter(function(t){return t.type==='sell'&&t.pnl!=null;});
+  var tabStyle=function(id){
+    var active=BT.tab===id;
+    return 'padding:8px 18px;border-radius:6px;font-size:12px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;border:1px solid '+(active?'var(--orange-bd)':'var(--border)')+';background:'+(active?'var(--orange-bg)':'var(--card2)')+';color:'+(active?'var(--orange)':'var(--text2)')+';font-weight:'+(active?'700':'400');
+  };
+  var tabs='<div style="display:flex;gap:8px;margin-bottom:18px">'+
+    '<button style="'+tabStyle('journal')+'" onclick="BT.tab=\'journal\';renderBack()">📋 Analizador de Bitácora</button>'+
+    '<button style="'+tabStyle('sim')+'" onclick="BT.tab=\'sim\';renderBack()">⚡ Simulación de Estrategia</button>'+
+    '</div>';
+
+  var html='<div class="ph"><div><h1>Simulación & Análisis</h1><p class="sub-txt">// Backtest real + análisis de tus operaciones</p></div></div>'+tabs;
+
+  if(BT.tab==='journal'){
+    html+=btRenderJournal(sells);
+  } else {
+    html+=btRenderSim();
+  }
+  document.getElementById("main").innerHTML=html;
+}
+
+function btRenderJournal(sells){
+  if(!sells.length){
+    return '<div class="cb" style="text-align:center;padding:40px 20px;color:var(--text3)">'+
+      '<div style="font-size:32px;margin-bottom:12px">📋</div>'+
+      '<div style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:6px">Sin operaciones cerradas aún</div>'+
+      '<div style="font-size:12px">Registra trades con P&L en tu Bitácora y aparecerán aquí analizadas automáticamente.</div>'+
+      '<button class="btn" style="margin-top:16px" onclick="setPage(\'bitacora\')">Ir a Bitácora →</button></div>';
+  }
+
+  var wins=sells.filter(function(t){return t.pnl>0;});
+  var losses=sells.filter(function(t){return t.pnl<=0;});
+  var totalPnl=sells.reduce(function(s,t){return s+(t.pnl||0);},0);
+  var avgWin=wins.length?wins.reduce(function(s,t){return s+t.pnl;},0)/wins.length:0;
+  var avgLoss=losses.length?Math.abs(losses.reduce(function(s,t){return s+t.pnl;},0)/losses.length):0;
+  var profitFactor=(avgLoss&&losses.length&&wins.length)?(wins.reduce(function(s,t){return s+t.pnl;},0)/Math.abs(losses.reduce(function(s,t){return s+t.pnl;},0))):null;
+  var winRate=sells.length?wins.length/sells.length:0;
+  var expectancy=winRate*avgWin-(1-winRate)*avgLoss;
+
+  // per-ticker breakdown
+  var byTicker={};
+  sells.forEach(function(t){
+    var tk=t.ticker||'—';
+    if(!byTicker[tk]) byTicker[tk]={wins:0,losses:0,pnl:0,trades:0};
+    byTicker[tk].trades++;
+    byTicker[tk].pnl+=(t.pnl||0);
+    if(t.pnl>0) byTicker[tk].wins++; else byTicker[tk].losses++;
   });
-  var wins=rows.filter(function(r){return r.pnl>0;}).length;
-  var tot=rows.reduce(function(s,r){return s+r.pnl;},0);
-  var maxEq=Math.max.apply(null,rows.map(function(r){return r.cum;}));
-  var minEq=Math.min.apply(null,[0].concat(rows.map(function(r){return r.cum;})));
+  var tkRows=Object.keys(byTicker).sort(function(a,b){return byTicker[b].pnl-byTicker[a].pnl;}).map(function(tk){
+    var r=byTicker[tk];
+    var wr=r.trades?r.wins/r.trades:0;
+    return '<tr>'+
+      '<td style="font-weight:600;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+tk+'\',0)">'+tk+' <span style="font-size:9px">↗</span></td>'+
+      '<td style="color:var(--text3)">'+r.trades+'</td>'+
+      '<td style="color:var(--text3)">'+r.wins+'/'+r.losses+'</td>'+
+      '<td style="color:'+(wr>=0.5?'var(--green)':'var(--red)')+'">'+pct(wr)+'</td>'+
+      '<td style="font-weight:700;color:'+(r.pnl>=0?'var(--green)':'var(--red)">'+(r.pnl>=0?'+':'')+'$'+fmt(Math.abs(r.pnl))+'</td></tr>');
+  }).join('');
+
+  // equity curve from sorted sells by id
+  var sorted=sells.slice().sort(function(a,b){return a.id-b.id;});
+  var cum=0;var eqData=sorted.map(function(t){cum+=(t.pnl||0);return cum;});
+  var eqMin=Math.min.apply(null,[0].concat(eqData));
+  var eqMax=Math.max.apply(null,eqData);
+  var eqRng=eqMax-eqMin||1;
+  var eqBars=eqData.map(function(v){
+    var h=Math.max(2,((v-eqMin)/eqRng*80)).toFixed(0);
+    return '<div style="flex:1;min-width:4px;background:'+(v>=0?'var(--green)':'var(--red)')+';opacity:.8;border-radius:2px 2px 0 0;height:'+h+'px;align-self:flex-end"></div>';
+  }).join('');
+
+  // max drawdown
+  var peak=0;var maxDD=0;
+  eqData.forEach(function(v){if(v>peak)peak=v;var dd=peak-v;if(dd>maxDD)maxDD=dd;});
+
+  return '<div class="krow">'+
+    kpi("Operaciones",sells.length,wins.length+" ganadoras","b")+
+    kpi("Win Rate",pct(winRate),wins.length+"/"+sells.length,winRate>=0.5?"g":"r")+
+    kpi("P&L Total",D(totalPnl),totalPnl>=0?"Positivo":"Negativo",totalPnl>=0?"g":"r")+
+    kpi("Expectativa",D(expectancy),"por trade",expectancy>=0?"g":"r")+
+    kpi("Profit Factor",profitFactor!=null?profitFactor.toFixed(2):"—","ratio gana/pierde",profitFactor&&profitFactor>=1.5?"g":profitFactor&&profitFactor>=1?"a":"r")+
+    kpi("Max Drawdown",D(maxDD),"caída máxima acumulada","r")+
+    '</div>'+
+    '<div class="cb" style="margin-bottom:14px">'+
+    '<div class="st"><div class="stbar"></div>Equity Curve — trades reales de tu Bitácora</div>'+
+    '<div style="display:flex;gap:2px;height:80px;align-items:flex-end;padding:4px">'+eqBars+'</div>'+
+    '</div>'+
+    '<div class="cb" style="margin-bottom:14px">'+
+    '<div class="st"><div class="stbar"></div>Rendimiento por Activo</div>'+
+    '<div class="tw"><table><thead><tr><th>Activo</th><th>Trades</th><th>W/L</th><th>Win Rate</th><th>P&L</th></tr></thead>'+
+    '<tbody>'+tkRows+'</tbody></table></div></div>'+
+    '<div style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px">Análisis basado en '+sells.length+' operaciones cerradas con P&L registrado en tu Bitácora.</div>';
+}
+
+function btRenderSim(){
+  var res=BT.result;
+  var formHtml=
+    '<div class="cb" style="margin-bottom:16px">'+
+    '<div class="st"><div class="stbar"></div>Parámetros de Simulación</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px">'+
+    '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Ticker</label>'+
+    '<input id="bt-ticker" class="inp" style="width:100%" value="'+BT.ticker+'" placeholder="SPY" oninput="BT.ticker=this.value.toUpperCase().trim()"/></div>'+
+    '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Período</label>'+
+    '<select id="bt-range" class="inp" style="width:100%" onchange="BT.range=this.value">'+
+    ['6mo','1y','2y'].map(function(r){return '<option value="'+r+'"'+(BT.range===r?' selected':'')+'>'+r+'</option>';}).join('')+
+    '</select></div>'+
+    '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Capital ($)</label>'+
+    '<input id="bt-capital" class="inp" style="width:100%" type="number" value="'+BT.capital+'" oninput="BT.capital=parseFloat(this.value)||10000"/></div>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">'+
+    '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">SMA Rápida (días)</label>'+
+    '<input id="bt-fast" class="inp" style="width:100%" type="number" value="'+BT.fast+'" min="5" max="50" oninput="BT.fast=parseInt(this.value)||20"/></div>'+
+    '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">SMA Lenta (días)</label>'+
+    '<input id="bt-slow" class="inp" style="width:100%" type="number" value="'+BT.slow+'" min="20" max="200" oninput="BT.slow=parseInt(this.value)||50"/></div>'+
+    '</div>'+
+    '<button class="btn-big" style="width:100%;margin-top:14px" onclick="btRunSim()" '+(BT.running?'disabled':'')+'>'+(BT.running?'⟳ Ejecutando...':'▶ Ejecutar Simulación')+'</button>'+
+    '</div>';
+
+  if(!res) return formHtml+'<div style="text-align:center;padding:30px;color:var(--text3);font-size:12px">Configura los parámetros y ejecuta la simulación para ver resultados.</div>';
+
+  if(res.error) return formHtml+'<div style="background:var(--rbg);border:1px solid var(--rborder);border-radius:8px;padding:14px;color:var(--red);font-size:12px">'+res.error+'</div>';
+
+  var rows=res.trades;
+  var eqMin=Math.min.apply(null,[res.capital].concat(rows.map(function(r){return r.cum;})));
+  var eqMax=Math.max.apply(null,[res.capital].concat(rows.map(function(r){return r.cum;})));
+  var eqRng=eqMax-eqMin||1;
+  var eqBars=rows.map(function(r){
+    var h=Math.max(2,((r.cum-eqMin)/eqRng*80)).toFixed(0);
+    return '<div title="'+r.date+' $'+fmt(r.cum)+'" style="flex:1;min-width:3px;background:'+(r.cum>=res.capital?'var(--green)':'var(--red)')+';opacity:.8;border-radius:2px 2px 0 0;height:'+h+'px;align-self:flex-end"></div>';
+  }).join('');
 
   var tableRows=rows.map(function(r){
     return '<tr>'+
-      '<td style="color:var(--text3)">'+r.id+'</td>'+
       '<td style="font-size:10px;color:var(--text3)">'+r.date+'</td>'+
-      '<td style="font-weight:600;color:var(--bright)">SPY</td>'+
-      '<td>$'+fmtD(r.entry)+'</td><td>$'+fmtD(r.exit)+'</td>'+
-      '<td style="font-weight:600;color:'+(r.pnl>=0?"var(--green)":"var(--red)")+'">'+(r.pnl>=0?"+":"")+'$'+fmtD(r.pnl)+'</td>'+
-      '<td style="color:'+(r.pnl>=0?"var(--green)":"var(--red)")+'">'+pct(r.ret)+'</td>'+
-      '<td style="font-weight:600;color:'+(r.cum>=0?"var(--green)":"var(--red)")+'">'+(r.cum>=0?"+":"")+'$'+fmt(r.cum)+'</td></tr>';
-  }).join("");
+      '<td style="color:'+(r.type==='buy'?'var(--green)':'var(--orange)')+'">'+r.type.toUpperCase()+'</td>'+
+      '<td style="font-weight:600">$'+fmtD(r.price)+'</td>'+
+      (r.pnl!=null?'<td style="font-weight:700;color:'+(r.pnl>=0?'var(--green)':'var(--red)')+'">'+( r.pnl>=0?'+':'')+'$'+fmtD(r.pnl)+'</td>':'<td style="color:var(--text3)">—</td>')+
+      '<td style="font-weight:600;color:'+(r.cum>=res.capital?'var(--green)':'var(--red)')+'">$'+fmt(r.cum)+'</td></tr>';
+  }).join('');
 
-  var rng=maxEq-minEq||1;
-  var eqBars=rows.map(function(r,i){
-    var h=((r.cum-minEq)/rng*90).toFixed(0);
-    return '<div style="flex:1;background:'+(r.cum>=0?"var(--green)":"var(--red)")+';opacity:.75;border-radius:2px 2px 0 0;height:'+h+'px;align-self:flex-end;min-height:2px"></div>';
-  }).join("");
-
-  document.getElementById("main").innerHTML=
-    '<div class="ph"><div><h1>Backtesting Engine</h1><p class="sub-txt">// SMA Crossover · SPY · 2024</p></div></div>'+
+  return formHtml+
     '<div class="krow">'+
-    kpi("Trades",rows.length,"","b")+
-    kpi("Win Rate",pct(wins/rows.length),wins+"/"+rows.length,"g")+
-    kpi("Total Return",D(tot),tot>=0?"+Positivo":"Negativo",tot>=0?"g":"r")+
-    kpi("Avg/Trade",D(tot/rows.length),"","a")+
-    kpi("Max Win",D(Math.max.apply(null,rows.map(function(r){return r.pnl;}))),"","g")+
+    kpi("Trades",res.trades.filter(function(r){return r.type==='sell';}).length,"operaciones","b")+
+    kpi("Win Rate",pct(res.winRate),res.wins+"/"+res.totalTrades,res.winRate>=0.5?"g":"r")+
+    kpi("Retorno Total",pct(res.totalReturn),D(res.finalCapital-res.capital),res.totalReturn>=0?"g":"r")+
+    kpi("Profit Factor",res.profitFactor!=null?res.profitFactor.toFixed(2):"—","ratio","a")+
+    kpi("Max Drawdown",pct(res.maxDrawdownPct),"caída máx","r")+
+    kpi("vs SPY","—","benchmark próximamente","b")+
     '</div>'+
     '<div class="cb" style="margin-bottom:14px">'+
-    '<div class="st"><div class="stbar"></div>Equity Curve — SPY · 2024</div>'+
-    '<div style="display:flex;gap:2px;height:90px;align-items:flex-end;padding:0 4px">'+eqBars+'</div>'+
+    '<div class="st"><div class="stbar"></div>Equity Curve — '+BT.ticker+' · SMA'+BT.fast+'/'+BT.slow+'</div>'+
+    '<div style="display:flex;gap:1px;height:80px;align-items:flex-end;padding:4px">'+eqBars+'</div>'+
     '</div>'+
-    '<div class="tw" style="max-height:320px;overflow-y:auto"><table>'+
-    '<thead><tr><th>#</th><th>Fecha</th><th>Asset</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Return</th><th>Acum.</th></tr></thead>'+
+    '<div class="tw" style="max-height:280px;overflow-y:auto"><table>'+
+    '<thead><tr><th>Fecha</th><th>Tipo</th><th>Precio</th><th>P&L</th><th>Capital</th></tr></thead>'+
     '<tbody>'+tableRows+'</tbody></table></div>';
+}
+
+async function btRunSim(){
+  if(BT.running) return;
+  var ticker=(BT.ticker||'SPY').toUpperCase().trim();
+  var fast=BT.fast||20;var slow=BT.slow||50;var capital=BT.capital||10000;
+  if(fast>=slow){showToast('La SMA rápida debe ser menor a la SMA lenta.','warn');return;}
+  BT.running=true;BT.result=null;renderBack();
+  try{
+    var hist=await fetchHistory(ticker,BT.range||'1y');
+    if(!hist||hist.length<slow+10){BT.result={error:'No hay suficientes datos históricos para '+ticker+' con SMA'+slow+'. Intenta con un período mayor o ticker diferente.'};BT.running=false;renderBack();return;}
+    var closes=hist.map(function(d){return d.close;});
+    // calc SMAs
+    function sma(arr,n,i){if(i<n-1)return null;var s=0;for(var j=i-n+1;j<=i;j++)s+=arr[j];return s/n;}
+    var trades=[];var pos=null;var equity=capital;
+    var winPnls=[];var lossPnls=[];
+    for(var i=slow;i<closes.length;i++){
+      var f=sma(closes,fast,i);var s2=sma(closes,slow,i);
+      var fp=sma(closes,fast,i-1);var sp=sma(closes,slow,i-1);
+      if(!f||!s2||!fp||!sp) continue;
+      // golden cross → buy
+      if(fp<=sp&&f>s2&&!pos){
+        var units=Math.floor(equity/closes[i]);
+        if(units<1) continue;
+        pos={price:closes[i],units:units,cost:closes[i]*units};
+        trades.push({date:hist[i].date||('d'+i),type:'buy',price:closes[i],pnl:null,cum:equity});
+      }
+      // death cross → sell
+      else if(fp>=sp&&f<s2&&pos){
+        var exitPrice=closes[i];
+        var pnl=(exitPrice-pos.price)*pos.units;
+        equity+=pnl;
+        if(pnl>0) winPnls.push(pnl); else lossPnls.push(Math.abs(pnl));
+        trades.push({date:hist[i].date||('d'+i),type:'sell',price:exitPrice,pnl:pnl,cum:equity});
+        pos=null;
+      }
+    }
+    // close open position at last price
+    if(pos&&closes.length){
+      var lastP=closes[closes.length-1];
+      var pnl=(lastP-pos.price)*pos.units;
+      equity+=pnl;
+      if(pnl>0) winPnls.push(pnl); else lossPnls.push(Math.abs(pnl));
+      trades.push({date:'Hoy',type:'sell',price:lastP,pnl:pnl,cum:equity});
+      pos=null;
+    }
+    var sells2=trades.filter(function(r){return r.type==='sell';});
+    var wins2=winPnls.length;
+    var profitFactor2=(lossPnls.length&&lossPnls.reduce(function(s,v){return s+v;},0)>0)?(winPnls.reduce(function(s,v){return s+v;},0)/lossPnls.reduce(function(s,v){return s+v;},0)):null;
+    var peak2=capital;var maxDD2=0;
+    trades.forEach(function(r){if(r.cum>peak2)peak2=r.cum;var dd=peak2-r.cum;if(dd>maxDD2)maxDD2=dd;});
+    BT.result={
+      capital:capital,finalCapital:equity,
+      totalReturn:(equity-capital)/capital,
+      trades:trades,
+      totalTrades:sells2.length,
+      wins:wins2,
+      winRate:sells2.length?wins2/sells2.length:0,
+      profitFactor:profitFactor2,
+      maxDrawdownPct:peak2>0?maxDD2/peak2:0
+    };
+  } catch(e){
+    BT.result={error:'Error al obtener datos: '+e.message};
+  }
+  BT.running=false;renderBack();
 }
 
 // ── ALERTAS ────────────────────────────────────────────────────
