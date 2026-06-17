@@ -27,9 +27,7 @@ export default async function handler(req) {
 
   try {
     const results = await Promise.allSettled(
-      tickers.map(t => finnhubKey
-        ? fetchFinnhub(t, finnhubKey)
-        : fetchFMP(t, fmpKey))
+      tickers.map(t => fetchWithFallback(t, finnhubKey, fmpKey))
     );
 
     const data = {}, errors = {};
@@ -39,7 +37,8 @@ export default async function handler(req) {
     });
 
     if (Object.keys(data).length === 0) {
-      return new Response(JSON.stringify({ error: 'no_data', details: errors }), { status: 404, headers: HEADERS });
+      const attempted = [finnhubKey && 'finnhub', fmpKey && 'fmp'].filter(Boolean);
+      return new Response(JSON.stringify({ error: 'no_data', details: errors, attemptedSources: attempted }), { status: 404, headers: HEADERS });
     }
     if (Object.keys(errors).length > 0) data._errors = errors;
     return new Response(JSON.stringify(data), { status: 200, headers: HEADERS });
@@ -101,6 +100,21 @@ async function fetchFinnhub(ticker, apiKey) {
     fetchedAt:     Date.now(),
     source:        'finnhub',
   };
+}
+
+async function fetchWithFallback(ticker, finnhubKey, fmpKey) {
+  if (finnhubKey) {
+    try {
+      const result = await fetchFinnhub(ticker, finnhubKey);
+      if (result) return result;
+    } catch (_) {}
+  }
+  if (fmpKey) {
+    try {
+      return await fetchFMP(ticker, fmpKey);
+    } catch (_) {}
+  }
+  return null;
 }
 
 async function finnhubGet(url, headers) {
