@@ -4132,7 +4132,7 @@ var BT={tab:'journal',ticker:'SPY',range:'1y',fast:20,slow:50,capital:10000,runn
 
 function renderBack(){
   var plan=planOf();
-  if(!plan.back){
+  if(plan.locked&&plan.locked.indexOf('back')>=0){
     document.getElementById("main").innerHTML=
       '<div class="ph"><div><h1>Simulación & Análisis</h1><p class="sub-txt">// Backtest real + Analizador de Bitácora</p></div></div>'+
       lockedBanner("Simulación & Análisis","Ejecuta estrategias reales sobre datos históricos y analiza el rendimiento de tus trades.");
