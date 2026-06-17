@@ -2181,7 +2181,7 @@ function renderSidebar(){
 
   // AI Advisor button
   if(u){
-    var aiBtn='<div style="padding:0 10px;margin-bottom:6px"><button onclick="toggleAI()" style="width:100%;display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;border:1px solid var(--orange-bd);background:var(--orange-bg);color:var(--orange);cursor:pointer;font-size:12px;font-weight:600">&#129302; <span class="nb-label">AI Advisor</span><span style="margin-left:auto;font-size:8px;background:var(--orange);color:#fff;padding:1px 5px;border-radius:4px">BETA</span></button></div>';
+    var aiBtn='<div style="padding:0 10px;margin-bottom:6px"><button onclick="toggleAI()" style="width:100%;display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;border:1px solid var(--orange-bd);background:var(--orange-bg);color:var(--orange);cursor:pointer;font-size:12px;font-weight:600">&#129302; <span class="nb-label">AI Advisor</span><span style="margin-left:auto;font-size:8px;background:var(--orange);color:#fff;padding:1px 5px;border-radius:4px">Early Access</span></button></div>';
     html+=aiBtn;
   }
 
@@ -2365,7 +2365,7 @@ async function deScoreTicker(ticker){
   var sectorMult=sectorRS?sectorRS.mult:1.0;
   var finalScore=Math.min(100,Math.round(score*sectorMult));
 
-  var action=finalScore>=75?'Acumular':finalScore>=55?'Mantener/Vigilar':finalScore>=35?'Esperar':'Evitar';
+  var action=finalScore>=75?'Score alto':finalScore>=55?'Score medio':finalScore>=35?'Score bajo':'Fuera de criterio';
   var actionColor=finalScore>=75?'var(--green)':finalScore>=55?'var(--blue)':finalScore>=35?'var(--orange)':'var(--red)';
 
   // Scale-out targets
@@ -3044,16 +3044,98 @@ function renderRegister(){
     '<div class="form-group" style="display:flex;align-items:flex-start;gap:8px">'+
     '<input id="rdisc" type="checkbox" style="margin-top:2px;flex-shrink:0;width:14px;height:14px"/>'+
     '<label for="rdisc" style="font-size:11px;color:var(--text2);line-height:1.5;cursor:pointer">'+
-    'Entiendo que los indicadores y análisis de FinanceOS Invest son herramientas '+
-    'educativas basadas en datos históricos, no constituyen asesoría financiera '+
-    'ni recomendación de inversión.</label>'+
+    'He leído y acepto los <span onclick="openTCModal(\'tc\')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Términos de Uso</span> y la '+
+    '<span onclick="openTCModal(\'pp\')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Política de Privacidad</span>. '+
+    'Entiendo que los análisis son educativos, no constituyen asesoría financiera ni recomendación de inversión.</label>'+
     '</div>'+
     '<div id="rerr" class="form-error">Error</div>'+
     '<button id="rbtn" onclick="doRegister()" class="btn-big" style="width:100%;justify-content:center;padding:10px">Activar trial gratis →</button>'+
-    '<div style="margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border);text-align:center">'+
+    '<div style="margin-top:12px;text-align:center;font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+
+    '<span onclick="openTCModal(\'tc\')" style="color:var(--text3);cursor:pointer;text-decoration:underline">Términos</span> · '+
+    '<span onclick="openTCModal(\'pp\')" style="color:var(--text3);cursor:pointer;text-decoration:underline">Privacidad</span> · '+
+    'MAXNOVA & LUCI Global LLC</div>'+
+    '<div style="margin-top:12px;padding-top:14px;border-top:0.5px solid var(--border);text-align:center">'+
     '<button onclick="renderWelcome()" class="btn" style="width:100%;justify-content:center">Ya tengo cuenta</button>'+
     '</div>'+
     '</div></div>';
+}
+
+function openTCModal(tab){
+  var isTc=tab!=='pp';
+  var tcContent=
+    '<h3 style="margin:0 0 14px;font-size:15px;color:var(--bright)">Términos de Uso — FinanceOS Invest</h3>'+
+    '<div style="font-size:11px;color:var(--text2);line-height:1.7;font-family:\'JetBrains Mono\',monospace">'+
+    '<b style="color:var(--bright)">1. Naturaleza del servicio</b><br>'+
+    'FinanceOS Invest es una plataforma de análisis técnico educativo. Los indicadores, scores, señales y '+
+    'cualquier output generado por la plataforma son herramientas de análisis basadas en datos históricos '+
+    'y modelos matemáticos. No constituyen asesoría financiera, recomendaciones de inversión ni predicciones de mercado.<br><br>'+
+    '<b style="color:var(--bright)">2. Datos y retrasos</b><br>'+
+    'Los precios y datos de mercado pueden presentar retrasos de 15 minutos o más. '+
+    'FinanceOS Invest no garantiza la exactitud, integridad o actualidad de los datos mostrados. '+
+    'Los datos provienen de fuentes de terceros (Yahoo Finance, FMP) y pueden contener errores.<br><br>'+
+    '<b style="color:var(--bright)">3. Sin asesoría financiera</b><br>'+
+    'Nada en esta plataforma debe interpretarse como asesoría de inversión personalizada. '+
+    'Toda decisión de inversión es responsabilidad exclusiva del usuario. '+
+    'FinanceOS Invest no es un broker, asesor de inversiones ni gestora de activos registrada.<br><br>'+
+    '<b style="color:var(--bright)">4. Riesgo de inversión</b><br>'+
+    'Invertir en mercados financieros conlleva riesgos significativos incluyendo pérdida parcial o total del capital. '+
+    'El desempeño histórico no garantiza resultados futuros.<br><br>'+
+    '<b style="color:var(--bright)">5. Uso aceptable</b><br>'+
+    'El usuario se compromete a usar la plataforma para fines educativos y personales únicamente. '+
+    'Queda prohibida la redistribución comercial del contenido o señales generadas.<br><br>'+
+    '<b style="color:var(--bright)">6. Modificaciones</b><br>'+
+    'MAXNOVA & LUCI Global LLC se reserva el derecho de modificar estos términos. '+
+    'El uso continuado de la plataforma implica aceptación de los términos vigentes.<br><br>'+
+    '<span style="color:var(--text3)">Vigente desde: Junio 2026 · MAXNOVA & LUCI Global LLC · Miami, FL, USA</span>'+
+    '</div>';
+
+  var ppContent=
+    '<h3 style="margin:0 0 14px;font-size:15px;color:var(--bright)">Política de Privacidad — FinanceOS Invest</h3>'+
+    '<div style="font-size:11px;color:var(--text2);line-height:1.7;font-family:\'JetBrains Mono\',monospace">'+
+    '<b style="color:var(--bright)">1. Datos que recopilamos</b><br>'+
+    'Recopilamos: email, nombre, portfolio ingresado manualmente, watchlist y preferencias de configuración. '+
+    'No recopilamos datos bancarios, información de corretaje ni ejecutamos transacciones en tu nombre.<br><br>'+
+    '<b style="color:var(--bright)">2. Uso de los datos</b><br>'+
+    'Los datos se usan exclusivamente para operar el servicio: mostrar tu portfolio, generar análisis técnico '+
+    'y enviar comunicaciones relacionadas con tu cuenta. No vendemos datos a terceros.<br><br>'+
+    '<b style="color:var(--bright)">3. Almacenamiento</b><br>'+
+    'Los datos se almacenan en Supabase (infraestructura segura con cifrado en reposo y en tránsito). '+
+    'Los datos de sesión y preferencias se guardan en localStorage de tu navegador.<br><br>'+
+    '<b style="color:var(--bright)">4. Terceros</b><br>'+
+    'Usamos Stripe para procesar pagos (no almacenamos datos de tarjeta). '+
+    'Datos de mercado provistos por Yahoo Finance y Financial Modeling Prep (FMP). '+
+    'Análisis AI provisto por Anthropic (Claude API) — los datos de portfolio enviados son anonimizados.<br><br>'+
+    '<b style="color:var(--bright)">5. Tus derechos</b><br>'+
+    'Puedes solicitar exportación o eliminación de tus datos escribiendo a support@financeospro.com. '+
+    'La eliminación de cuenta borra permanentemente tu portfolio y datos asociados.<br><br>'+
+    '<b style="color:var(--bright)">6. Cookies</b><br>'+
+    'Usamos cookies de sesión estrictamente necesarias para autenticación. No usamos cookies de seguimiento ni publicidad.<br><br>'+
+    '<span style="color:var(--text3)">Vigente desde: Junio 2026 · MAXNOVA & LUCI Global LLC · Miami, FL, USA</span>'+
+    '</div>';
+
+  var content=isTc?tcContent:ppContent;
+  var tabs=
+    '<div style="display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border)">'+
+    '<button onclick="openTCModal(\'tc\')" style="padding:7px 16px;background:transparent;border:none;border-bottom:2px solid '+(isTc?'var(--blue)':'transparent')+';color:'+(isTc?'var(--blue)':'var(--text3)')+';font-size:11px;font-weight:600;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Términos de Uso</button>'+
+    '<button onclick="openTCModal(\'pp\')" style="padding:7px 16px;background:transparent;border:none;border-bottom:2px solid '+(isTc?'transparent':'var(--blue)')+';color:'+(isTc?'var(--text3)':'var(--blue)')+';font-size:11px;font-weight:600;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Privacidad</button>'+
+    '</div>';
+
+  var el=document.createElement('div');
+  el.id='tc-modal-overlay';
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
+  el.innerHTML=
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;max-width:560px;width:100%;max-height:80vh;display:flex;flex-direction:column">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0">'+
+    '<div style="font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);letter-spacing:1px">FINANCEOSPRO.COM</div>'+
+    '<button onclick="document.getElementById(\'tc-modal-overlay\').remove()" style="background:transparent;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;padding:0 0 2px">×</button>'+
+    '</div>'+
+    '<div style="padding:16px 20px 0">'+tabs+'</div>'+
+    '<div style="padding:0 20px 20px;overflow-y:auto;flex:1">'+content+'</div>'+
+    '</div>';
+  var existing=document.getElementById('tc-modal-overlay');
+  if(existing) existing.remove();
+  document.body.appendChild(el);
+  el.addEventListener('click',function(e){if(e.target===el) el.remove();});
 }
 
 function renderPaywall(){
@@ -5441,7 +5523,7 @@ function calcSentiment(){
   score=Math.max(0,Math.min(100,score));
 
   var label,color,emoji,desc;
-  if(score<=20){label='Miedo Extremo';color='#e84142';emoji='😱';desc='Oportunidad de compra. Mercado vende sin discriminar.';}
+  if(score<=20){label='Miedo Extremo';color='#e84142';emoji='😱';desc='Sentimiento extremadamente negativo. Históricamente asociado a alta volatilidad y ventas indiscriminadas.';}
   else if(score<=40){label='Miedo';color='#f59e0b';emoji='😰';desc='Cautela. Posible sobreacción bajista en el corto plazo.';}
   else if(score<=60){label='Neutral';color='#6b80a0';emoji='😐';desc='Sin señal clara. El mercado procesa información.';}
   else if(score<=80){label='Codicia';color='#f7931a';emoji='😏';desc='Optimismo. Cuidado con FOMO. Considera toma parcial de ganancias.';}
@@ -7091,7 +7173,7 @@ function renderDisclaimer(){
   var d=document.createElement('div');
   d.id='disclaimer-bar';
   d.className='disclaimer-bar';
-  d.innerHTML='⚠ Los indicadores y análisis mostrados son herramientas educativas basadas en datos históricos. No constituyen asesoría financiera, recomendación de inversión, ni garantía de rentabilidad. Siempre consulta con un asesor financiero certificado antes de tomar decisiones de inversión. · MAXNOVA & LUCI Global LLC';
+  d.innerHTML='⚠ Los indicadores y análisis mostrados son herramientas educativas basadas en datos históricos. No constituyen asesoría financiera, recomendación de inversión, ni garantía de rentabilidad. Siempre consulta con un asesor financiero certificado antes de tomar decisiones de inversión. · MAXNOVA & LUCI Global LLC · <span onclick="openTCModal(\'tc\')" style="cursor:pointer;text-decoration:underline;opacity:.7">Términos</span> · <span onclick="openTCModal(\'pp\')" style="cursor:pointer;text-decoration:underline;opacity:.7">Privacidad</span>';
   document.body.appendChild(d);
 }
 
