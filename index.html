@@ -7622,6 +7622,62 @@ async function recordUserConsents(userId,source){
 
 // ── END CONSENT FUNCTIONS ──────────────────────────────────────
 
+// Render a blocking consent gate modal and return a Promise that resolves
+// only after the user successfully accepts and inserts all required consents.
+// Called only when CONSENT_GATE_ENABLED is true and missing.length > 0.
+function showConsentGate(userId){
+  return new Promise(function(resolve){
+    window._cgResolve=resolve;
+
+    function renderGate(errMsg){
+      document.getElementById('mroot').innerHTML=
+        '<div class="overlay" onclick="" style="z-index:600">'+
+        '<div class="modal" style="max-width:480px" onclick="event.stopPropagation()">'+
+        '<div style="font-size:15px;font-weight:700;color:var(--bright);margin-bottom:8px">FinanceOS Invest — Confirmación de uso</div>'+
+        '<p style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:20px;font-family:\'JetBrains Mono\',monospace">'+
+        'Antes de continuar, necesitamos que confirmes que leíste y aceptas las condiciones principales de uso de FinanceOS Invest.'+
+        '</p>'+
+        '<div style="text-align:left;display:flex;flex-direction:column;gap:14px;margin-bottom:20px">'+
+        '<label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:12px;color:var(--text);font-family:\'JetBrains Mono\',monospace;line-height:1.5">'+
+        '<input type="checkbox" id="cg-tc" onchange="cgCheck()" style="margin-top:2px;flex-shrink:0">'+
+        '<span>Acepto los Términos de Uso de FinanceOS Invest.</span></label>'+
+        '<label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:12px;color:var(--text);font-family:\'JetBrains Mono\',monospace;line-height:1.5">'+
+        '<input type="checkbox" id="cg-pp" onchange="cgCheck()" style="margin-top:2px;flex-shrink:0">'+
+        '<span>Acepto la Política de Privacidad.</span></label>'+
+        '<label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:12px;color:var(--text);font-family:\'JetBrains Mono\',monospace;line-height:1.5">'+
+        '<input type="checkbox" id="cg-inv" onchange="cgCheck()" style="margin-top:2px;flex-shrink:0">'+
+        '<span>Entiendo que FinanceOS Invest es una herramienta educativa de análisis. No proporciona asesoría financiera personalizada, no es un bróker y no ejecuta órdenes. Los datos pueden tener retraso y toda inversión implica riesgo.</span></label>'+
+        '</div>'+
+        (errMsg?'<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:8px 12px;margin-bottom:14px;font-size:11px;color:var(--red);font-family:\'JetBrains Mono\',monospace">'+errMsg+'</div>':'')+
+        '<button id="cg-btn" disabled onclick="cgConfirm(\''+userId+'\')" style="width:100%;padding:11px;border-radius:8px;border:none;background:var(--orange);color:#fff;font-size:13px;font-weight:700;cursor:not-allowed;opacity:.4;transition:.2s">Confirmar y continuar</button>'+
+        '<div style="margin-top:14px;font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;text-align:center">MAXNOVA & LUCI Global LLC</div>'+
+        '</div></div>';
+    }
+
+    window.cgCheck=function(){
+      var ok=['cg-tc','cg-pp','cg-inv'].every(function(id){var el=document.getElementById(id);return el&&el.checked;});
+      var btn=document.getElementById('cg-btn');
+      if(btn){btn.disabled=!ok;btn.style.opacity=ok?'1':'.4';btn.style.cursor=ok?'pointer':'not-allowed';}
+    };
+
+    window.cgConfirm=async function(uid){
+      var btn=document.getElementById('cg-btn');
+      if(btn){btn.disabled=true;btn.textContent='Guardando...';btn.style.opacity='.7';}
+      var res=await recordUserConsents(uid,'consent_gate');
+      if(res.ok){
+        document.getElementById('mroot').innerHTML='';
+        var cb=window._cgResolve;
+        window._cgResolve=null;window.cgCheck=null;window.cgConfirm=null;
+        if(cb) cb();
+      } else {
+        renderGate('Error al guardar tu aceptación. Verifica tu conexión e intenta nuevamente.');
+      }
+    };
+
+    renderGate(null);
+  });
+}
+
 // Check which required consents the user is missing and store in S.
 // Called only when CONSENT_GATE_ENABLED is true.
 async function checkConsentGate(userId){
@@ -7667,7 +7723,12 @@ async function sbLoadUserData(authUser){
     // When false, no query to public.consents is made and no modal is shown.
     if(CONSENT_GATE_ENABLED){
       await checkConsentGate(authUser.id);
-      // showConsentGate() will be added in Commit 4 (not yet implemented).
+      if(S.consentGateRequired){
+        // Awaits here until user accepts — resolves only after successful insert.
+        // render() is called by the caller (boot/onAuthStateChange) after this resolves.
+        await showConsentGate(authUser.id);
+        return; // prevent setTimeout(checkOnboarding) while gate was open; caller triggers render()
+      }
     }
     setTimeout(checkOnboarding,600);
   }catch(e){
