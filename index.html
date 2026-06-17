@@ -33,7 +33,7 @@
 <meta property="og:type"        content="website"/>
 <meta property="og:url"         content="https://invest.financeospro.com/"/>
 <meta property="og:title"       content="FinanceOS Invest — Análisis Técnico de Inversiones para LATAM"/>
-<meta property="og:description" content="Plataforma Pro de análisis de inversiones: Decision Engine con régimen de mercado en tiempo real, señales técnicas RSI/MACD/ATR, gestión de riesgo, screener y portafolio para inversores LATAM."/>
+<meta property="og:description" content="Plataforma Pro de análisis de inversiones: Decision Engine con régimen de mercado, señales técnicas RSI/MACD/ATR, gestión de riesgo, screener y portafolio para inversores LATAM. Datos con posible retraso."/>
 <meta property="og:image"       content="https://invest.financeospro.com/og-invest.png"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
@@ -44,7 +44,7 @@
 <meta name="twitter:card"        content="summary_large_image"/>
 <meta name="twitter:site"        content="@FinanceOSPro"/>
 <meta name="twitter:title"       content="FinanceOS Invest — Análisis Técnico para LATAM"/>
-<meta name="twitter:description" content="Decision Engine en tiempo real, señales técnicas y gestión de riesgo para inversores latinoamericanos."/>
+<meta name="twitter:description" content="Decision Engine con señales técnicas y gestión de riesgo para inversores latinoamericanos. Datos referenciales con posible retraso."/>
 <meta name="twitter:image"       content="https://invest.financeospro.com/og-invest.png"/>
 <!-- JSON-LD Structured Data -->
 <script type="application/ld+json">
@@ -53,8 +53,8 @@
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": "FinanceOS Invest",
-    "alternateName": ["FinanceOS Invest Pro", "MAXNOVA Invest"],
-    "description": "Plataforma Pro de análisis técnico de inversiones para LATAM. Decision Engine con régimen de mercado SPY, señales técnicas en tiempo real, gestión de riesgo por ATR, screener de acciones y portafolio.",
+    "alternateName": ["FinanceOS Invest Pro"],
+    "description": "Plataforma Pro de análisis técnico de inversiones para LATAM. Decision Engine con régimen de mercado SPY, señales técnicas RSI/MACD/ATR, gestión de riesgo, screener de acciones y portafolio. Datos referenciales con posible retraso.",
     "url": "https://invest.financeospro.com/",
     "applicationCategory": "FinanceApplication",
     "operatingSystem": "Web, iOS, Android",
@@ -71,7 +71,7 @@
       "url": "https://financeospro.com"
     },
     "featureList": [
-      "Decision Engine con régimen de mercado en tiempo real",
+      "Decision Engine con régimen de mercado SPY/SMA200",
       "Señales técnicas: RSI, MACD, ATR(14), SMA50/200",
       "Cálculo automático de entry, stop-loss y targets por ATR",
       "Screener de acciones con filtros técnicos",
@@ -100,7 +100,7 @@
         "name": "¿Qué es el Decision Engine de FinanceOS Invest?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "El Decision Engine analiza el régimen de mercado usando SPY vs SMA200, calcula el Pullback Quality Score de cada activo (RSI, SMA50, SMA200, distancia a máximo de 52 semanas), y genera señales de entrada con stop-loss y targets calculados por ATR(14). Todo en tiempo real."
+          "text": "El Decision Engine analiza el régimen de mercado usando SPY vs SMA200, calcula el Pullback Quality Score de cada activo (RSI, SMA50, SMA200, distancia a máximo de 52 semanas), y genera señales de entrada con stop-loss y targets calculados por ATR(14). Datos referenciales con posible retraso."
         }
       },
       {
@@ -1371,7 +1371,7 @@ const NEWS_DATA=[
    body:"FOMC votó 8–4 el 29 abril. División sin precedentes. Kevin Warsh asumirá como Fed Chair en junio. Mercados descuentan tasas estables todo el año.",
    tickers:[{t:"TLT",d:"dn"},{t:"SPY",d:"ne"},{t:"GLD",d:"up"}],
    dec:"⚠️ Cautela",decColor:"var(--orange)",
-   key:"Tasas altas presionan growth y REITs. Favorece value y cash.",
+   key:"Tasas en rango 3.5%–3.75%. Sector growth y REITs bajo presión. Contexto favorable para value y activos de corta duración.",
    source:"CNBC · Fed Reserve",hoursAgo:92},
   {id:2,cat:"Earnings",impact:"bullish",breaking:false,
    title:"Apple supera Q2: ingresos y guidance por encima del consenso — acciones +3.1%",
@@ -1385,14 +1385,14 @@ const NEWS_DATA=[
    body:"WTI subió 76% desde febrero. El 20% del petróleo mundial pasa por Ormuz. Presiona inflación y limita recortes de tasas.",
    tickers:[{t:"XLE",d:"up"},{t:"DAL",d:"dn"},{t:"USO",d:"up"}],
    dec:"⚠️ Riesgo",decColor:"var(--orange)",
-   key:"XLE como hedge geopolítico. DVN, OXY como alternativa. Evitar aerolíneas.",
+   key:"Sector energía (XLE) con correlación positiva al conflicto. DVN, OXY entre los más impactados al alza. Aerolíneas con presión por costo de combustible.",
    source:"CNN · Reuters",hoursAgo:2},
   {id:4,cat:"IA & Tech",impact:"bullish",breaking:false,
    title:"Big Tech gastará $700B en AI capex 2026 — mercado premia monetización inmediata",
    body:"Alphabet +5.4%, Amazon +3.8% post-earnings. Meta –4.1% sin ROI claro. NVDA reporta el 20 mayo con estimados récord.",
    tickers:[{t:"NVDA",d:"up"},{t:"GOOGL",d:"up"},{t:"AMZN",d:"up"},{t:"META",d:"dn"}],
-   dec:"✅ Oportunidad",decColor:"var(--green)",
-   key:"NVDA el 20 mayo es el evento del mes. Estimados $78.5B revenues (+78% YoY).",
+   dec:"✅ Señal alcista",decColor:"var(--green)",
+   key:"NVDA reporta el 20 mayo. Estimados de consenso: $78.5B revenues (+78% YoY). Evento de alta relevancia para el sector.",
    source:"Schwab Research",hoursAgo:36},
   {id:5,cat:"Macro",impact:"neutral",breaking:false,
    title:"GDP Q1 creció 2% anualizado — mejor que Q4 pero bajo estimado de 2.2%",
@@ -1406,21 +1406,21 @@ const NEWS_DATA=[
    body:"Nasdaq superó 25,000 puntos por primera vez. Russell 2000 también aceleró. Amplitud de mercado mejora.",
    tickers:[{t:"SPY",d:"up"},{t:"QQQ",d:"up"},{t:"IWM",d:"up"}],
    dec:"✅ Momentum",decColor:"var(--green)",
-   key:"Stay invested. 'Sell in May' históricamente no es una estrategia confiable.",
+   key:"Amplitud de mercado mejorando. Momentum en índices principales. Históricamente mayo no ha sido un mes negativo de forma consistente.",
    source:"TheStreet",hoursAgo:48},
   {id:7,cat:"Earnings",impact:"bearish",breaking:true,
    title:"Roblox -24% tras recortar guidance 2026 — mayor caída de la temporada earnings",
    body:"Outlook de bookings recortado a $6.14B. Mayor reacción negativa de la temporada. Alta intolerancia del mercado a decepcionar.",
    tickers:[{t:"RBLX",d:"dn"},{t:"SNAP",d:"dn"},{t:"MTCH",d:"dn"}],
-   dec:"❌ Evitar",decColor:"var(--red)",
-   key:"Selectividad máxima. El mercado sube en agregado pero castiga duramente a quien decepciona.",
+   dec:"❌ Presión bajista",decColor:"var(--red)",
+   key:"Selectividad alta en earnings. El mercado en agregado positivo pero con reacciones asimétricas ante resultados débiles.",
    source:"WSJ · Bloomberg",hoursAgo:14},
   {id:8,cat:"Fed",impact:"neutral",breaking:false,
    title:"Kevin Warsh confirmado como próximo Fed Chair — postura más dovish esperada",
    body:"Senate Banking Committee aprobó la nominación. Asumirá en reunión FOMC del 17 junio. UBS proyecta 2 recortes entre junio y septiembre.",
    tickers:[{t:"TLT",d:"up"},{t:"GLD",d:"up"},{t:"XLF",d:"ne"}],
    dec:"👁 Monitorear",decColor:"var(--orange)",
-   key:"Primera conferencia de Warsh el 17 junio es el evento macro del verano. Posicionar bonos antes.",
+   key:"Primera conferencia de Warsh el 17 junio es el evento macro del verano. TLT y GLD con correlación histórica positiva a postura dovish.",
    source:"Fortune · J.P. Morgan",hoursAgo:48}
 ];
 const CAL_DATA=[
@@ -2131,7 +2131,7 @@ function renderSidebar(){
     '<div class="logo-icon">FI</div>'+
     '<div>'+
     '<div class="logo-name">FinanceOS Invest</div>'+
-    '<div class="logo-sub">MAXNOVA & LUCI · '+( S.user&&S.user.plan?S.user.plan.toUpperCase():'')+'</div>'+
+    '<div class="logo-sub">FinanceOS · '+( S.user&&S.user.plan?S.user.plan.toUpperCase():'')+'</div>'+
     '</div></div>';
 
   // Section: Main
@@ -2225,7 +2225,7 @@ async function deGetVIX(){
     var label={low:'VIX Bajo',normal:'VIX Normal',elevated:'VIX Elevado',crisis:'VIX Crisis'}[regime];
     var color={low:'var(--grn)',normal:'var(--blue)',elevated:'var(--amber)',crisis:'var(--red)'}[regime];
     var emoji={low:'🟢',normal:'🔵',elevated:'🟠',crisis:'🔴'}[regime];
-    var tip={low:'Sizing completo permitido.',normal:'Reducir posiciones a 75% del tamaño normal.',elevated:'Reducir a 50% — volatilidad alta.',crisis:'Solo 25% de posición — modo defensivo.'}[regime];
+    var tip={low:'Volatilidad baja — históricamente compatible con tamaño completo de posición.',normal:'Volatilidad normal — reducir tamaño de posición ~25% es práctica habitual.',elevated:'Volatilidad alta — tamaño reducido a ~50% es común en este régimen.',crisis:'Volatilidad extrema — exposición mínima (~25%) hasta que el régimen normalice.'}[regime];
     var result={vix:v,prev:prev,regime:regime,label:label,color:color,emoji:emoji,tip:tip,sizing:sizing};
     DE_CACHE.vix=result;return result;
   }catch(e){return{vix:null,regime:'unknown',label:'VIX N/D',color:'var(--text3)',emoji:'⚪',tip:'No se pudo obtener VIX.',sizing:1.0};}
@@ -2528,11 +2528,11 @@ function renderDecisionEngine(){
       '<div style="margin-left:auto;text-align:right">'+
       '<div style="font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3)">Estrategia sugerida</div>'+
       '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-top:3px">'+
-      (regime.regime==='risk_on'?'Acumular posiciones de calidad':regime.regime==='risk_off'?'Reducir exposición · Cash/Bonds':'Posiciones pequeñas · Selectivo')+
+      (regime.regime==='risk_on'?'Score técnico alto · Régimen alcista':regime.regime==='risk_off'?'Régimen defensivo · Indicadores bajistas':'Régimen mixto · Alta selectividad')+
       '</div></div></div>'+spyLine+'</div>';
 
     var actionGuide='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">'+
-      [['🟢','Acumular','≥75','Señal fuerte de entrada'],['🔵','Vigilar','55–74','En watchlist activo'],['🟡','Esperar','35–54','No es momento'],['🔴','Evitar','<35','Fuera de criterio']].map(function(g){
+      [['🟢','Score alto','≥75','Score técnico alto'],['🔵','Vigilar','55–74','En watchlist activo'],['🟡','Esperar','35–54','Score bajo'],['🔴','Fuera','<35','Fuera de criterio']].map(function(g){
         return '<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center">'+
           '<div style="font-size:18px;margin-bottom:4px">'+g[0]+'</div>'+
           '<div style="font-size:11px;font-weight:600;color:var(--bright)">'+g[1]+'</div>'+
@@ -2959,7 +2959,7 @@ function renderWelcome(){
     '<div class="welcome-hero">'+
     '<div style="display:inline-flex;align-items:center;gap:8px;background:var(--grn-bg);border:1px solid var(--grn-lt);border-radius:20px;padding:5px 14px;margin-bottom:22px">'+
     '<div style="width:7px;height:7px;border-radius:50%;background:var(--grn)"></div>'+
-    '<span style="font-size:11px;font-family:\'JetBrains Mono\',monospace;color:var(--grn);letter-spacing:.5px">BETA · LATAM</span>'+
+    '<span style="font-size:11px;font-family:\'JetBrains Mono\',monospace;color:var(--grn);letter-spacing:.5px">Early Access · LATAM</span>'+
     '</div>'+
     '<h1>Analiza. Decide.<br><span>Invierte con criterio.</span></h1>'+
     '<p>Portfolio, señales técnicas, gestión de riesgo y contexto macro — en una sola plataforma para inversores de LATAM.</p>'+
@@ -2971,7 +2971,7 @@ function renderWelcome(){
     '</div>'+
     // ── FEATURES ──
     '<div class="welcome-feats">'+
-    '<div class="welcome-feat"><div class="welcome-feat-icon">📊</div><h3>Portfolio Manager</h3><p>Seguimiento en tiempo real de tus posiciones, P&L y asset allocation.</p></div>'+
+    '<div class="welcome-feat"><div class="welcome-feat-icon">📊</div><h3>Portfolio Manager</h3><p>Seguimiento de tus posiciones, P&L y asset allocation con datos registrados.</p></div>'+
     '<div class="welcome-feat"><div class="welcome-feat-icon">🎯</div><h3>Señales técnicas</h3><p>RSI, MACD, Bandas de Bollinger y más sobre datos reales de mercado.</p></div>'+
     '<div class="welcome-feat"><div class="welcome-feat-icon">🛡️</div><h3>Gestión de riesgo</h3><p>Position sizing automático, Bull/Bear/Black Swan y R/R por activo.</p></div>'+
     '<div class="welcome-feat"><div class="welcome-feat-icon">⚙️</div><h3>Simulación</h3><p>Prueba tus estrategias sobre datos históricos reales antes de ejecutar.</p></div>'+
@@ -3014,7 +3014,7 @@ function renderWelcome(){
     '<div style="margin-top:16px;font-size:10px;color:var(--text3);text-align:center;line-height:1.6;font-family:\'JetBrains Mono\',monospace">'+
     'Análisis educativo. No constituye asesoría financiera.</div>'+
     '</div>'+
-    '<div style="margin-top:32px;font-size:11px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">© 2026 MAXNOVA & LUCI Global LLC · <a href="https://financeospro.com" style="color:var(--text3)">financeospro.com</a></div>'+
+    '<div style="margin-top:32px;font-size:11px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">© 2026 FinanceOS · MAXNOVA & LUCI Global LLC · <a href="https://financeospro.com" style="color:var(--text3)">financeospro.com</a></div>'+
     '</div>';
 }
 
@@ -4947,7 +4947,7 @@ function renderDrawerBody(){
   } else {
     // Fundamentals
     var f=fund;
-    var recLabel={'strongbuy':'Compra Fuerte','buy':'Comprar','hold':'Mantener','sell':'Vender','strongsell':'Venta Fuerte','neutral':'Neutral'};
+    var recLabel={'strongbuy':'Consenso muy positivo','buy':'Consenso positivo','hold':'Consenso neutral','sell':'Consenso negativo','strongsell':'Consenso muy negativo','neutral':'Sin consenso claro'};
     var recColor={'strongbuy':'var(--green)','buy':'var(--green)','hold':'var(--amber)','sell':'var(--red)','strongsell':'var(--red)','neutral':'var(--text2)'};
     var rec=f&&f.recommendationKey?f.recommendationKey.toLowerCase():null;
     var mktCap=f&&f.marketCap?f.marketCap:(lq&&lq.marketCap?lq.marketCap:null);
@@ -5133,7 +5133,7 @@ function renderAIPanel(){
       '<div style="text-align:center;padding:24px 0">'+
       '<div style="font-size:28px;margin-bottom:10px">🤖</div>'+
       '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:6px">Hola, soy tu FinanceOS Advisor</div>'+
-      '<div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:16px">Conozco tu portfolio en tiempo real.<br>Pregúntame lo que quieras sobre tus inversiones.</div>'+
+      '<div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:16px">Analizo tu portfolio con los datos que has registrado.<br>Pregúntame lo que quieras sobre tus inversiones.</div>'+
       '<div style="display:flex;flex-direction:column;gap:6px">'+
       suggested.map(function(q){
         return '<button onclick="document.getElementById(\'ai-input\').value=\''+q+'\';sendFromInput()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--text);cursor:pointer;text-align:left;transition:.15s;font-family:\'JetBrains Mono\',monospace" onmouseover="this.style.borderColor=\'var(--orange-bd)\';this.style.color=\'var(--orange)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--text)\'">'+'💬 '+q+'</button>';
@@ -5853,10 +5853,10 @@ async function generateRadarReport(){
     '    {"id":"health","title":"Score de Salud","content":"Análisis del score '+health.total+'/100. Qué sub-score está más débil y cómo mejorar. 3-4 oraciones."},\n'+
     '    {"id":"macro","title":"Contexto Macro","content":"Qué pasó en mercados esta semana y cómo afecta ESPECÍFICAMENTE a las posiciones de este portfolio. 3-4 oraciones."},\n'+
     '    {"id":"portfolio","title":"Diagnóstico del Portfolio","content":"Análisis posición por posición. Cuál mantener, cuál reducir, cuál promediar. Menciona tickers concretos. 4-5 oraciones."},\n'+
-    '    {"id":"entries","title":"Entradas de la Semana","content":"Exactamente 2 oportunidades de entrada con: ticker, precio de entrada sugerido, stop loss, target, ratio R/R, y justificación en 1 línea. Solo activos con señal BUY."},\n'+
-    '    {"id":"exits","title":"Señales de Salida","content":"Posiciones que deben reducirse o salirse esta semana. Si no hay señales SELL en el portfolio, indica cuáles vigilar. Sé específico con precios."},\n'+
+    '    {"id":"entries","title":"Oportunidades Técnicas","content":"Hasta 2 activos con señal BUY según indicadores técnicos. Para cada uno: ticker, zona de soporte técnico de referencia, stop sugerido por ATR, target por extensión, ratio R/R estimado, y contexto en 1 línea. Solo análisis técnico — no constituye recomendación de inversión."},\n'+
+    '    {"id":"exits","title":"Señales de Alerta","content":"Posiciones con señal técnica de debilidad según los indicadores. Indica cuáles vigilar y por qué. El usuario decide cuándo actuar."},\n'+
     '    {"id":"practice","title":"Práctica de la Semana","content":"UNA sola práctica de gestión de portfolio específica para este inversor, basada en su perfil '+riskLabel+' y sus datos actuales. Concreta, aplicable esta semana."},\n'+
-    '    {"id":"action","title":"Plan de Acción","content":"Exactamente 3 acciones numeradas para esta semana. Formato: \'1. [Acción concreta con ticker, precio y fecha límite]\'. Sin ambigüedades."}\n'+
+    '    {"id":"action","title":"Puntos de Atención","content":"3 puntos de seguimiento técnico para esta semana. Formato: \'1. [Observación técnica con ticker y nivel de referencia]\'. Análisis educativo, no directivo."}\n'+
     '  ]\n'+
     '}';
 
@@ -6248,8 +6248,8 @@ var ONBOARD={step:0,shown:false};
 
 function showOnboarding(){
   var steps=[
-    {icon:'💼',title:'Tu portfolio, en tiempo real',
-     desc:'Agrega tus posiciones y FinanceOS Invest las conecta con precios reales de Yahoo Finance. Ve tu P&L actualizado al minuto.',
+    {icon:'💼',title:'Tu portfolio, siempre actualizado',
+     desc:'Agrega tus posiciones y FinanceOS Invest las conecta con precios de Yahoo Finance. Ve tu P&L con datos de mercado actualizados.',
      action:'Ver Portfolio',page:'port'},
     {icon:'⚡',title:'Señales inteligentes',
      desc:'20 activos analizados con 4 indicadores técnicos. Score compuesto 0-100. Señales BUY/HOLD/SELL actualizadas con el mercado.',

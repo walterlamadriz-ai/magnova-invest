@@ -50,7 +50,8 @@ export default async function handler(req) {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
 
   const { searchParams } = new URL(req.url);
-  const tickers = searchParams.get('tickers') || 'SPY,QQQ,NVDA,AAPL,AMZN,META,MSFT,GLD';
+  const rawTickers = searchParams.get('tickers') || 'SPY,QQQ,NVDA,AAPL,AMZN,META,MSFT,GLD';
+  const tickers = rawTickers.split(',').map(t => t.trim().toUpperCase()).filter(t => /^[A-Z0-9]{1,10}$/.test(t)).slice(0, 20).join(',') || 'SPY,QQQ,NVDA,AAPL';
 
   try {
     const url = `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${tickers}&region=US&lang=en-US`;

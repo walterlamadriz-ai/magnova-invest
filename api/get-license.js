@@ -16,14 +16,13 @@ function getCorsHeaders(req) {
   return { 'Access-Control-Allow-Origin': allowed, 'Access-Control-Allow-Methods': 'GET, OPTIONS' };
 }
 
-const json = (data, status = 200) =>
-  new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json', ...getCorsHeaders(req) },
-  });
-
 export default async function handler(req) {
   const cors = getCorsHeaders(req);
+  const json = (data, status = 200) =>
+    new Response(JSON.stringify(data), {
+      status,
+      headers: { 'Content-Type': 'application/json', ...cors },
+    });
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
 
   const { searchParams } = new URL(req.url);
