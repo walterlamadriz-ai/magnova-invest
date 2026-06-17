@@ -741,8 +741,9 @@ tr:last-child td { border-bottom: none; }
 }
 .drw {
   position: fixed;
-  top: 0; right: -420px;
-  width: 400px;
+  top: 0; right: -440px;
+  width: 420px;
+  max-width: 100%;
   height: 100vh;
   background: var(--card);
   border-left: 0.5px solid var(--border2);
@@ -750,9 +751,13 @@ tr:last-child td { border-bottom: none; }
   display: flex; flex-direction: column;
   box-shadow: var(--shadow-lg);
   transition: right .25s cubic-bezier(.4,0,.2,1);
-  overflow: hidden;
+  overflow: visible;
 }
 .drw.open { right: 0; }
+@media (max-width: 440px) {
+  .drw { width: 100%; right: -100%; }
+  .drw.open { right: 0; }
+}
 .drw.open ~ .dov { display: block; }
 .drwh {
   padding: 18px 20px;
@@ -1017,7 +1022,7 @@ tr:last-child td { border-bottom: none; }
     transform: translateX(-220px);
     transition: transform .25s cubic-bezier(.4,0,.2,1);
     width: 220px;
-    z-index: 200;
+    z-index: 400;
   }
   .sb.mobile-open { transform: translateX(0); }
   .main { margin-left: 0; }
@@ -1050,8 +1055,9 @@ tr:last-child td { border-bottom: none; }
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,.45);
-  z-index: 199;
+  z-index: 399;
 }
+.main { position: relative; }
 
 /* ── TOAST NOTIFICATIONS ── */
 #toast-container { position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
@@ -1148,6 +1154,109 @@ tr:last-child td { border-bottom: none; }
 
 /* content padding */
 #main > div:not(.ph) { padding: 20px 28px; }
+
+/* ── DRAWER INNER COMPONENTS ── */
+.sigb {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--border2);
+  background: var(--card2); margin-bottom: 14px;
+}
+.sigb.buy  { border-color: var(--gborder); background: var(--gbg); }
+.sigb.sell { border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.08); }
+.sigb.hold { border-color: var(--amborder); background: var(--ambg); }
+
+.cha { margin-bottom: 14px; overflow: hidden; border-radius: 8px; }
+.chl {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .7px; color: var(--text3);
+  font-family: 'JetBrains Mono', monospace; margin-bottom: 8px;
+}
+
+/* Tab buttons — chart / RSI / MACD / Fundamentals */
+.dtab, .rtab {
+  padding: 5px 11px;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  background: var(--card2);
+  color: var(--text2);
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+  white-space: nowrap;
+}
+.dtab:hover, .rtab:hover { border-color: var(--orange-bd); color: var(--orange); }
+.dtab.on { background: var(--orange-bg); color: var(--orange); border-color: var(--orange-bd); font-weight: 700; }
+.rtab.on { background: var(--gbg); color: var(--green); border-color: var(--gborder); font-weight: 700; }
+div:has(>.dtab), div:has(>.rtab) {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;
+}
+
+/* Indicator 2-column grid (RSI / MACD panels) */
+.ind2 {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-bottom: 14px;
+}
+.icard {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px;
+}
+.icl { font-size: 9px; color: var(--text3); text-transform: uppercase;
+  letter-spacing: .6px; font-family: 'JetBrains Mono', monospace; margin-bottom: 3px; }
+.icv { font-size: 17px; font-weight: 700; color: var(--bright); line-height: 1.2; }
+.ics { font-size: 9px; color: var(--text3); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+
+/* Fundamentals 2-column grid */
+.fund3 {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 6px; margin-bottom: 14px;
+}
+.fi {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 10px; border-radius: 6px;
+  background: var(--card2); border: 1px solid var(--border);
+}
+.fl2 { font-size: 9px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+.fv  { font-size: 12px; font-weight: 600; color: var(--bright); }
+
+/* Modal close button */
+.mx {
+  position: absolute; top: 14px; right: 14px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--card2); border: 1px solid var(--border);
+  color: var(--text2); font-size: 14px; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .12s, color .12s;
+}
+.mx:hover { background: rgba(239,68,68,.15); color: #ef4444; border-color: rgba(239,68,68,.4); }
+
+/* Button variants */
+.btn-up {
+  padding: 6px 14px; border-radius: 8px;
+  background: var(--orange-bg); border: 1px solid var(--orange-bd);
+  color: var(--orange); font-size: 11px; font-weight: 700;
+  font-family: 'JetBrains Mono', monospace; cursor: pointer;
+  transition: background .12s;
+}
+.btn-up:hover { background: var(--orange); color: #fff; }
+.btn-r {
+  padding: 6px 14px; border-radius: 8px;
+  background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3);
+  color: #ef4444; font-size: 11px; font-family: 'JetBrains Mono', monospace;
+  cursor: pointer; transition: background .12s;
+}
+.btn-r:hover { background: rgba(239,68,68,.18); }
+
+/* Mobile drawer adjustments */
+@media (max-width: 480px) {
+  .drwb { padding: 14px; }
+  .drwh { padding: 14px; }
+  .ind2 { grid-template-columns: 1fr; }
+  .fund3 { grid-template-columns: 1fr; }
+  .dtab { font-size: 10px; padding: 4px 8px; }
+}
 </style>
 </head>
 <body>
@@ -1985,6 +2094,7 @@ function toggleMobileMenu(force){
 }
 function setPage(p){
   S.page=p;
+  closeDrawer();
   toggleMobileMenu(false); // close mobile nav on navigation
   // Update active state without full sidebar re-render
   document.querySelectorAll(".nb").forEach(function(btn){
@@ -1997,7 +2107,7 @@ function setPage(p){
   renderMain();
 }
 
-function openModal(t,data){S.modal=t;S.editPos=data||null;renderModal();}
+function openModal(t,data){closeDrawer();S.modal=t;S.editPos=data||null;renderModal();}
 function closeModal(){
   S.modal=null;S.editPos=null;
   document.getElementById("mroot").innerHTML="";
@@ -4731,7 +4841,7 @@ function renderDrawerBody(){
     '<button class="btn" style="border-color:var(--border);color:var(--text3)" onclick="closeDrawer()">Cerrar</button>'+
     '</div>';
 
-  if(dTab==='chart') renderLWCharts(hist,sma20,sma50,bbArr);
+  if(dTab==='chart') setTimeout(function(){renderLWCharts(hist,sma20,sma50,bbArr);},320);
 }
 
 
