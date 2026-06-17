@@ -2473,6 +2473,67 @@ async function deGetRegime(){
   return result;
 }
 
+function drawSPYMiniChart(regime){
+  try{
+    var canvas=document.getElementById('spy-mini-chart');
+    if(!canvas) return;
+    var ctx=canvas.getContext('2d');
+    var rawHist=regime&&regime.hist;
+    // Work on a copy sorted oldest→newest — do not mutate regime.hist
+    var hist=rawHist?rawHist.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}):[];
+    var closes=hist.map(function(d){return d.close;});
+    var hasSMA200=closes.length>=200;
+    // Status label
+    var statusEl=document.getElementById('spy-mini-status');
+    if(statusEl){
+      if(!closes.length){statusEl.textContent='No se pudo cargar el contexto SPY.';}
+      else if(!hasSMA200){statusEl.textContent='SMA200 no disponible — datos insuficientes.';}
+      else{statusEl.textContent=closes[closes.length-1]>=regime.sma200?'SPY sobre SMA200':'SPY bajo SMA200';}
+    }
+    if(!hasSMA200||!closes.length) return;
+    // Compute full SMA200 array (only real 200-period values — no Math.min shortcut)
+    var smaArr=[];
+    for(var i=0;i<closes.length;i++){
+      if(i<199){smaArr.push(null);}
+      else{var sum=0;for(var j=i-199;j<=i;j++) sum+=closes[j];smaArr.push(sum/200);}
+    }
+    // Size canvas for retina
+    var dpr=window.devicePixelRatio||1;
+    var W=canvas.offsetWidth||canvas.parentElement.offsetWidth||300;
+    var H=76;
+    canvas.width=W*dpr; canvas.height=H*dpr;
+    canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    ctx.scale(dpr,dpr);
+    // Price range across both series
+    var validSma=smaArr.filter(function(v){return v!=null;});
+    var allV=closes.concat(validSma);
+    var minP=Math.min.apply(null,allV), maxP=Math.max.apply(null,allV);
+    var rng=maxP-minP||1;
+    function xOf(i){return 1+(W-2)*(i/(closes.length-1));}
+    function yOf(v){return H-4-(H-8)*((v-minP)/rng);}
+    // SMA200 line
+    ctx.beginPath(); ctx.strokeStyle=regime.color||'#f59e0b'; ctx.lineWidth=1.5;
+    var firstSma=true;
+    smaArr.forEach(function(v,i){
+      if(v==null) return;
+      if(firstSma){ctx.moveTo(xOf(i),yOf(v));firstSma=false;}else ctx.lineTo(xOf(i),yOf(v));
+    });
+    ctx.stroke();
+    // SPY price line
+    ctx.beginPath(); ctx.strokeStyle='rgba(226,232,240,.85)'; ctx.lineWidth=1.5;
+    closes.forEach(function(v,i){if(i===0)ctx.moveTo(xOf(i),yOf(v));else ctx.lineTo(xOf(i),yOf(v));});
+    ctx.stroke();
+    // Current price dot
+    var lx=xOf(closes.length-1),ly=yOf(closes[closes.length-1]);
+    ctx.beginPath(); ctx.arc(lx,ly,3,0,Math.PI*2); ctx.fillStyle='rgba(226,232,240,.9)'; ctx.fill();
+  }catch(e){
+    var fb=document.getElementById('spy-mini-fallback');
+    if(fb) fb.style.display='block';
+    var mc=document.getElementById('spy-mini-chart');
+    if(mc) mc.style.display='none';
+  }
+}
+
 async function deScoreTicker(ticker){
   if(DE_CACHE.scores[ticker]&&(Date.now()-DE_CACHE.lastFetch)<1800000)return DE_CACHE.scores[ticker];
   var hist=await fetchHistory(ticker,'1y');
@@ -2695,7 +2756,14 @@ function renderDecisionEngine(){
       '<div style="font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3)">Estrategia sugerida</div>'+
       '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-top:3px">'+
       (regime.regime==='risk_on'?'Score técnico alto · Régimen alcista':regime.regime==='risk_off'?'Régimen defensivo · Indicadores bajistas':'Régimen mixto · Alta selectividad')+
-      '</div></div></div>'+spyLine+'</div>';
+      '</div></div></div>'+spyLine+
+      '<canvas id="spy-mini-chart" style="width:100%;height:76px;display:block;margin-top:14px;border-radius:6px"></canvas>'+
+      '<div id="spy-mini-fallback" style="display:none;font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:8px">No se pudo cargar el contexto SPY.</div>'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;flex-wrap:wrap;gap:4px">'+
+        '<span id="spy-mini-status" style="font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3)">Cargando contexto SPY…</span>'+
+        '<span style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--text3)">Referencia educativa de contexto de mercado. No constituye señal de compra o venta.</span>'+
+      '</div>'+
+      '</div>';
 
     var actionGuide='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">'+
       [['🟢','Score alto','≥75','Score técnico alto'],['🔵','Vigilar','55–74','En watchlist activo'],['🟡','Esperar','35–54','Score bajo'],['🔴','Fuera','<35','Fuera de criterio']].map(function(g){
@@ -2829,6 +2897,7 @@ function renderDecisionEngine(){
     }
 
     document.getElementById('de-body').innerHTML=regimeCard+vixCard+earningsCard+actionGuide+scoresHtml+disclaimer;
+    drawSPYMiniChart(regime);
   }).catch(function(err){
     document.getElementById('de-body').innerHTML='<div style="color:var(--red);font-size:12px;padding:20px">Error al cargar datos: '+err.message+'</div>';
   });
