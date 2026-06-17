@@ -3884,7 +3884,7 @@ function renderSig(){
     '<tbody>'+rows+'</tbody></table></div>'+
     '<div style="margin-top:12px;padding:8px 10px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">'+
     '⚠ Los sesgos mostrados resultan de modelos técnicos automatizados (Trend×30% · Vol×20% · RSI×25% · MACD×25%). '+
-    'No son recomendaciones personalizadas de inversión. Datos con posible retraso · Fuente: Yahoo Finance. '+
+    'No son recomendaciones personalizadas de inversión. Datos de mercado · posible retraso ≤15 min'+(liveUpdated?' · actualizado '+timeAgo(liveUpdated):'')+' · Fuente: Yahoo Finance. '+
     'Toda inversión implica riesgo de pérdida parcial o total del capital.'+
     '</div>';
 }
@@ -4082,7 +4082,7 @@ function renderNews(){
     {t:"AMZN",last:199,chg:1.2,vol:"50M"},{t:"META",last:522,chg:-4.1,vol:"40M"}
   ];
   MOVERS.forEach(function(m){if(LIVE[m.t]){m.last=LIVE[m.t].price;m.chg=(LIVE[m.t].changePct||0)*100;}});
-  var lastUpdStr=liveUpdated?'Actualizado '+new Date(liveUpdated).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}):'Cargando...';
+  var lastUpdStr=liveUpdated?'Yahoo Finance · actualizado '+timeAgo(liveUpdated):'Cargando...';
   var moverRows=MOVERS.map(function(m){
     var pos=m.chg>=0;
     return '<div style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s" onclick="openDrawer(\''+m.t+'\','+m.last+')" onmouseover="this.style.background=\'rgba(247,147,26,.04)\'" onmouseout="this.style.background=\'transparent\'">'+
@@ -4132,6 +4132,7 @@ function renderNews(){
   }
   // Save to cache for offline use
   saveNewsCache({savedAt:Date.now()});
+  var newsUpdStr=cached&&cached.savedAt?'<div style="margin-top:8px;padding:6px 10px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">NewsAPI · actualizado '+timeAgo(cached.savedAt)+'</div>':'';
 
   // ── Ticker strip ──────────────────────────────────────────────
   var STRIPS=[
@@ -4264,7 +4265,8 @@ function renderNews(){
         '</div>'+
         '<div class="cb"><div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:10px">Componentes</div>'+compRows+'</div>'+
         '</div>';
-    })();
+    })()+
+    newsUpdStr;
 }
 function setNewsF(f){S.newsFilter=f;renderMain();}
 
