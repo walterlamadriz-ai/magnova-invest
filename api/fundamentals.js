@@ -60,7 +60,9 @@ async function fetchFinnhub(ticker, apiKey) {
   const m  = metricRes.status  === 'fulfilled' ? metricRes.value?.metric  : null;
   const pr = profileRes.status === 'fulfilled' ? profileRes.value         : null;
 
-  if (!pr?.ticker && !m) return null;
+  const hasProfile = !!pr?.ticker;
+  const hasMetrics = m && Object.values(m).some(v => v !== null && v !== undefined);
+  if (!hasProfile && !hasMetrics) return null;
 
   // Map Finnhub fields to the same shape the frontend expects
   const price    = numOrNull(pr?.['52WeekHigh']) ?? null; // not in profile2, use live
