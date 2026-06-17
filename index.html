@@ -1017,6 +1017,7 @@ tr:last-child td { border-bottom: none; }
     transform: translateX(-220px);
     transition: transform .25s cubic-bezier(.4,0,.2,1);
     width: 220px;
+    z-index: 200;
   }
   .sb.mobile-open { transform: translateX(0); }
   .main { margin-left: 0; }
@@ -1027,7 +1028,39 @@ tr:last-child td { border-bottom: none; }
   .krow { grid-template-columns: repeat(2,1fr); }
   table { font-size: 11px; }
   td, th { padding: 7px 10px; }
+  .hbg-btn { display:flex!important; }
+  .sb-backdrop { display:block; }
 }
+.hbg-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.sb-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 199;
+}
+
+/* ── TOAST NOTIFICATIONS ── */
+#toast-container { position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+.toast { display:flex; align-items:center; gap:10px; padding:11px 16px; border-radius:10px; font-size:12px; font-family:'JetBrains Mono',monospace; color:#fff; min-width:220px; max-width:320px; box-shadow:0 4px 20px rgba(0,0,0,.35); opacity:0; transform:translateY(10px); transition:opacity .25s,transform .25s; pointer-events:auto; }
+.toast.show { opacity:1; transform:translateY(0); }
+.toast.success { background:var(--green); }
+.toast.error { background:#ef4444; }
+.toast.info { background:var(--blue); }
+.toast.warning { background:var(--orange); }
 
 /* ── @MEDIA PRINT (Radar PDF) ── */
 @media print {
@@ -1130,13 +1163,18 @@ tr:last-child td { border-bottom: none; }
     <a href="https://demo.financeospro.com/app/?demo=true" target="_blank" style="color:rgba(255,255,255,.35);text-decoration:none;font-size:10px">Demo →</a>
   </div>
 </div>
+<div class="sb-backdrop" id="sb-backdrop" onclick="toggleMobileMenu(false)"></div>
 <div class="app">
   <nav class="sb" id="sb"></nav>
-  <div style="display:flex;flex-direction:column;flex:1">
+  <div style="display:flex;flex-direction:column;flex:1;min-width:0">
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg)" id="mobile-header">
+      <button class="hbg-btn" onclick="toggleMobileMenu()" title="Menú">☰</button>
+    </div>
     <main class="main" id="main" style="flex:1;padding:0"></main>
   </div>
 </div>
 <div id="mroot"></div>
+<div id="toast-container"></div>
 <div class="dov" id="dov" onclick="closeDrawer()"></div>
 <div class="drw" id="drw">
   <div class="drwh" id="drwh"></div>
@@ -1331,7 +1369,7 @@ function avgCostFromTrades(ticker){
   var ts=0,tc=0;
   buys.forEach(function(t){ts+=t.qty;tc+=t.amount;});
   S.trades.filter(function(t){return t.ticker===ticker&&t.type==='sell';}).forEach(function(t){ts-=t.qty;});
-  return ts>0?tc/buys.reduce(function(s,t){return s+t.qty;},0):null;
+  return ts>0?tc/ts:null;
 }
 function sharesFromTrades(ticker){
   var s=0;
@@ -1361,9 +1399,8 @@ var liveFromCache=false;
 // Falls back to public CORS proxies for local dev only.
 var fetchStats={ok:0,fail:0,lastErr:null,lastOk:null};
 
-var _USE_EDGE=window.location.hostname.includes('vercel.app')||
-              window.location.hostname.includes('financeospro.com')||
-              window.location.hostname.includes('magnova');
+var _USE_EDGE=['vercel.app','financeospro.com','magnova.app','magnova-invest']
+  .some(function(h){return window.location.hostname.includes(h);});
 
 // localStorage API cache — 20 min TTL, keyed by url
 var _API_CACHE_TTL=20*60*1000;
@@ -1472,6 +1509,7 @@ async function fetchHistory(ticker,range){
   }catch(e){fetchStats.fail++;fetchStats.lastErr=e.message;return null;}
 }
 async function fetchFundamentals(ticker){
+  try{
   var ckey='fund_'+ticker;
   var cached=_cacheGet(ckey);
   if(cached) return cached;
@@ -1505,6 +1543,7 @@ async function fetchFundamentals(ticker){
   };
   _cacheSet(ckey,result);
   return result;
+  }catch(e){console.error("fetchFundamentals failed",ticker,e);return null;}
 }
 
 
@@ -1518,10 +1557,7 @@ async function refreshLive(tickers,manual){
   });
   try{
     var gotAny=false;
-    var isVercel=window.location.hostname.includes('vercel.app')||
-                 window.location.hostname.includes('magnova.app')||
-               window.location.hostname.includes('financeospro.com')||
-                 window.location.hostname.includes('magnova-invest');
+    var isVercel=_USE_EDGE;
 
     if(isVercel){
       // ONE request for all tickers via our Edge Function
@@ -1757,10 +1793,51 @@ function liveBadge(){
   return "<div class=\""+c.cls+"\" style=\"display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10px;font-family:monospace\">"+
     (c.dot?"<span class=\"live-dot\"></span>":"")+c.txt+"</div>";
 }
+function updateLiveBadge(){
+  document.querySelectorAll('.live-badge-wrap').forEach(function(el){el.innerHTML=liveBadge();});
+}
+function updateLivePricesInDOM(){
+  // Update price cells in place without full page re-render
+  document.querySelectorAll('[data-live-price]').forEach(function(el){
+    var t=el.getAttribute('data-live-price');
+    if(LIVE[t]){
+      var q=LIVE[t];
+      el.textContent='$'+q.price.toFixed(2);
+    }
+  });
+  document.querySelectorAll('[data-live-change]').forEach(function(el){
+    var t=el.getAttribute('data-live-change');
+    if(LIVE[t]){
+      var q=LIVE[t];
+      var pct=(q.changePercent||0).toFixed(2);
+      el.textContent=(q.changePercent>=0?'+':'')+pct+'%';
+      el.style.color=q.changePercent>=0?'var(--green)':'var(--red)';
+    }
+  });
+  updateLiveBadge();
+}
 
+function showToast(msg,type){
+  var c=document.getElementById('toast-container');
+  if(!c) return;
+  var t=document.createElement('div');
+  t.className='toast '+(type||'success');
+  t.innerHTML=(type==='error'?'✕':type==='warning'?'⚠':type==='info'?'ℹ':'✓')+' '+msg;
+  c.appendChild(t);
+  requestAnimationFrame(function(){ t.classList.add('show'); });
+  setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},300); },3000);
+}
 function render(){renderSidebar();renderMain();renderModal();renderDisclaimer();}
+function toggleMobileMenu(force){
+  var sb=document.getElementById('sb');
+  var bd=document.getElementById('sb-backdrop');
+  var open=typeof force==='boolean'?force:!sb.classList.contains('mobile-open');
+  sb.classList.toggle('mobile-open',open);
+  if(bd) bd.style.display=open?'block':'none';
+}
 function setPage(p){
   S.page=p;
+  toggleMobileMenu(false); // close mobile nav on navigation
   // Update active state without full sidebar re-render
   document.querySelectorAll(".nb").forEach(function(btn){
     btn.classList.remove("act");
@@ -2142,7 +2219,7 @@ function renderDecisionEngine(){
 
   var DEFAULT_TICKERS=['SPY','QQQ','AAPL','NVDA','MSFT','AMZN','GLD','BTC-USD'];
   var tickers=[];
-  S.watchlist.forEach(function(w){if(tickers.indexOf(w.ticker)<0)tickers.push(w.ticker);});
+  S.watchlist.forEach(function(w){var tk=typeof w==='string'?w:w.ticker;if(tk&&tickers.indexOf(tk)<0)tickers.push(tk);});
   S.portfolio.forEach(function(p){if(tickers.indexOf(p.t)<0)tickers.push(p.t);});
   var usingDefaults=!tickers.length;
   if(usingDefaults)tickers=DEFAULT_TICKERS;
@@ -2568,6 +2645,18 @@ function renderMain(){
   if(plan.locked.indexOf(S.page)>=0){renderPaywall();return;}
   var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:renderSentimentWidget,radar:renderRadar,decision:renderDecisionEngine,ind:renderInd,risk:renderRisk,back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:renderScreener,settings:renderSettings};
   (pages[S.page]||renderDash)();
+  // Inject trial countdown banner
+  var banner=trialBanner();
+  if(banner){
+    var existing=document.getElementById('trial-banner-el');
+    if(!existing){
+      var div=document.createElement('div');
+      div.id='trial-banner-el';
+      div.innerHTML=banner;
+      var main=document.getElementById('main');
+      if(main) main.insertBefore(div,main.firstChild);
+    }
+  }
 }
 
 // ── WELCOME ────────────────────────────────────────────────────
@@ -3187,6 +3276,7 @@ function addWatch(t){
   if(S.watchlist.indexOf(t)<0){
     S.watchlist.push(t);persist();
     sbAddWatch(t);
+    showToast(t+' agregado al watchlist');
     if(S.page==="watch") renderMain();
   }
 }
@@ -3195,6 +3285,7 @@ function rmWatch(t){
   S.watchlist=S.watchlist.filter(function(x){return x!==t;});
   persist();
   sbRmWatch(t);
+  showToast(t+' removido del watchlist','warning');
   if(S.page==="watch") renderMain();
 }
 function resetWatch(){S.watchlist=[...DEF_WATCH];persist();renderWatch();}
@@ -3858,11 +3949,10 @@ async function doUpgrade(){
     if(data.url){window.location.href=data.url;return;}
     throw new Error(data.error||'Error');
   }catch(e){
-    // Stripe not configured yet — show helpful message instead of crashing
     if(e.message&&e.message.includes('not configured')){
-      alert('El pago con tarjeta estará disponible muy pronto. Por ahora usa el trial gratuito.');
+      showToast('Pago con tarjeta disponible muy pronto. Usa el trial gratuito por ahora.','info');
     }else{
-      alert('Error al conectar con el servidor de pagos. Intenta de nuevo.');
+      showToast('Error al conectar con el servidor de pagos. Intenta de nuevo.','error');
     }
   }
 }
@@ -3915,6 +4005,7 @@ async function savePos(id){
   REBAL.targets={}; // reset rebalancing targets when portfolio changes
   S.modal=null;S.editPos=null;
   document.getElementById("mroot").innerHTML="";
+  showToast(id===-1?'Posición agregada':'Posición actualizada');
   renderMain(); // fast partial re-render
 }
 function mDel(mr){
@@ -3936,6 +4027,7 @@ function delPos(id){
   DIVS.data={};     // reset dividend cache for removed ticker
   S.modal=null;S.editPos=null;
   document.getElementById("mroot").innerHTML="";
+  showToast('Posición eliminada','warning');
   renderMain();
 }
 
@@ -4076,6 +4168,7 @@ function saveTrade(){
   }
 
   closeModal();
+  showToast('Operación registrada en Bitácora');
   setPage("bitacora");
 }
 
@@ -5716,6 +5809,8 @@ function startTrial(){
   if(S.user){
     S.user.plan='trial';
     S.user.trialStarted=Date.now();
+    // Sync plan + trial start to Supabase so it survives re-login
+    sb.from("profiles").update({plan:'trial',trial_started_at:new Date().toISOString()}).eq("id",S.user.id).then(function(){},function(e){console.error("startTrial sync failed",e);});
     persist();
     closeModal();
     // Unlock message
@@ -5736,30 +5831,6 @@ function installPWA(){
   if(_deferredPrompt){_deferredPrompt.prompt();_deferredPrompt=null;}
 }
 
-// ── POST-LOGIN HOOK: trigger onboarding ───────────────────────
-var _origDoLogin=doLogin;
-doLogin=function(){
-  _origDoLogin();
-  if(S.user) setTimeout(checkOnboarding,600);
-};
-
-// ── TRIAL BANNER IN RENDER ────────────────────────────────────
-var _origRenderMain2=renderMain;
-renderMain=function(){
-  _origRenderMain2();
-  // Inject trial banner if applicable
-  var banner=trialBanner();
-  if(banner&&S.user){
-    var existing=document.getElementById('trial-banner-el');
-    if(!existing){
-      var div=document.createElement('div');
-      div.id='trial-banner-el';
-      div.innerHTML=banner;
-      var main=document.getElementById('main');
-      if(main) main.insertBefore(div,main.firstChild);
-    }
-  }
-};
 
 // ── COMPARADOR DE ACTIVOS ────────────────────────────────────────
 var COMP={tickers:["AAPL","MSFT"],range:60,data:{},loading:false};
@@ -6262,9 +6333,10 @@ async function bootLiveData(){
     updateLivePricesInDOM();
   }).catch(function(){});
 
-  // ③ Auto-refresh every 5 min
+  // ③ Auto-refresh every 5 min (only when tab visible and during market hours)
   _bootInterval=setInterval(function(){
     if(!S.user){clearInterval(_bootInterval);_bootInterval=null;_bootRunning=false;return;}
+    if(document.hidden) return; // skip when tab not visible
     var t2=[];
     S.portfolio.forEach(function(h){if(t2.indexOf(h.t)<0)t2.push(h.t);});
     S.watchlist.forEach(function(t){if(t2.indexOf(t)<0)t2.push(t);});
@@ -6356,6 +6428,7 @@ async function sbLoadUserData(authUser){
     }
     S.watchlist=watch.length>0?watch:[...DEF_WATCH];
     loadTrades();
+    setTimeout(checkOnboarding,600);
   }catch(e){
     console.error("sbLoadUserData failed",e);
     // Fallback to defaults so the app still renders
@@ -6458,7 +6531,7 @@ async function sbAddHolding(h){
   var res=await sb.from("portfolio_holdings").insert({
     user_id:S.user.id, ticker:h.t, asset_type:h.type, shares:h.sh, avg_cost:h.cost, note:h.note||""
   }).select().single();
-  if(res.error){ console.error("sbAddHolding failed",res.error); return h.id; }
+  if(res.error){ console.error("sbAddHolding failed",res.error); return null; }
   return res.data.id;
 }
 async function sbUpdateHolding(h){
