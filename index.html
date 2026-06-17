@@ -5051,7 +5051,7 @@ function exportCSV(){
 
 
 // ── POSITION BUILDER ────────────────────────────────────────────────────────
-var PB={ticker:'',price:0,capital:0,risk:2,stop:0,computed:null}; // capital set on first render
+var PB={ticker:'',price:0,capital:0,risk:2,stop:0,rr:2,computed:null}; // capital set on first render
 
 function renderPB(){
   if(!PB.capital||PB.capital<=0) PB.capital=S.capital;
@@ -5141,8 +5141,20 @@ function renderPB(){
     '<input id="pb-capital" class="inp" style="width:100%" type="number" value="'+cap+'" oninput="PB.capital=parseFloat(this.value)||0;pbCalc()"/></div>'+
     '<div><label style="display:block;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:\'JetBrains Mono\',monospace;margin-bottom:5px">Riesgo máx (%)</label>'+
     '<input id="pb-risk" class="inp" style="width:100%" type="number" value="'+PB.risk+'" min="0.5" max="10" step="0.5" oninput="PB.risk=parseFloat(this.value)||2;pbCalc()"/></div></div>'+
-    '<div style="margin-bottom:14px"><label style="display:block;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:\'JetBrains Mono\',monospace;margin-bottom:5px">Ref. Baja (vacío = -8% automático)</label>'+
+    '<div style="margin-bottom:10px"><label style="display:block;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:\'JetBrains Mono\',monospace;margin-bottom:5px">Stop Loss (vacío = -8% automático)</label>'+
     '<input id="pb-stop" class="inp" style="width:100%" type="number" placeholder="Auto — 8% bajo precio entrada" value="'+(PB.stop||'')+'" oninput="PB.stop=parseFloat(this.value)||0;pbCalc()"/></div>'+
+
+    // R/R Target selector
+    '<div style="margin-bottom:14px">'+
+    '<label style="display:block;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-family:\'JetBrains Mono\',monospace;margin-bottom:6px">Ratio Riesgo/Recompensa (R/R target)</label>'+
+    '<div style="display:flex;gap:5px;flex-wrap:wrap">'+
+    [1,1.5,2,3,4].map(function(r){
+      var active=PB.rr===r;
+      return '<button onclick="PB.rr='+r+';pbCalc()" style="padding:5px 12px;border-radius:6px;font-size:11px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;border:1px solid '+(active?'var(--orange-bd)':'var(--border)')+';background:'+(active?'var(--orange-bg)':'var(--card2)')+';color:'+(active?'var(--orange)':'var(--text2)')+';font-weight:'+(active?'700':'400')+'">'+r+'R</button>';
+    }).join('')+
+    '<input id="pb-rr" type="number" class="inp" min="0.5" max="10" step="0.5" value="'+PB.rr+'" oninput="PB.rr=parseFloat(this.value)||2;pbCalc()" style="width:72px;padding:5px 8px;font-size:11px" placeholder="Custom"/>'+
+    '</div></div>'+
+
     '<button onclick="pbCalc()" class="btn-big" style="width:100%">Calcular posición óptima →</button>'+
     '</div></div>'+
     '<div>'+resultPanel+'</div></div>'+
@@ -5170,22 +5182,30 @@ function pbFetchPrice(){
 }
 
 function pbCalc(){
-  var ticker=(document.getElementById('pb-ticker')||{}).value||PB.ticker;
+  var ticker=((document.getElementById('pb-ticker')||{}).value||PB.ticker||'').toUpperCase().trim();
   var price=parseFloat((document.getElementById('pb-price')||{}).value)||PB.price;
   var capital=parseFloat((document.getElementById('pb-capital')||{}).value)||PB.capital||S.capital;
   var risk=parseFloat((document.getElementById('pb-risk')||{}).value)||PB.risk||2;
   var stop=parseFloat((document.getElementById('pb-stop')||{}).value)||PB.stop||0;
-  if(!price||!capital) return;
-  if(!stop) stop=price*0.92;
+  var rr=parseFloat((document.getElementById('pb-rr')||{}).value)||PB.rr||2;
+
+  if(!price||price<=0){showToast('Ingresa o carga un precio válido para continuar.','warn');return;}
+  if(!capital||capital<=0){showToast('Define tu capital disponible.','warn');return;}
+
+  if(!stop||stop<=0) stop=price*0.92; // default -8%
+  if(stop>=price){showToast('El stop loss debe ser menor al precio de entrada.','warn');return;}
+
   var riskPct=(price-stop)/price;
-  if(riskPct<=0) return;
+  if(riskPct<=0){showToast('Diferencia entre precio y stop inválida.','warn');return;}
+
   var riskAmt=capital*(risk/100);
   var posSize=riskAmt/riskPct;
   var units=posSize/price;
-  var target=price+2*(price-stop);
-  var rr=(target-price)/(price-stop);
-  PB.ticker=ticker;PB.price=price;PB.capital=capital;PB.risk=risk;PB.stop=stop;
-  PB.computed={ticker:ticker,price:price,stop:stop,target:target,riskAmt:riskAmt,posSize:posSize,units:units,rr:rr};
+  var target=price+rr*(price-stop); // configurable R/R
+  var rrActual=(target-price)/(price-stop);
+
+  PB.ticker=ticker;PB.price=price;PB.capital=capital;PB.risk=risk;PB.stop=stop;PB.rr=rr;
+  PB.computed={ticker:ticker,price:price,stop:stop,target:target,riskAmt:riskAmt,posSize:posSize,units:units,rr:rrActual};
   renderPB();
 }
 
@@ -5200,35 +5220,70 @@ function pbAddToPortfolio(){
 
 
 // ── MARKET SENTIMENT GAUGE ──────────────────────────────────────────────────
+// ── Sentiment history: persisted daily snapshots ──
+var SENT_HIST=(function(){
+  try{
+    var raw=JSON.parse(localStorage.getItem('mv_sent_hist')||'[]');
+    return Array.isArray(raw)?raw:[];
+  }catch(e){return[];}
+}());
+
+function sentSaveToday(score){
+  var today=new Date().toISOString().slice(0,10);
+  var existing=SENT_HIST.find(function(e){return e.d===today;});
+  if(existing){existing.v=score;}else{SENT_HIST.unshift({d:today,v:score});}
+  SENT_HIST=SENT_HIST.slice(0,30); // keep 30 days
+  try{localStorage.setItem('mv_sent_hist',JSON.stringify(SENT_HIST));}catch(e){}
+}
+
 function calcSentiment(){
-  var buyPct=(ALL_SIG.filter(function(s){return s.sig==='BUY';}).length/ALL_SIG.length)*100;
-  var sigAvg=ALL_SIG.reduce(function(s,x){return s+x.sc;},0)/ALL_SIG.length;
+  var buyPct=ALL_SIG.length?
+    (ALL_SIG.filter(function(s){return s.sig==='BUY';}).length/ALL_SIG.length)*100:50;
+  var sigAvg=ALL_SIG.length?
+    ALL_SIG.reduce(function(s,x){return s+x.sc;},0)/ALL_SIG.length:50;
   var port=S.portfolio;
   var totC=port.reduce(function(s,h){return s+h.sh*h.cost;},0);
   var totM=port.reduce(function(s,h){return s+h.sh*h.cur;},0);
   var pnlPct=totC?((totM-totC)/(totC||1))*100:0;
   var momentumScore=Math.max(0,Math.min(100,50+pnlPct*2));
-  var vixScore=Math.max(0,Math.min(100,100-(16.8-10)*3));
+
+  // VIX: use cached DE value if available, otherwise default 18
+  var vixVal=(DE_CACHE.vix&&DE_CACHE.vix.vix)||18;
+  var vixScore=Math.max(0,Math.min(100,100-(vixVal-10)*3));
+  var vixDisplay=DE_CACHE.vix&&DE_CACHE.vix.vix?DE_CACHE.vix.vix.toFixed(1):'—';
+
   var rsiAvg=0,rsiCount=0;
   port.forEach(function(h){var sig=ALL_SIG.find(function(x){return x.t===h.t;});if(sig){rsiAvg+=sig.sc;rsiCount++;}});
   rsiAvg=rsiCount?rsiAvg/rsiCount:sigAvg;
+
   var score=Math.round(buyPct*0.30+sigAvg*0.15+rsiAvg*0.25+vixScore*0.15+momentumScore*0.15);
   score=Math.max(0,Math.min(100,score));
+
   var label,color,emoji,desc;
   if(score<=20){label='Miedo Extremo';color='#e84142';emoji='😱';desc='Oportunidad de compra. Mercado vende sin discriminar.';}
   else if(score<=40){label='Miedo';color='#f59e0b';emoji='😰';desc='Cautela. Posible sobreacción bajista en el corto plazo.';}
   else if(score<=60){label='Neutral';color='#6b80a0';emoji='😐';desc='Sin señal clara. El mercado procesa información.';}
   else if(score<=80){label='Codicia';color='#f7931a';emoji='😏';desc='Optimismo. Cuidado con FOMO. Considera toma parcial de ganancias.';}
   else{label='Codicia Extrema';color='#26a65b';emoji='🤑';desc='Euforia. Riesgo de corrección. Revisa stops y diversificación.';}
-  return{score:score,label:label,color:color,emoji:emoji,desc:desc,
+
+  sentSaveToday(score);
+
+  return{score:score,label:label,color:color,emoji:emoji,desc:desc,vixVal:vixVal,
     components:[
-      {name:'Señales BUY',value:buyPct.toFixed(0)+'%',score:buyPct,icon:'⚡'},
-      {name:'Score promedio',value:sigAvg.toFixed(0)+'/100',score:sigAvg,icon:'📊'},
-      {name:'RSI portfolio',value:rsiAvg.toFixed(0),score:rsiAvg,icon:'📈'},
-      {name:'VIX (inv.)',value:'16.8',score:vixScore,icon:'🌡'},
-      {name:'Momentum P&L',value:(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%',score:momentumScore,icon:'💰'}
+      {name:'Señales BUY',   value:buyPct.toFixed(0)+'%',          score:buyPct,        icon:'⚡'},
+      {name:'Score DE avg',  value:sigAvg.toFixed(0)+'/100',        score:sigAvg,        icon:'📊'},
+      {name:'RSI portfolio', value:rsiAvg.toFixed(0),               score:rsiAvg,        icon:'📈'},
+      {name:'VIX inverso',   value:'VIX '+vixDisplay,               score:vixScore,      icon:'🌡'},
+      {name:'Momentum P&L',  value:(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%', score:momentumScore, icon:'💰'}
     ]
   };
+}
+
+async function refreshSentiment(){
+  var btn=document.getElementById('sent-refresh');
+  if(btn){btn.textContent='⟳ Actualizando...';btn.disabled=true;}
+  await deGetVIX();
+  renderSentimentWidget();
 }
 
 function buildDial(score,color,size){
@@ -5269,14 +5324,23 @@ function renderSentimentWidget(){
   var buy=ALL_SIG.filter(function(s){return s.sig==='BUY';}).length;
   var hold=ALL_SIG.filter(function(s){return s.sig==='HOLD';}).length;
   var sell=ALL_SIG.filter(function(s){return s.sig==='SELL';}).length;
-  var t=ALL_SIG.length;
-  var hist=[52,55,48,60,65,58,72,68,75,71,78,73,d.score-5,d.score];
-  var hBars=hist.map(function(v,i){
+  var t=ALL_SIG.length||1;
+
+  // Real persisted history (up to 14 entries, oldest first)
+  var histData=SENT_HIST.slice(0,14).reverse();
+  // Pad with nulls if we have fewer than 14 days
+  while(histData.length<14) histData.unshift(null);
+  var hBars=histData.map(function(entry,i){
+    var isLast=i===histData.length-1;
+    if(!entry) return '<div style="flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:2px">'+
+      '<div style="width:100%;height:3px;background:var(--card3);border-radius:2px"></div>'+
+      '<div style="font-size:7px;color:var(--border2)">·</div></div>';
+    var v=entry.v;
     var c2=v<=20?'#e84142':v<=40?'#f59e0b':v<=60?'#6b80a0':v<=80?'#f7931a':'#26a65b';
-    var isLast=i===hist.length-1;
-    return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">'+
-      '<div style="width:100%;height:'+Math.max(3,v*0.65)+'px;background:'+c2+';border-radius:2px 2px 0 0;opacity:'+(isLast?'1':'.45')+'"></div>'+
-      '<div style="font-size:7px;color:'+(isLast?c2:'var(--text3)')+';font-family:\'JetBrains Mono\',monospace">'+(isLast?'HOY':'D-'+(hist.length-1-i))+'</div>'+
+    var dayLabel=isLast?'HOY':entry.d.slice(5); // MM-DD
+    return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px" title="'+entry.d+': '+v+'">'+
+      '<div style="width:100%;height:'+Math.max(4,v*0.65)+'px;background:'+c2+';border-radius:2px 2px 0 0;opacity:'+(isLast?'1':'.5')+'"></div>'+
+      '<div style="font-size:7px;color:'+(isLast?c2:'var(--text3)')+';font-family:\'JetBrains Mono\',monospace">'+dayLabel+'</div>'+
       '</div>';
   }).join('');
   var compRows=d.components.map(function(c){
@@ -5289,9 +5353,16 @@ function renderSentimentWidget(){
       '</div>';
   }).join('');
 
+  var vixStatus=DE_CACHE.vix&&DE_CACHE.vix.vix?
+    '<span style="font-size:9px;padding:2px 7px;border-radius:4px;background:var(--card2);border:1px solid var(--border);color:var(--text3);font-family:\'JetBrains Mono\',monospace">VIX '+d.vixVal.toFixed(1)+' · '+((DE_CACHE.vix&&DE_CACHE.vix.label)||'')+'</span>':
+    '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">VIX no cargado</span>';
+
   document.getElementById("main").innerHTML=
     '<div class="ph"><div><h1>Market Sentiment</h1>'+
-    '<p class="sub-txt">// Fear & Greed propio · 5 componentes ponderados</p></div></div>'+
+    '<p class="sub-txt">// Fear & Greed propio · 5 componentes ponderados · VIX real</p></div>'+
+    '<div class="ph-right">'+vixStatus+
+    '<button id="sent-refresh" onclick="refreshSentiment()" class="btn" style="padding:5px 12px;font-size:11px">⟳ Actualizar VIX</button>'+
+    '</div></div>'+
     '<div style="display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start">'+
     '<div style="display:flex;flex-direction:column;gap:12px">'+
     '<div class="cb" style="text-align:center">'+
