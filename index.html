@@ -16,6 +16,7 @@
 <!-- SEO & GEO -->
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/favicon.svg"/>
 <link rel="canonical" href="https://invest.financeospro.com/"/>
 <meta name="author" content="Walter Lamadriz — MAXNOVA & LUCI Global LLC"/>
 <meta name="keywords" content="análisis técnico acciones, plataforma inversiones LATAM, señales técnicas, gestión riesgo portafolio, decision engine inversiones, screener acciones, finanzas LATAM"/>
@@ -1263,13 +1264,13 @@ div:has(>.dtab), div:has(>.rtab) {
 <!-- Suite nav -->
 <div style="background:#0f1f17;border-bottom:0.5px solid rgba(255,255,255,.07);padding:7px 20px;display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:11px;position:sticky;top:0;z-index:9999">
   <div style="display:flex;align-items:center;gap:16px">
-    <a href="https://financeospro.com" style="color:rgba(255,255,255,.45);text-decoration:none;letter-spacing:.3px" title="Volver al inicio">← financeospro.com</a>
+    <a href="https://financeospro.com" style="color:rgba(255,255,255,.75);text-decoration:none;letter-spacing:.3px" title="Volver al inicio">← financeospro.com</a>
     <span style="color:rgba(255,255,255,.15)">·</span>
     <span style="color:rgba(255,255,255,.6);letter-spacing:.5px">INVEST</span>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
-    <a href="https://financeospro.com" style="color:rgba(255,255,255,.35);text-decoration:none;font-size:10px">FinanceOS Personal →</a>
-    <a href="https://demo.financeospro.com/app/?demo=true" target="_blank" style="color:rgba(255,255,255,.35);text-decoration:none;font-size:10px">Demo →</a>
+    <a href="https://financeospro.com" style="color:rgba(255,255,255,.65);text-decoration:none;font-size:10px">FinanceOS Personal →</a>
+    <a href="https://financeospro.com/#pricing" target="_blank" style="color:rgba(255,255,255,.65);text-decoration:none;font-size:10px">Planes →</a>
   </div>
 </div>
 <div class="sb-backdrop" id="sb-backdrop" onclick="toggleMobileMenu(false)"></div>
@@ -1325,7 +1326,7 @@ const DEF_PORT=[
   {id:9, t:"AMZN", type:"Stock",sh:10, cost:168.00,cur:199.0,  note:"E-commerce+Cloud"},
   {id:10,t:"JPM",  type:"Stock",sh:18, cost:158.00,cur:196.0,  note:"Banking value"},
 ];
-const DEF_WATCH=["AAPL","MSFT","NVDA","SPY","QQQ","GOOGL","META","TSLA","VTI","JPM"];
+const DEF_WATCH=["AAPL","MSFT","NVDA","SPY","QQQ","GOOGL","META","TSLA","VTI","JPM","MELI","NU","GGB","BSBR","PBR"];
 const ALL_SIG=[
   {t:"NVDA",sig:"BUY",sc:89},{t:"AAPL",sig:"BUY",sc:82},
   {t:"XLK",sig:"BUY",sc:81},{t:"SPY",sig:"BUY",sc:79},
@@ -2008,7 +2009,7 @@ function genFallback(basePrice,days){
   for(var i=0;i<days;i++){
     var chg=(Math.random()-0.48)*p*0.022;
     var c=Math.max(p+chg,1);
-    data.push({date:"D"+(i+1),open:p,high:Math.max(p,c)*1.005,low:Math.min(p,c)*0.995,close:c,vol:Math.floor(Math.random()*50e6+10e6),p:i+1});
+    data.push({date:"D"+(i+1),open:p,high:Math.max(p,c)*1.005,low:Math.min(p,c)*0.995,close:c,vol:Math.floor(Math.random()*50e6+10e6),p:i+1,_synthetic:true});
     p=c;
   }
   data[data.length-1].close=basePrice;
@@ -3701,6 +3702,7 @@ function renderNews(){
     fetchLiveNews().then(function(){renderMain();}).catch(function(){});
   }
   var activeNews=getNewsData();
+  var usingStaticNews=!LIVE_NEWS.length;
   var f=S.newsFilter;
 
   // ── Quick Links (trending topics) ────────────────────────────
@@ -3915,6 +3917,11 @@ function renderNews(){
 
     // Breaking banner
     breakingBanner+
+
+    // Static news notice
+    (usingStaticNews&&_newsFetched?
+      '<div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.25);border-radius:8px;padding:9px 14px;margin-bottom:12px;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--amber);display:flex;align-items:center;gap:8px">'+
+      '<span>⚠️</span><span>Mostrando noticias de ejemplo — no se pudo conectar con el feed en vivo. Los datos son referenciales.</span></div>':'')+
 
     // Quick Links
     '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;overflow-x:auto;scrollbar-width:none">'+
@@ -6751,23 +6758,27 @@ function renderComp(){
     '<div class="st" style="margin-bottom:0"><div class="stbar"></div>Performance (base 0%)</div>'+
     '<div>'+legend+'</div></div>'+
     chartContent+'</div>'+
-    statsContent+'</div></div>';
+    statsContent+
+    (COMP.synthetic&&COMP.synthetic.length?
+      '<div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.3);border-radius:8px;padding:9px 14px;margin-top:10px;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--amber)">'+
+      '⚠️ Datos simulados para: '+COMP.synthetic.join(', ')+' — Histórico real no disponible. Las líneas de estos tickers son referenciales, no reflejan precio real.'+
+      '</div>':'')+'</div></div>';
 }
 
 async function compLoad(){
   if(COMP.loading) return;
   COMP.tickers=COMP.tickers.filter(function(t){return t&&t.trim().length>0;});
   if(COMP.tickers.length<2){alert('Selecciona al menos 2 tickers');return;}
-  COMP.loading=true;COMP.data={};renderComp();
+  COMP.loading=true;COMP.data={};COMP.synthetic=[];renderComp();
   var rangeMap={30:'1mo',60:'2mo',90:'3mo',130:'6mo'};
   var rng=rangeMap[COMP.range]||'3mo';
   try{
     var promises=COMP.tickers.map(function(t){
       return fetchHistory(t,rng).then(function(hist){
         if(hist&&hist.length>5){COMP.data[t]=hist;}
-        else{COMP.data[t]=genFallback(getLivePrice(t)||100,COMP.range);}
+        else{COMP.data[t]=genFallback(getLivePrice(t)||100,COMP.range);if(COMP.synthetic.indexOf(t)<0)COMP.synthetic.push(t);}
         if(!LIVE[t]) return fetchQuote(t).then(function(q){if(q) LIVE[t]=q;});
-      }).catch(function(){COMP.data[t]=genFallback(getLivePrice(t)||100,COMP.range);});
+      }).catch(function(){COMP.data[t]=genFallback(getLivePrice(t)||100,COMP.range);if(COMP.synthetic.indexOf(t)<0)COMP.synthetic.push(t);});
     });
     await Promise.all(promises);
   }catch(e){/* silent */}
