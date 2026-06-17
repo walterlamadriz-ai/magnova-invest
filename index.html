@@ -1631,8 +1631,21 @@ async function fetchHistory(ticker,range){
   try{
     var r=range||'3mo';
     var ckey='h_'+ticker+'_'+r;
+    // 1. In-memory cache (fastest path)
     var cached=_cacheGet(ckey);
     if(cached){fetchStats.ok++;return cached;}
+    // 2. localStorage cache — survives page reload, 5-min TTL
+    try{
+      var lsKey='fh_'+ticker+'_'+r;
+      var stored=localStorage.getItem(lsKey);
+      if(stored){
+        var parsed=JSON.parse(stored);
+        if(parsed&&parsed.ts&&(Date.now()-parsed.ts)<300000&&parsed.data&&parsed.data.length>5){
+          _cacheSet(ckey,parsed.data);fetchStats.ok++;return parsed.data;
+        }
+      }
+    }catch(e){}
+    // 3. Network fetch
     var res;
     if(_USE_EDGE){
       res=await fetchWithTimeout('/api/history?ticker='+encodeURIComponent(ticker)+'&range='+r+'&interval=1d',8000);
@@ -1668,16 +1681,31 @@ async function fetchHistory(ticker,range){
       }
     }
     if(!data||data.length<5) throw new Error('insufficient data');
-    _cacheSet(ckey,data);fetchStats.ok++;fetchStats.lastOk=Date.now();
+    _cacheSet(ckey,data);
+    // Persist to localStorage so next page load is instant
+    try{localStorage.setItem('fh_'+ticker+'_'+r,JSON.stringify({ts:Date.now(),data:data}));}catch(e){}
+    fetchStats.ok++;fetchStats.lastOk=Date.now();
     return data;
   }catch(e){fetchStats.fail++;fetchStats.lastErr=e.message;return null;}
 }
 async function fetchFundamentals(ticker){
   try{
     var ckey='fund_'+ticker;
+    // 1. In-memory cache
     var cached=_cacheGet(ckey);
     if(cached) return cached;
-    if(!_USE_EDGE) return null; // no CORS-safe fallback for FMP
+    // 2. localStorage cache — 1h TTL (fundamentals don't change intra-day)
+    try{
+      var lsFKey='ff_'+ticker;
+      var storedF=localStorage.getItem(lsFKey);
+      if(storedF){
+        var parsedF=JSON.parse(storedF);
+        if(parsedF&&parsedF.ts&&(Date.now()-parsedF.ts)<3600000&&parsedF.data){
+          _cacheSet(ckey,parsedF.data);return parsedF.data;
+        }
+      }
+    }catch(e){}
+    if(!_USE_EDGE) return null;
     var res=await fetchWithTimeout('/api/fundamentals?ticker='+encodeURIComponent(ticker),9000);
     if(!res||!res.ok) return null;
     var json=await res.json();
@@ -1711,6 +1739,7 @@ async function fetchFundamentals(ticker){
       employees:   d.employees,
     };
     _cacheSet(ckey,result);
+    try{localStorage.setItem('ff_'+ticker,JSON.stringify({ts:Date.now(),data:result}));}catch(e){}
     return result;
   }catch(e){console.error('fetchFundamentals failed',ticker,e);return null;}
 }
@@ -4874,18 +4903,18 @@ function openDrawer(ticker,curPrice){
   var sig=ALL_SIG.find(function(s){return s.t===ticker;})||{sig:"HOLD",sc:60};
   var price=curPrice||sig.p||100;
   renderDrawerHead(ticker,price);
-  document.getElementById("drwb").innerHTML='<div class="dload"><div class="spin"></div>Cargando análisis...</div>';
   document.getElementById("dov").classList.add("open");
   document.getElementById("drw").classList.add("open");
   document.body.style.overflow="hidden";
-  // Load history
+  // Render immediately with cached/available data — chart area shows its own spinner
+  renderDrawerBody();
+  // Load history — re-renders chart area when data arrives
   loadDrawerHistory(ticker,price);
   // Load fundamentals in background — re-render tab when data arrives
   if(!dFundCache[ticker]){
     fetchFundamentals(ticker).then(function(f){
       if(f){
         dFundCache[ticker]=f;
-        // Re-render only if still on fundamentals tab for same ticker
         if(dTicker===ticker&&dTab==='fundamentals') renderDrawerBody();
       }
     });
@@ -4994,7 +5023,10 @@ function renderDrawerBody(){
   });
 
   var content="";
-  if(dTab==="chart"){
+  // Chart/RSI/MACD need history — show per-area loading without blocking the whole drawer
+  if(hist.length===0&&(dTab==="chart"||dTab==="rsi"||dTab==="macd")){
+    content='<div class="dload" style="height:220px"><div class="spin"></div>Cargando histórico...</div>';
+  } else if(dTab==="chart"){
     content=
       '<div class="cha">'+
       '<div class="chl">Velas · SMA20 · SMA50 · BB'+
