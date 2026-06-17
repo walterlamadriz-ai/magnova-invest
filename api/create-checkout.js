@@ -33,17 +33,20 @@ export default async function handler(req) {
   let body;
   try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
-  const { product, email, userId, successUrl, cancelUrl } = body;
+  const { product, email, userId, successUrl, cancelUrl, interval } = body;
 
   // Price IDs — set these in Vercel env vars after creating products in Stripe
   const PRICES = {
-    personal:   process.env.STRIPE_PRICE_PERSONAL,    // One-time $29.99
-    pro:        process.env.STRIPE_PRICE_PRO,          // One-time $49
-    invest_pro: process.env.STRIPE_PRICE_INVEST_PRO,   // Subscription $29.99/mes
+    personal:          process.env.STRIPE_PRICE_PERSONAL,         // One-time $29.99
+    pro:               process.env.STRIPE_PRICE_PRO,               // One-time $49
+    invest_pro:        process.env.STRIPE_PRICE_INVEST_PRO,        // Subscription $29.99/mes
+    invest_pro_annual: process.env.STRIPE_PRICE_INVEST_PRO_ANNUAL, // Subscription $199/año
   };
 
-  const priceId = PRICES[product];
-  if (!priceId) return json({ error: `Unknown product or price not configured: ${product}` }, 400);
+  // Route invest_pro to annual price when interval='annual'
+  const priceKey = (product === 'invest_pro' && interval === 'annual') ? 'invest_pro_annual' : product;
+  const priceId = PRICES[priceKey];
+  if (!priceId) return json({ error: `Unknown product or price not configured: ${priceKey}` }, 400);
 
   const isSubscription = product === 'invest_pro';
   const origin = req.headers.get('origin') || 'https://invest.financeospro.com';

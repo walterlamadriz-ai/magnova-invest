@@ -1410,6 +1410,48 @@ var LIVE_REFRESH_MS=5*60*1000;
 var STOP_LOSS_DEFAULT=0.08;
 var DEFAULT_CAPITAL=100000;
 
+// Multi-currency FX support
+var FX_RATES={USD:1,CLP:958,MXN:17.1,COP:4150,ARS:890,PEN:3.75};
+var FX_SYMBOLS={USD:'$',CLP:'$',MXN:'$',COP:'$',ARS:'$',PEN:'S/'};
+var FX_LABELS={USD:'USD',CLP:'CLP',MXN:'MXN',COP:'COP',ARS:'ARS',PEN:'PEN'};
+var USER_CURRENCY=(function(){try{return localStorage.getItem('mv_currency')||'USD';}catch(e){return 'USD';}}());
+var _fxFetched=false;
+
+function setUserCurrency(c){
+  USER_CURRENCY=c;
+  try{localStorage.setItem('mv_currency',c);}catch(e){}
+  renderMain();
+}
+
+function fxConvert(usdVal){
+  var rate=FX_RATES[USER_CURRENCY]||1;
+  var val=usdVal*rate;
+  var sym=FX_SYMBOLS[USER_CURRENCY]||'$';
+  var lbl=FX_LABELS[USER_CURRENCY]||'USD';
+  if(USER_CURRENCY==='USD') return sym+fmtD(val);
+  if(val>=1e9) return sym+fmtD(val/1e9)+'B '+lbl;
+  if(val>=1e6) return sym+fmtD(val/1e6)+'M '+lbl;
+  if(val>=1e3) return sym+fmt(Math.round(val/1000))+'K '+lbl;
+  return sym+fmt(Math.round(val))+' '+lbl;
+}
+
+async function fetchFXLatam(){
+  if(_fxFetched||!_USE_EDGE) return;
+  _fxFetched=true;
+  try{
+    var cacheKey='mv_fx_latam';
+    var cached=null;
+    try{cached=JSON.parse(localStorage.getItem(cacheKey)||'null');}catch(e){}
+    if(cached&&cached.rates&&(Date.now()-cached.ts)<FX_CACHE_TTL){FX_RATES=Object.assign({USD:1},cached.rates);return;}
+    var res=await fetchWithTimeout('/api/fx-latam',6000);
+    var data=await res.json();
+    if(data&&data.rates){
+      FX_RATES=Object.assign({USD:1},data.rates);
+      try{localStorage.setItem(cacheKey,JSON.stringify({rates:data.rates,ts:Date.now()}));}catch(e){}
+    }
+  }catch(e){}
+}
+
 var _USE_EDGE=['vercel.app','financeospro.com','magnova.app','magnova-invest']
   .some(function(h){return window.location.hostname.includes(h);});
 
@@ -1496,6 +1538,7 @@ async function fetchHistory(ticker,range){
       if(!json.data||!json.data.length) throw new Error('no data');
       data=json.data.map(function(d,i){
         return {date:new Date(d.date).toLocaleDateString('es-CL',{month:'short',day:'numeric'}),
+                ts:Math.floor(new Date(d.date).getTime()/1000),
                 open:d.open,high:d.high,low:d.low,close:d.close,vol:d.volume,p:i+1};
       }).filter(function(d){return d.close>0;});
     } else {
@@ -1751,6 +1794,99 @@ function svgVol(data,W,H){
     return "<rect x='"+(i*bw+1).toFixed(1)+"' y='"+(H-h).toFixed(1)+"' width='"+(bw-2).toFixed(1)+"' height='"+h+"' fill='var(--blue)' opacity='.5' rx='1'/>";
   }).join("");
   return "<svg viewBox='0 0 "+W+" "+H+"' style='width:100%;height:"+H+"px'>"+bars+"</svg>";
+}
+
+// ── LIGHTWEIGHT CHARTS (Candlestick) ───────────────────────────
+var _lwLoaded=false;
+var _lwLoadPromise=null;
+
+function loadLWScript(){
+  if(_lwLoaded) return Promise.resolve();
+  if(_lwLoadPromise) return _lwLoadPromise;
+  _lwLoadPromise=new Promise(function(resolve,reject){
+    var s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/lightweight-charts@4/dist/lightweight-charts.standalone.production.js';
+    s.onload=function(){_lwLoaded=true;resolve();};
+    s.onerror=reject;
+    document.head.appendChild(s);
+  });
+  return _lwLoadPromise;
+}
+
+function renderLWCharts(hist,sma20,sma50,bbArr){
+  loadLWScript().then(function(){
+    var LW=window.LightweightCharts;
+    if(!LW) return;
+    var mainEl=document.getElementById('lw-chart-main');
+    var volEl=document.getElementById('lw-chart-vol');
+    if(!mainEl||!volEl) return;
+    // Filter valid OHLCV bars
+    var bars=hist.filter(function(d){return d.ts&&d.open&&d.high&&d.low&&d.close;});
+    if(!bars.length) return;
+
+    var bgColor='#0d0f14';
+    var textColor='#8a9bbd';
+    var gridColor='rgba(255,255,255,0.04)';
+
+    var chart=LW.createChart(mainEl,{
+      width:mainEl.clientWidth||mainEl.offsetWidth||300,
+      height:210,
+      layout:{background:{type:'solid',color:bgColor},textColor:textColor,fontFamily:"'Share Tech Mono',monospace",fontSize:9},
+      grid:{vertLines:{color:gridColor},horzLines:{color:gridColor}},
+      crosshair:{mode:LW.CrosshairMode.Normal},
+      timeScale:{timeVisible:false,borderColor:'rgba(255,255,255,0.07)'},
+      rightPriceScale:{borderColor:'rgba(255,255,255,0.07)'},
+    });
+
+    var candleSeries=chart.addCandlestickSeries({
+      upColor:'#22c55e',downColor:'#ef4444',wickUpColor:'#22c55e',wickDownColor:'#ef4444',
+      borderVisible:false,
+    });
+    candleSeries.setData(bars.map(function(d){return {time:d.ts,open:d.open,high:d.high,low:d.low,close:d.close};}));
+
+    var s20Data=bars.map(function(d,i){return sma20[i]!=null?{time:d.ts,value:sma20[i]}:null;}).filter(Boolean);
+    if(s20Data.length){
+      var s20s=chart.addLineSeries({color:'#f59e0b',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+      s20s.setData(s20Data);
+    }
+    var s50Data=bars.map(function(d,i){return sma50[i]!=null?{time:d.ts,value:sma50[i]}:null;}).filter(Boolean);
+    if(s50Data.length){
+      var s50s=chart.addLineSeries({color:'#3d8ef8',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+      s50s.setData(s50Data);
+    }
+    if(bbArr&&bbArr.length){
+      var bbUpData=bars.map(function(d,i){return bbArr[i]&&bbArr[i].upper!=null?{time:d.ts,value:bbArr[i].upper}:null;}).filter(Boolean);
+      var bbLoData=bars.map(function(d,i){return bbArr[i]&&bbArr[i].lower!=null?{time:d.ts,value:bbArr[i].lower}:null;}).filter(Boolean);
+      if(bbUpData.length){
+        var bbUs=chart.addLineSeries({color:'rgba(61,142,248,0.3)',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,lineStyle:2});
+        bbUs.setData(bbUpData);
+      }
+      if(bbLoData.length){
+        var bbLs=chart.addLineSeries({color:'rgba(61,142,248,0.3)',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,lineStyle:2});
+        bbLs.setData(bbLoData);
+      }
+    }
+    chart.timeScale().fitContent();
+
+    // Volume chart
+    var volChart=LW.createChart(volEl,{
+      width:volEl.clientWidth||volEl.offsetWidth||300,
+      height:60,
+      layout:{background:{type:'solid',color:bgColor},textColor:textColor},
+      grid:{vertLines:{color:gridColor},horzLines:{color:gridColor}},
+      timeScale:{timeVisible:false,borderColor:'rgba(255,255,255,0.07)'},
+      rightPriceScale:{borderColor:'rgba(255,255,255,0.07)'},
+      crosshair:{mode:LW.CrosshairMode.Hidden},
+    });
+    var volSeries=volChart.addHistogramSeries({
+      color:'rgba(255,255,255,0.15)',priceFormat:{type:'volume'},priceScaleId:'',
+    });
+    volSeries.setData(bars.map(function(d){return {time:d.ts,value:d.vol||0,color:d.close>=d.open?'rgba(34,197,94,0.3)':'rgba(239,68,68,0.3)'};}));
+    volChart.timeScale().fitContent();
+
+    // Sync x-axis scroll between both charts
+    chart.timeScale().subscribeVisibleLogicalRangeChange(function(r){if(r)volChart.timeScale().setVisibleLogicalRange(r);});
+  }).catch(function(){});
 }
 
 function genFallback(basePrice,days){
@@ -2524,9 +2660,29 @@ function renderScreener(){
     '</div>'+
     '<button onclick="screenerApplyFilters()" class="btn" style="padding:6px 14px;font-size:11px">Aplicar filtros</button>'+
     '</div>'+
+
+    // Ticker presets
+    '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">'+
+    '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:.8px">Presets:</span>'+
+    [
+      ['🇺🇸 Tech','AAPL MSFT NVDA GOOGL META AMZN TSLA AMD INTC ORCL'],
+      ['📈 ETFs','SPY QQQ IWM GLD TLT XLK XLF XLV XLE XLI'],
+      ['🌎 LATAM ADR','BABA MELI PBR VALE CX BBD ITUB BRFS ERJ LTM AMXL WALMEX'],
+      ['🇧🇷 Brasil','ITUB BBDC4.SA VALE3.SA PETR4.SA ABEV3.SA B3SA3.SA WEGE3.SA'],
+      ['🇲🇽 México','AMXL.MX WALMEX.MX FEMSA.MX GFINBURO.MX CEMEX.MX BIMBOA.MX'],
+      ['🇨🇱 Chile','SQM BCI.CL FALABELLA.CL COPEC.CL ENELCHILE.CL CCU.CL CMPC.CL'],
+    ].map(function(p){
+      return '<button onclick="screenerSetPreset(\''+p[1]+'\')" style="padding:4px 10px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--text3);font-size:9px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;white-space:nowrap">'+p[0]+'</button>';
+    }).join('')+
+    '</div>'+
     '</div>'+
 
     resultsHtml;
+}
+
+function screenerSetPreset(tickerStr){
+  S.screenerTickers=tickerStr;
+  screenerRun();
 }
 
 function screenerApplyFilters(){
@@ -2976,6 +3132,13 @@ function renderPort(){
     '<div class="ph">'+
     '<div><h1>Portfolio Manager</h1><p class="sub-txt">// Editable · <span id="saved">✓ Guardado</span></p></div>'+
     '<div class="ph-right">'+liveBadge()+
+    // Currency selector
+    '<div style="display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:2px">'+
+    ['USD','CLP','MXN','COP','ARS','PEN'].map(function(c){
+      var active=USER_CURRENCY===c;
+      return '<button onclick="setUserCurrency(\''+c+'\')" style="padding:3px 7px;border:none;border-radius:4px;font-size:9px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;background:'+(active?'var(--orange-bg)':'transparent')+';color:'+(active?'var(--orange)':'var(--text3)')+';font-weight:'+(active?'700':'400')+'">'+c+'</button>';
+    }).join('')+
+    '</div>'+
     (plan.maxT>=999||S.portfolio.length<plan.maxT?'<button class="btn" onclick="openModal(\'addpos\')">+ Agregar</button>':'<span style="font-size:10px;color:var(--amber);font-family:\'Share Tech Mono\'">Límite Free ('+plan.maxT+')</span>')+
     '</div></div>'+
     (S.portfolio.length>0&&S.portfolio[0]&&S.portfolio[0].id<=10&&!localStorage.getItem('mv_demo_dismissed')?
@@ -2984,9 +3147,9 @@ function renderPort(){
       '<button onclick="localStorage.setItem(\'mv_demo_dismissed\',\'1\');renderPort()" style="background:transparent;border:1px solid var(--amber);border-radius:5px;padding:3px 8px;color:var(--amber);font-size:10px;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Entendido</button></div>':'')+
     freeBanner("Plan Free: máximo "+plan.maxT+" posiciones.")+
     '<div class="krow">'+
-    kpi("Capital",D(S.capital),"","g")+
-    kpi("Valor Mercado",D(totM),"","b")+
-    kpi("Cash",D(S.capital-totC),"Disponible","a")+
+    kpi("Capital",D(S.capital),(USER_CURRENCY!=='USD'?fxConvert(S.capital):''),"g")+
+    kpi("Valor Mercado",D(totM),(USER_CURRENCY!=='USD'?fxConvert(totM):''),"b")+
+    kpi("Cash",D(S.capital-totC),(USER_CURRENCY!=='USD'?fxConvert(S.capital-totC):'Disponible'),"a")+
     kpi("P&L",(totP>=0?"+":"")+D(totP),(totP>=0?"+":"")+pct(totP/(totC||1)),totP>=0?"g":"r")+
     kpi("Posiciones",port.length+(plan.maxT<999?"/"+plan.maxT:""),"","b")+
     '</div>'+
@@ -3006,7 +3169,8 @@ function renderPort(){
     '<button class="btn" onclick="openModal(\'addtrade\')">📋 Registrar operación</button>'+
     '<button class="btn" onclick="exportCSV()">⬇ Export CSV</button>'+
     '<button class="btn" style="border-color:var(--border);color:var(--text3)" onclick="resetPort()">↺ Restaurar demo</button>'+
-    '</div>';
+    '</div>'+
+    (port.length>=2?renderCorrelationMatrix(port):'');
 }
 function updateCap(v){
   S.capital=Math.max(0,parseFloat(v)||0);
@@ -3359,6 +3523,40 @@ function renderSig(){
 function setSigF(f){S.sigFilter=f;renderMain();}
 
 // ── NEWS ───────────────────────────────────────────────────────
+var LIVE_NEWS=[];
+var _newsFetched=false;
+
+async function fetchLiveNews(){
+  if(!_USE_EDGE) return;
+  // Check localStorage cache first (15 min TTL)
+  try{
+    var cached=JSON.parse(localStorage.getItem('mv_live_news')||'null');
+    if(cached&&(Date.now()-cached.ts)<15*60*1000&&cached.items.length){
+      LIVE_NEWS=cached.items;_newsFetched=true;return;
+    }
+  }catch(e){/* silent */}
+  try{
+    var tickers=['SPY','QQQ','NVDA','AAPL','AMZN','META','MSFT','GLD','BTC-USD'];
+    S.portfolio.slice(0,5).forEach(function(h){if(tickers.indexOf(h.t)<0)tickers.unshift(h.t);});
+    var res=await fetchWithTimeout('/api/news?tickers='+tickers.slice(0,12).join(','),8000);
+    if(!res.ok) throw new Error('news api '+res.status);
+    var data=await res.json();
+    if(data.items&&data.items.length){
+      LIVE_NEWS=data.items;
+      localStorage.setItem('mv_live_news',JSON.stringify({ts:Date.now(),items:LIVE_NEWS}));
+    }
+  }catch(e){console.warn('fetchLiveNews failed',e);}
+  _newsFetched=true;
+}
+
+function getNewsData(){
+  // Merge: live news first, then static NEWS_DATA as fallback/supplement
+  if(LIVE_NEWS.length){
+    var liveIds=LIVE_NEWS.map(function(n){return n.id;});
+    return LIVE_NEWS.concat(NEWS_DATA.filter(function(n){return liveIds.indexOf(n.id)<0;}));
+  }
+  return NEWS_DATA;
+}
 
 // ── TIMESTAMP HELPERS ──────────────────────────────────────────
 function relTime(hoursAgo){
@@ -3383,6 +3581,11 @@ function loadNewsCache(){
 }
 
 function renderNews(){
+  // Fetch live news on first visit, re-render when done
+  if(!_newsFetched){
+    fetchLiveNews().then(function(){renderMain();}).catch(function(){});
+  }
+  var activeNews=getNewsData();
   var f=S.newsFilter;
 
   // ── Quick Links (trending topics) ────────────────────────────
@@ -3419,10 +3622,10 @@ function renderNews(){
   var sparkPts={bullish:'0,35 16,28 32,20 48,12 64,6',bearish:'0,8 16,14 32,22 48,30 64,38',neutral:'0,22 16,18 32,28 48,20 64,15',critical:'0,30 16,20 32,25 48,10 64,5'};
 
   // ── Breaking news items ───────────────────────────────────────
-  var breakingItems=NEWS_DATA.filter(function(n){return n.breaking;});
+  var breakingItems=activeNews.filter(function(n){return n.breaking;});
 
   // ── Filtered list ─────────────────────────────────────────────
-  var filtered=f==='Todo'?NEWS_DATA:NEWS_DATA.filter(function(n){return n.cat===f;});
+  var filtered=f==='Todo'?activeNews:activeNews.filter(function(n){return n.cat===f;});
   var featItem=filtered[0];
   var listItems=filtered.slice(1);
 
@@ -3452,7 +3655,7 @@ function renderNews(){
     var sparkCol=impCol[featItem.impact]||'var(--orange)';
     var pts=sparkPts[featItem.impact]||sparkPts.neutral;
     featCard=
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;display:flex;min-height:145px;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor=\'rgba(247,147,26,.3)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;display:flex;min-height:145px;cursor:pointer;transition:.15s" '+(featItem.link?'onclick="window.open(\''+featItem.link+'\',\'_blank\',\'noopener\')"':'')+' onmouseover="this.style.borderColor=\'rgba(247,147,26,.3)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
       // Thumbnail with spark chart
       '<div style="width:195px;flex-shrink:0;background:linear-gradient(160deg,#091428,#0e2244);position:relative;overflow:hidden">'+
       '<svg viewBox="0 0 195 145" style="position:absolute;bottom:0;left:0;width:100%;height:75px">'+
@@ -3938,6 +4141,31 @@ function renderModal(){
 }
 
 
+var _billingPeriod='monthly';
+
+function setBillingPeriod(period){
+  _billingPeriod=period;
+  var mo=document.getElementById('tog-mo');
+  var yr=document.getElementById('tog-yr');
+  var priceEl=document.getElementById('pro-price-display');
+  var subEl=document.getElementById('pro-price-sub');
+  var ctaEl=document.getElementById('pro-cta-sub');
+  if(!mo||!yr)return;
+  if(period==='annual'){
+    mo.style.background='transparent'; mo.style.color='var(--text3)'; mo.style.borderColor='var(--border)';
+    yr.style.background='var(--orange-bg)'; yr.style.color='var(--orange)'; yr.style.borderColor='var(--orange-bd)';
+    if(priceEl) priceEl.innerHTML='$199<span style="font-size:13px;color:var(--text3)">/año</span>';
+    if(subEl) subEl.textContent='$16.58/mes efectivo · ~45% ahorro vs mensual';
+    if(ctaEl) ctaEl.textContent='Después del trial: $199/año · Cancela en 1 click';
+  }else{
+    yr.style.background='transparent'; yr.style.color='var(--text3)'; yr.style.borderColor='var(--border)';
+    mo.style.background='var(--orange-bg)'; mo.style.color='var(--orange)'; mo.style.borderColor='var(--orange-bd)';
+    if(priceEl) priceEl.innerHTML='$29.99<span style="font-size:13px;color:var(--text3)">/mes</span>';
+    if(subEl) subEl.textContent='USD / mes · Cancela cuando quieras';
+    if(ctaEl) ctaEl.textContent='Después del trial: $29.99/mes · Cancela en 1 click';
+  }
+}
+
 async function doUpgrade(){
   var u=S.user;
   if(!u)return;
@@ -3946,6 +4174,7 @@ async function doUpgrade(){
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({product:'invest_pro',userId:u.id,email:u.email,
+        interval:_billingPeriod,
         successUrl:window.location.origin+'/?upgraded=1',
         cancelUrl:window.location.href})
     });
@@ -4178,6 +4407,89 @@ function saveTrade(){
 
 // ── DRAWER ─────────────────────────────────────────────────────
 var dTicker=null,dTab="chart",dRange=60,dHistCache={},dFundCache={};
+var corrCache={};
+
+function pearson(a,b){
+  var n=Math.min(a.length,b.length);
+  if(n<5) return null;
+  var ax=a.slice(-n),bx=b.slice(-n);
+  var ma=ax.reduce(function(s,v){return s+v;},0)/n;
+  var mb=bx.reduce(function(s,v){return s+v;},0)/n;
+  var num=0,da=0,db=0;
+  for(var i=0;i<n;i++){var ra=ax[i]-ma,rb=bx[i]-mb;num+=ra*rb;da+=ra*ra;db+=rb*rb;}
+  var denom=Math.sqrt(da)*Math.sqrt(db);
+  return denom===0?null:num/denom;
+}
+
+function corrColor(r){
+  if(r===null) return 'var(--card3)';
+  var abs=Math.abs(r);
+  if(r>0.7) return 'rgba(239,68,68,0.5)';
+  if(r>0.4) return 'rgba(234,179,8,0.4)';
+  if(r>0.1) return 'rgba(255,255,255,0.08)';
+  if(r>-0.1) return 'rgba(255,255,255,0.04)';
+  if(r>-0.4) return 'rgba(59,130,246,0.2)';
+  return 'rgba(34,197,94,0.3)';
+}
+
+function renderCorrelationMatrix(port){
+  var tickers=port.map(function(h){return h.t;}).slice(0,8);
+  var key=tickers.join(',');
+  var loaded=tickers.every(function(t){return dHistCache[t+'_60']&&dHistCache[t+'_60'].length>5;});
+
+  if(!loaded){
+    return '<div class="cb" style="margin-top:14px">'+
+      '<div class="st"><div class="stbar"></div>Correlación de portafolio</div>'+
+      '<p style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin:0 0 10px">Calcula las correlaciones Pearson entre activos (2 meses de historia)</p>'+
+      '<button class="btn" onclick="loadCorrData()">📊 Calcular matriz de correlación</button>'+
+      '</div>';
+  }
+
+  var closes={};
+  tickers.forEach(function(t){
+    var h=dHistCache[t+'_60']||[];
+    closes[t]=h.map(function(d){return d.close;});
+  });
+  var n=tickers.length;
+  var cellW=Math.max(52,Math.floor(260/n));
+
+  var header='<tr><td style="width:'+cellW+'px"></td>'+tickers.map(function(t){
+    return '<th style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;padding:3px;text-align:center;width:'+cellW+'px">'+t+'</th>';
+  }).join('')+'</tr>';
+
+  var bodyRows=tickers.map(function(ta,i){
+    var cells=tickers.map(function(tb,j){
+      if(i===j) return '<td style="background:var(--orange-bg);border:1px solid var(--border);text-align:center;font-size:10px;color:var(--orange);font-family:\'JetBrains Mono\',monospace;padding:6px">1.00</td>';
+      var r=pearson(closes[ta],closes[tb]);
+      var bg=corrColor(r);
+      var txt=r!==null?r.toFixed(2):'—';
+      var tc=r===null?'var(--text3)':Math.abs(r)>0.5?'var(--bright)':'var(--text)';
+      return '<td style="background:'+bg+';border:1px solid var(--border);text-align:center;font-size:10px;color:'+tc+';font-family:\'JetBrains Mono\',monospace;padding:6px">'+txt+'</td>';
+    }).join('');
+    return '<tr><th style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;padding:3px 8px 3px 0;text-align:right">'+ta+'</th>'+cells+'</tr>';
+  }).join('');
+
+  return '<div class="cb" style="margin-top:14px">'+
+    '<div class="st"><div class="stbar"></div>Correlación de portafolio <span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">(Pearson · 2 meses)</span></div>'+
+    '<p style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin:0 0 10px">🔴 Alta correlación (>0.7) · 🟡 Media (0.4–0.7) · 🟢 Baja/negativa (diversificación)</p>'+
+    '<div style="overflow-x:auto"><table style="border-collapse:collapse">'+header+bodyRows+'</table></div>'+
+    '</div>';
+}
+
+async function loadCorrData(){
+  var port=S.portfolio.slice(0,planOf().maxT);
+  var tickers=port.map(function(h){return h.t;}).slice(0,8);
+  var btn=event&&event.target;
+  if(btn){btn.textContent='⏳ Cargando...';btn.disabled=true;}
+  await Promise.all(tickers.map(async function(t){
+    var k=t+'_60';
+    if(!dHistCache[k]){
+      var h=await fetchHistory(t,'2mo');
+      dHistCache[k]=h&&h.length>5?h:genFallback(getLivePrice(t)||100,60);
+    }
+  }));
+  renderPort();
+}
 
 function openDrawer(ticker,curPrice){
   dTicker=ticker;dTab="chart";
@@ -4307,12 +4619,12 @@ function renderDrawerBody(){
   if(dTab==="chart"){
     content=
       '<div class="cha">'+
-      '<div class="chl">Precio · SMA20 · SMA50 · BB'+
-      '<div style="display:flex;gap:8px"><span style="font-size:9px;color:var(--green);font-family:\'Share Tech Mono\'">━ Precio</span><span style="font-size:9px;color:var(--amber);font-family:\'Share Tech Mono\'">╌ SMA20</span><span style="font-size:9px;color:var(--blue);font-family:\'Share Tech Mono\'">╌ SMA50</span></div>'+
+      '<div class="chl">Velas · SMA20 · SMA50 · BB'+
+      '<div style="display:flex;gap:8px"><span style="font-size:9px;color:var(--green);font-family:\'Share Tech Mono\'">▲ Alcista</span><span style="font-size:9px;color:var(--red);font-family:\'Share Tech Mono\'">▼ Bajista</span><span style="font-size:9px;color:var(--amber);font-family:\'Share Tech Mono\'">╌ SMA20</span><span style="font-size:9px;color:var(--blue);font-family:\'Share Tech Mono\'">╌ SMA50</span></div>'+
       '</div>'+
-      svgLine(chartData,["close","sma20","sma50","bbUp","bbLo"],["var(--orange)","var(--orange)","var(--blue)","rgba(61,142,248,.25)","rgba(61,142,248,.25)"])+
+      '<div id="lw-chart-main" style="height:210px;width:100%;border-radius:6px;overflow:hidden"></div>'+
       '</div>'+
-      '<div class="cha"><div class="chl">Volumen</div>'+svgVol(chartData)+'</div>';
+      '<div class="cha"><div class="chl">Volumen</div><div id="lw-chart-vol" style="height:60px;width:100%;border-radius:6px;overflow:hidden"></div></div>';
   } else if(dTab==="rsi"){
     content=
       '<div class="cha">'+
@@ -4418,6 +4730,8 @@ function renderDrawerBody(){
     '<button class="btn" onclick="openModal(\'addpos\');closeDrawer()">+ Portfolio</button>'+
     '<button class="btn" style="border-color:var(--border);color:var(--text3)" onclick="closeDrawer()">Cerrar</button>'+
     '</div>';
+
+  if(dTab==='chart') renderLWCharts(hist,sma20,sma50,bbArr);
 }
 
 
@@ -4452,7 +4766,7 @@ function buildPortfolioContext(){
     lines.push("- "+s.t+": "+s.sig+" (Score "+s.sc+", precio $"+(s.p?fmtD(s.p):"—")+")");
   });
   lines.push("\nNOTICIAS RELEVANTES (semana actual):");
-  NEWS_DATA.slice(0,4).forEach(function(n){
+  getNewsData().slice(0,4).forEach(function(n){
     lines.push("- ["+n.cat+"] "+n.title+" ("+relTime(n.hoursAgo)+")");
   });
   return lines.join("\n");
@@ -5156,7 +5470,7 @@ async function generateRadarReport(){
     '- Señales SELL en el portfolio: '+exitSignals+'\n'+
     '- Ingresos dividendos próximas 4 semanas: '+divIncome+'\n\n'+
     'NOTICIAS RELEVANTES:\n'+
-    NEWS_DATA.slice(0,5).map(function(n,i){return (i+1)+'. '+n.title.substring(0,80);}).join('\n')+'\n\n'+
+    getNewsData().slice(0,5).map(function(n,i){return (i+1)+'. '+n.title.substring(0,80);}).join('\n')+'\n\n'+
     'INSTRUCCIÓN DE FORMATO — responde SOLO con este JSON exacto:\n'+
     '{\n'+
     '  "summary": "Una frase que resuma el estado del portfolio esta semana (máx 15 palabras)",\n'+
@@ -5761,6 +6075,13 @@ function mUpgrade(mr){
 
     // Pricing section
     '<div style="padding:20px 28px;border-bottom:1px solid var(--border)">'+
+
+    // Billing toggle
+    '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px">'+
+    '<button id="tog-mo" onclick="setBillingPeriod(\'monthly\')" style="padding:5px 16px;border-radius:20px;font-size:11px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;border:1px solid var(--orange-bd);background:var(--orange-bg);color:var(--orange);font-weight:700">Mensual</button>'+
+    '<button id="tog-yr" onclick="setBillingPeriod(\'annual\')" style="padding:5px 16px;border-radius:20px;font-size:11px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3)">Anual <span style="background:var(--green);color:#fff;font-size:8px;padding:1px 5px;border-radius:3px;margin-left:2px">-45%</span></button>'+
+    '</div>'+
+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
 
     // Free tier
@@ -5780,8 +6101,8 @@ function mUpgrade(mr){
     '<div style="background:var(--orange-bg);border:2px solid var(--orange-bd);border-radius:var(--r-md);padding:16px;position:relative">'+
     '<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--orange);color:#fff;font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.5px;font-family:\'JetBrains Mono\',monospace">MÁS POPULAR</div>'+
     '<div style="font-size:12px;font-weight:700;color:var(--orange);margin-bottom:4px">PRO</div>'+
-    '<div style="font-size:24px;font-weight:700;color:var(--white);font-family:\'JetBrains Mono\',monospace">$29.99</div>'+
-    '<div style="font-size:10px;color:var(--text3);margin-bottom:12px">USD / mes · Cancela cuando quieras</div>'+
+    '<div id="pro-price-display" style="font-size:24px;font-weight:700;color:var(--white);font-family:\'JetBrains Mono\',monospace">$29.99</div>'+
+    '<div id="pro-price-sub" style="font-size:10px;color:var(--text3);margin-bottom:12px">USD / mes · Cancela cuando quieras</div>'+
     proFeatures.slice(0,8).map(function(f){
       return '<div style="font-size:11px;color:var(--bright);padding:3px 0;border-bottom:1px solid var(--orange-bd);display:flex;gap:6px;align-items:center"><span style="color:var(--green)">✓</span>'+f[0]+' '+f[1]+'</div>';
     }).join('')+
@@ -5791,7 +6112,7 @@ function mUpgrade(mr){
     // Trial CTA
     '<div style="padding:20px 28px 16px">'+
     '<button onclick="startTrial()" class="btn-big" style="width:100%;padding:13px;font-size:14px;margin-bottom:10px">🚀 Empezar 14 días gratis — Sin tarjeta</button>'+
-    '<p style="font-size:10px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">Después del trial: $29.99/mes · Cancela en 1 click</p>'+
+    '<p id="pro-cta-sub" style="font-size:10px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">Después del trial: $29.99/mes · Cancela en 1 click</p>'+
     '</div>'+
 
     // Testimonials
@@ -6431,6 +6752,7 @@ async function sbLoadUserData(authUser){
     }
     S.watchlist=watch.length>0?watch:[...DEF_WATCH];
     loadTrades();
+    fetchFXLatam();
     setTimeout(checkOnboarding,600);
   }catch(e){
     console.error("sbLoadUserData failed",e);
