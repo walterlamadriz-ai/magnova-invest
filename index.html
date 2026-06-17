@@ -1817,6 +1817,7 @@ function updateLivePricesInDOM(){
   updateLiveBadge();
 }
 
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function showToast(msg,type){
   var c=document.getElementById('toast-container');
   if(!c) return;
@@ -3043,7 +3044,7 @@ function renderBitacora(){
       '<td style="font-weight:600">$'+fmt(t.amount)+'</td>'+
       '<td style="font-size:10px;color:var(--text3)">'+(t.rsi||'—')+'</td>'+
       '<td>'+pnlHtml+'</td>'+
-      '<td style="font-size:10px;color:var(--text2);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(t.note||'')+'</td>'+
+      '<td style="font-size:10px;color:var(--text2);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(t.note)+'</td>'+
       '<td><button class="btn btn-r" style="padding:2px 6px;font-size:10px" onclick="deleteTrade('+t.id+')">🗑</button></td>'+
       '</tr>';
   }).join(""):'<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text3)">Sin operaciones registradas todavía.<br><span style="font-size:11px">Usá el botón "Registrar operación" en Portfolio.</span></td></tr>';
