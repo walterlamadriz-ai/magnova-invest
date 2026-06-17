@@ -1331,6 +1331,10 @@ div:has(>.dtab), div:has(>.rtab) {
 // FINANCEOS INVEST — Real market data · Clean build
 // ═══════════════════════════════════════════════════════════════
 
+// ── FEATURE FLAGS ──────────────────────────────────────────────
+// Set to true only after Commit 4 (consent gate modal) is reviewed and approved.
+const CONSENT_GATE_ENABLED = false;
+
 // ── USERS & PLANS ──────────────────────────────────────────────
 // USERS[] migrado a Supabase Auth — ver migrate-test-users.md
 const PLANS={
@@ -1484,6 +1488,9 @@ const S={
   newsFilter:"Todo",
   modal:null,editPos:null,
   nextId:10,
+  // ── CONSENT GATE (F1-07) ──
+  consentGateRequired: false,
+  missingConsents: [],
   // ── BITÁCORA ──
   trades:[],          // {id,ticker,type,date,price,qty,amount,rsi,note,pnl}
   tradeFilter:{ticker:"ALL",type:"ALL"},
@@ -7615,6 +7622,15 @@ async function recordUserConsents(userId,source){
 
 // ── END CONSENT FUNCTIONS ──────────────────────────────────────
 
+// Check which required consents the user is missing and store in S.
+// Called only when CONSENT_GATE_ENABLED is true.
+async function checkConsentGate(userId){
+  var existing=await readUserConsents(userId);
+  var missing=getMissingConsents(existing);
+  S.missingConsents=missing;
+  S.consentGateRequired=missing.length>0;
+}
+
 // Load profile + portfolio + watchlist from Supabase for the logged-in user
 async function sbLoadUserData(authUser){
   try{
@@ -7647,6 +7663,12 @@ async function sbLoadUserData(authUser){
     S.watchlist=watch.length>0?watch:[...DEF_WATCH];
     loadTrades();
     fetchFXLatam();
+    // F1-07: consent gate — only active when CONSENT_GATE_ENABLED is true.
+    // When false, no query to public.consents is made and no modal is shown.
+    if(CONSENT_GATE_ENABLED){
+      await checkConsentGate(authUser.id);
+      // showConsentGate() will be added in Commit 4 (not yet implemented).
+    }
     setTimeout(checkOnboarding,600);
   }catch(e){
     console.error("sbLoadUserData failed",e);
