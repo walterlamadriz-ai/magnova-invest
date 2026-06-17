@@ -1,7 +1,6 @@
 // api/fundamentals.js — Vercel Edge Function
-// Fundamentals via Financial Modeling Prep (FMP) API
-// Reduced to 2 parallel calls (profile + ratios-ttm) — quote data comes from
-// /api/quote (Yahoo) and key-metrics-ttm duplicates ratios-ttm on free tier.
+// Fundamentals via Finnhub API (primary) with FMP fallback
+// Finnhub: 200-500ms latency vs FMP 800-2500ms
 export const config = { runtime: 'edge' };
 
 const HEADERS = {
@@ -17,13 +16,22 @@ export default async function handler(req) {
   const tickersParam = (searchParams.get('ticker') || '').toUpperCase().trim();
   if (!tickersParam) return new Response(JSON.stringify({ error: 'ticker_required' }), { status: 400, headers: HEADERS });
 
-  const apiKey = process.env.FMP_API_KEY;
-  if (!apiKey) return new Response(JSON.stringify({ error: 'server_misconfigured' }), { status: 503, headers: HEADERS });
+  const finnhubKey = process.env.FINNHUB_API_KEY;
+  const fmpKey     = process.env.FMP_API_KEY;
+
+  if (!finnhubKey && !fmpKey) {
+    return new Response(JSON.stringify({ error: 'server_misconfigured' }), { status: 503, headers: HEADERS });
+  }
 
   const tickers = tickersParam.split(',').map(t => t.trim()).filter(Boolean).slice(0, 10);
 
   try {
-    const results = await Promise.allSettled(tickers.map(t => fetchFundamentals(t, apiKey)));
+    const results = await Promise.allSettled(
+      tickers.map(t => finnhubKey
+        ? fetchFinnhub(t, finnhubKey)
+        : fetchFMP(t, fmpKey))
+    );
+
     const data = {}, errors = {};
     results.forEach((result, i) => {
       if (result.status === 'fulfilled' && result.value) data[tickers[i]] = result.value;
@@ -40,18 +48,82 @@ export default async function handler(req) {
   }
 }
 
-async function fetchFundamentals(ticker, apiKey) {
-  // 2 calls instead of 4: profile has price+marketCap+beta+sector+description,
-  // ratios-ttm has all valuation/profitability ratios. key-metrics-ttm overlaps
-  // ratios-ttm on FMP free tier and /v3/quote duplicates Yahoo data we already have.
+// ── Finnhub (primary — 200-500ms, 60 req/min free) ──────────────────────────
+async function fetchFinnhub(ticker, apiKey) {
+  const base = 'https://finnhub.io/api/v1';
+  const h = { 'X-Finnhub-Token': apiKey };
+
+  const [metricRes, profileRes] = await Promise.allSettled([
+    finnhubGet(`${base}/stock/metric?symbol=${encodeURIComponent(ticker)}&metric=all`, h),
+    finnhubGet(`${base}/stock/profile2?symbol=${encodeURIComponent(ticker)}`, h),
+  ]);
+
+  const m  = metricRes.status  === 'fulfilled' ? metricRes.value?.metric  : null;
+  const pr = profileRes.status === 'fulfilled' ? profileRes.value         : null;
+
+  if (!pr?.ticker && !m) return null;
+
+  // Map Finnhub fields to the same shape the frontend expects
+  const price    = numOrNull(pr?.['52WeekHigh']) ?? null; // not in profile2, use live
+  const lastDiv  = numOrNull(m?.['dividendYieldIndicatedAnnual']);
+
+  return {
+    ticker,
+    // Valuation
+    peRatio:       numOrNull(m?.['peNormalizedAnnual'] ?? m?.['peTTM']),
+    forwardPE:     numOrNull(m?.['peForwardAnnual']   ?? m?.['peTTM']),
+    priceToBook:   numOrNull(m?.['pbAnnual']          ?? m?.['pbTTM']),
+    eps:           numOrNull(m?.['epsTTM']            ?? m?.['epsBasicExclExtraItemsTTM']),
+    // Profitability
+    grossMargin:   numOrNull(m?.['grossMarginTTM']    ?? m?.['grossMarginAnnual']),
+    netMargin:     numOrNull(m?.['netProfitMarginTTM']?? m?.['netProfitMarginAnnual']),
+    operatingMargin: numOrNull(m?.['operatingMarginTTM'] ?? m?.['operatingMarginAnnual']),
+    roe:           numOrNull(m?.['roeTTM']            ?? m?.['roeAnnual']),
+    // Growth
+    revenueGrowth: numOrNull(m?.['revenueGrowthTTMYoy'] ?? m?.['revenueGrowth3Y']),
+    // Risk
+    beta:          numOrNull(m?.['beta']),
+    debtToEquity:  numOrNull(m?.['totalDebt/totalEquityAnnual'] ?? m?.['totalDebt/totalEquityQuarterly']),
+    // Dividend
+    dividendYield: lastDiv ? lastDiv / 100 : null,
+    // Market data
+    marketCap:     pr?.marketCapitalization ? pr.marketCapitalization * 1e6 : null,
+    price:         null, // use LIVE[] price — not duplicating from Finnhub
+    // Company info
+    sector:        pr?.finnhubIndustry || null,
+    industry:      pr?.finnhubIndustry || null,
+    description:   null, // Finnhub profile2 has no description; FMP has it
+    website:       pr?.weburl || null,
+    employees:     numOrNull(pr?.employeeTotal),
+    country:       pr?.country || null,
+    analystRating: null, // use separate recommendation endpoint if needed
+    targetPrice:   null,
+    fetchedAt:     Date.now(),
+    source:        'finnhub',
+  };
+}
+
+async function finnhubGet(url, headers) {
+  const res = await fetch(url, {
+    headers: { 'Accept': 'application/json', ...headers },
+    signal: AbortSignal.timeout(4000),
+  });
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (json && typeof json === 'object' && !json.error) return json;
+  return null;
+}
+
+// ── FMP (fallback — used if FINNHUB_API_KEY not set) ────────────────────────
+async function fetchFMP(ticker, apiKey) {
   const [profileRes, ratiosRes] = await Promise.allSettled([
     fmpFetch(`/v3/profile/${encodeURIComponent(ticker)}`, apiKey),
     fmpFetch(`/v3/ratios-ttm/${encodeURIComponent(ticker)}`, apiKey),
   ]);
 
-  const profile = profileRes.status === 'fulfilled' ? profileRes.value?.[0] : null;
-  const ratiosRaw = ratiosRes.status === 'fulfilled' ? ratiosRes.value : null;
-  const ratios = Array.isArray(ratiosRaw) ? ratiosRaw[0] : ratiosRaw;
+  const profile   = profileRes.status === 'fulfilled' ? profileRes.value?.[0] : null;
+  const ratiosRaw = ratiosRes.status  === 'fulfilled' ? ratiosRes.value        : null;
+  const ratios    = Array.isArray(ratiosRaw) ? ratiosRaw[0] : ratiosRaw;
 
   if (!profile?.symbol) return null;
 
@@ -60,26 +132,20 @@ async function fetchFundamentals(ticker, apiKey) {
 
   return {
     ticker,
-    // Valuation
     peRatio:       numOrNull(ratios?.peRatioTTM),
     forwardPE:     numOrNull(ratios?.priceEarningsRatioTTM),
     priceToBook:   numOrNull(ratios?.priceToBookRatioTTM),
     eps:           numOrNull(ratios?.epsTTM || profile.eps),
-    // Profitability
     grossMargin:   numOrNull(ratios?.grossProfitMarginTTM),
     netMargin:     numOrNull(ratios?.netProfitMarginTTM),
+    operatingMargin: null,
     roe:           numOrNull(ratios?.returnOnEquityTTM),
-    // Growth
     revenueGrowth: numOrNull(ratios?.revenueGrowthTTM),
-    // Risk
     beta:          numOrNull(profile.beta),
     debtToEquity:  numOrNull(ratios?.debtEquityRatioTTM),
-    // Dividend
     dividendYield: numOrNull(ratios?.dividendYieldTTM || (lastDiv && price ? lastDiv / price : null)),
-    // Market data — profile has mktCap, no extra call needed
     marketCap:     numOrNull(profile.mktCap),
     price,
-    // Company info
     sector:        profile.sector    || null,
     industry:      profile.industry  || null,
     description:   profile.description ? profile.description.slice(0, 280) + '…' : null,
@@ -97,7 +163,7 @@ async function fmpFetch(path, apiKey) {
   const url = `https://financialmodelingprep.com/api${path}?apikey=${apiKey}`;
   const res = await fetch(url, {
     headers: { 'Accept': 'application/json' },
-    signal: AbortSignal.timeout(6000),
+    signal: AbortSignal.timeout(5000),
   });
   if (!res.ok) return null;
   const json = await res.json();
