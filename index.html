@@ -3432,14 +3432,14 @@ function renderPort(){
     var ret=(h.cur-h.cost)/h.cost;
     var w=h.sh*h.cur/(totM||1);
     var lq=LIVE[h.t];
-    var chgHtml=lq?'<div style="font-size:9px;color:'+(lq.changePct>=0?"var(--green)":"var(--red)")+';">'+(lq.changePct>=0?"+":"")+((lq.changePct||0)*100).toFixed(2)+'% hoy</div>':'';
     var hj=JSON.stringify(h).replace(/"/g,"&quot;");
-    return '<tr class="trow">'+
+    return '<tr class="trow" data-pnl="'+pnl.toFixed(2)+'" data-ret="'+ret.toFixed(4)+'" data-val="'+(h.sh*h.cur).toFixed(2)+'" data-chg="'+(lq?(lq.changePct||0):0)+'">'+
       '<td style="font-weight:600;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+h.t+'\','+h.cur+')">'+h.t+' <span style="font-size:9px;color:var(--text3)">↗</span></td>'+
       '<td>'+typeTag(h.type)+'</td>'+
       '<td>'+h.sh+'</td>'+
       '<td>$'+fmtD(h.cost)+'</td>'+
-      '<td style="cursor:pointer" onclick="openDrawer(\''+h.t+'\','+h.cur+')">'+'<div style="font-weight:600;color:var(--bright)">$'+fmtD(h.cur)+'</div>'+chgHtml+'</td>'+
+      '<td style="font-weight:600;cursor:pointer" onclick="openDrawer(\''+h.t+'\','+h.cur+')">$'+fmtD(h.cur)+'</td>'+
+      '<td>'+chgCell(lq)+'</td>'+
       '<td>$'+fmt(h.sh*h.cur)+'</td>'+
       '<td style="color:'+(pnl>=0?"var(--green)":"var(--red)")+';font-weight:600">'+(pnl>=0?"+":"")+'$'+fmt(pnl)+'</td>'+
       '<td style="color:'+(ret>=0?"var(--green)":"var(--red)")+'">'+pct(ret)+'</td>'+
@@ -3479,8 +3479,8 @@ function renderPort(){
     '<span style="font-size:12px;color:var(--text3)">Capital:</span>'+
     '<input class="inp" type="number" value="'+S.capital+'" onchange="updateCap(this.value)" style="width:130px"/>'+
     '</div>'+
-    '<div class="tw"><table><thead><tr>'+
-    '<th>Activo</th><th>Tipo</th><th>Unidades</th><th>Entrada</th><th>Precio Real</th><th>Valor</th><th>P&L</th><th>Retorno</th><th>Peso</th><th>Acc.</th>'+
+    '<div class="tw"><table id="tbl-port"><thead><tr>'+
+    '<th>Activo</th><th>Tipo</th><th>Unidades</th><th>Entrada</th>'+sortTh("port","price","Precio")+sortTh("port","chg","Δ Hoy")+sortTh("port","val","Valor")+sortTh("port","pnl","P&L")+sortTh("port","ret","Retorno")+'<th>Peso</th><th>Acc.</th>'+
     '</tr></thead><tbody>'+rows+
     '<tr class="tot"><td colspan="5">TOTAL</td><td>$'+fmt(totM)+'</td>'+
     '<td style="color:'+(totP>=0?"var(--green)":"var(--red)")+'">'+(totP>=0?"+":"")+'$'+fmt(totP)+'</td>'+
@@ -3736,7 +3736,6 @@ function renderWatch(){
     var s=ALL_SIG.find(function(x){return x.t===t;})||{sig:"HOLD",sc:60,p:100};
     var lp=getLivePrice(t);
     var lq=LIVE[t];
-    var chg=lq?'<span style="font-size:9px;color:'+(lq.changePct>=0?"var(--green)":"var(--red)")+'"> '+(lq.changePct>=0?"+":"")+((lq.changePct||0)*100).toFixed(2)+'%</span>':'';
     var inPort=S.portfolio.some(function(h){return h.t===t;});
     var portBadge=inPort?'<span style="font-size:8px;padding:1px 5px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);border-radius:3px;color:var(--blue);margin-left:4px">PORT</span>':'';
     var deCell=isPro
@@ -3820,7 +3819,6 @@ function renderSig(){
     var lp=getLivePrice(s.t);
     var lq=LIVE[s.t];
     var inW=S.watchlist.indexOf(s.t)>=0;
-    var chg=lq?'<span style="font-size:9px;color:'+(lq.changePct>=0?"var(--green)":"var(--red)")+'"> '+(lq.changePct>=0?"+":"")+((lq.changePct||0)*100).toFixed(2)+'%</span>':'';
     var wbtn='<button class="btn" style="padding:2px 7px;font-size:10px;'+(inW?"border-color:var(--orange);color:var(--orange)":"border-color:var(--text3);color:var(--text3)")+'" onclick="event.stopPropagation();'+(inW?"rmWatch('"+s.t+"')":"addWatch('"+s.t+"')")+'">'+(inW?"✓":"+")+' Watch</button>';
     return '<tr class="trow" data-sc="'+s.sc+'" data-price="'+lp+'" data-chg="'+(lq?(lq.changePct||0):0)+'">'+
       '<td style="font-weight:600;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+s.t+'\','+lp+')">'+s.t+' <span style="font-size:9px;color:var(--text3)">↗</span></td>'+
