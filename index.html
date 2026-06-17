@@ -342,37 +342,6 @@ body {
   margin-bottom: 4px;
 }
 
-.sb-btn {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 7px 10px;
-  border-radius: var(--r-sm);
-  border: none;
-  background: transparent;
-  color: var(--text2);
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-  font-size: 12px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 500;
-  transition: background .12s, color .12s;
-  margin-bottom: 1px;
-}
-.sb-btn:hover { background: var(--card2); color: var(--bright); }
-.sb-btn.active {
-  background: var(--grn-bg);
-  color: var(--grn);
-}
-.sb-btn .sb-icon {
-  width: 16px; height: 16px;
-  opacity: .7;
-  flex-shrink: 0;
-  font-size: 14px;
-  display: flex; align-items:center; justify-content:center;
-}
-.sb-btn.active .sb-icon { opacity: 1; }
 
 .sb-footer {
   margin-top: auto;
@@ -408,6 +377,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  padding-bottom: 48px;
 }
 
 /* ── PAGE HEADER ── */
@@ -523,7 +493,7 @@ body {
 .tw {
   border: 0.5px solid var(--border2);
   border-radius: var(--r-lg);
-  overflow: hidden;
+  overflow-x: auto;
   box-shadow: var(--shadow-sm);
   margin-bottom: 14px;
 }
@@ -832,6 +802,11 @@ tr:last-child td { border-bottom: none; }
 }
 /* ── DISCLAIMER LEGAL ── */
 .disclaimer-bar {
+  position: fixed;
+  bottom: 0;
+  left: var(--sb-w);
+  right: 0;
+  z-index: 200;
   background: var(--amber-bg);
   border-top: 0.5px solid rgba(180,83,9,.15);
   padding: 8px 28px;
@@ -839,7 +814,20 @@ tr:last-child td { border-bottom: none; }
   color: var(--amber);
   font-family: 'JetBrains Mono', monospace;
   line-height: 1.5;
-  flex-shrink: 0;
+}
+
+/* ── ALERT SAAS GRID ── */
+.mgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 4px;
+}
+.mc {
+  background: var(--card2);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 14px;
 }
 
 /* ── WELCOME / LOGIN ── */
@@ -1026,7 +1014,7 @@ tr:last-child td { border-bottom: none; }
     z-index: 400;
   }
   .sb.mobile-open { transform: translateX(0); }
-  .main { margin-left: 0; }
+  .main { margin-left: 0; padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)); }
   .ph { padding: 14px 16px 12px; }
   .page-body { padding: 16px; }
   .g2, .g3 { grid-template-columns: 1fr; }
@@ -1034,8 +1022,14 @@ tr:last-child td { border-bottom: none; }
   .krow { grid-template-columns: repeat(2,1fr); }
   table { font-size: 11px; }
   td, th { padding: 7px 10px; }
+  .tw { overflow-x: auto; }
   .hbg-btn { display:flex!important; }
   .sb-backdrop { display:block; }
+  #mobile-header { display: flex!important; }
+  .disclaimer-bar { left: 0; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (min-width: 769px) {
+  #mobile-header { display: none!important; }
 }
 .hbg-btn {
   display: none;
@@ -1235,17 +1229,17 @@ div:has(>.dtab), div:has(>.rtab) {
 
 /* Button variants */
 .btn-up {
-  padding: 6px 14px; border-radius: 8px;
+  padding: 6px 14px; border-radius: var(--r-sm);
   background: var(--orange-bg); border: 1px solid var(--orange-bd);
   color: var(--orange); font-size: 11px; font-weight: 700;
-  font-family: 'JetBrains Mono', monospace; cursor: pointer;
+  font-family: 'Inter', sans-serif; cursor: pointer;
   transition: background .12s;
 }
 .btn-up:hover { background: var(--orange); color: #fff; }
 .btn-r {
-  padding: 6px 14px; border-radius: 8px;
+  padding: 6px 14px; border-radius: var(--r-sm);
   background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.3);
-  color: #ef4444; font-size: 11px; font-family: 'JetBrains Mono', monospace;
+  color: #ef4444; font-size: 11px; font-family: 'Inter', sans-serif;
   cursor: pointer; transition: background .12s;
 }
 .btn-r:hover { background: rgba(239,68,68,.18); }
@@ -1269,7 +1263,6 @@ div:has(>.dtab), div:has(>.rtab) {
     <span style="color:rgba(255,255,255,.6);letter-spacing:.5px">INVEST</span>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
-    <a href="https://financeospro.com" style="color:rgba(255,255,255,.65);text-decoration:none;font-size:10px">FinanceOS Personal →</a>
     <a href="https://financeospro.com/#pricing" target="_blank" style="color:rgba(255,255,255,.65);text-decoration:none;font-size:10px">Planes →</a>
   </div>
 </div>
@@ -1279,6 +1272,7 @@ div:has(>.dtab), div:has(>.rtab) {
   <div style="display:flex;flex-direction:column;flex:1;min-width:0">
     <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg)" id="mobile-header">
       <button class="hbg-btn" onclick="toggleMobileMenu()" title="Menú">☰</button>
+      <span id="mobile-page-label" style="font-size:13px;font-weight:600;color:var(--bright);letter-spacing:.2px"></span>
     </div>
     <main class="main" id="main" style="flex:1;padding:0"></main>
   </div>
@@ -2166,7 +2160,7 @@ function renderSidebar(){
 
   // Section: Main
   html+='<div class="sb-section"><div class="sb-section-label">Principal</div>';
-  var main=["news","dash","port","watch","sig","pb","comp","sentiment","radar"];
+  var main=["news","dash","port","watch"];
   PAGES.filter(function(p){return main.indexOf(p.id)>=0;}).forEach(function(p){
     var act=S.page===p.id?" act":"";
     var action="setPage('"+p.id+"')";
@@ -2179,7 +2173,7 @@ function renderSidebar(){
 
   // Section: Analytics (Pro)
   html+='<div class="sb-section"><div class="sb-section-label">Análisis</div>';
-  var analytics=["decision","ind","risk","back","screener"];
+  var analytics=["sig","pb","comp","sentiment","radar","decision","ind","risk","back","screener"];
   PAGES.filter(function(p){return analytics.indexOf(p.id)>=0;}).forEach(function(p){
     var locked=u&&plan&&plan.locked.indexOf(p.id)>=0;
     var act=S.page===p.id?" act":"";
@@ -2967,6 +2961,9 @@ function renderMain(){
   if(plan.locked.indexOf(S.page)>=0){renderPaywall();return;}
   var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:renderSentimentWidget,radar:renderRadar,decision:renderDecisionEngine,ind:renderInd,risk:renderRisk,back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:renderScreener,settings:renderSettings};
   (pages[S.page]||renderDash)();
+  var curPage=PAGES.find(function(p){return p.id===S.page;});
+  var mLabel=document.getElementById('mobile-page-label');
+  if(mLabel&&curPage) mLabel.textContent=curPage.label;
   // Inject trial countdown banner
   var banner=trialBanner();
   if(banner){
@@ -3283,7 +3280,7 @@ function renderDash(){
     '</div>'+
     '<div id="de-regime-banner"></div>'+
     '<div class="st"><div class="stbar"></div>Top Señales</div>'+
-    '<div class="tw"><table><thead><tr><th>Activo</th><th>Señal</th><th>Score</th><th>Fuerza</th><th>Precio</th><th>Stop</th></tr></thead>'+
+    '<div class="tw"><table><thead><tr><th>Activo</th><th>Señal</th><th>Score</th><th>Fuerza</th><th>Precio</th><th title="Referencia de baja histórica –8%">Ref. –8%</th></tr></thead>'+
     '<tbody>'+sigRows+'</tbody></table></div>'+
     '<div class="grid2">'+
     '<div class="cb"><div class="st"><div class="stbar"></div>Allocation</div>'+allocRows+'</div>'+
@@ -3395,7 +3392,7 @@ function renderPort(){
     '<button class="btn" onclick="openModal(\'addpos\')">+ Nueva posición</button>'+
     '<button class="btn" onclick="openModal(\'addtrade\')">📋 Registrar operación</button>'+
     '<button class="btn" onclick="exportCSV()">⬇ Export CSV</button>'+
-    '<button class="btn" style="border-color:var(--border);color:var(--text3)" onclick="resetPort()">↺ Restaurar demo</button>'+
+    '<button class="btn-r" onclick="resetPort()">↺ Restaurar demo</button>'+
     '</div>'+
     (port.length>=2?renderCorrelationMatrix(port):'');
 }
@@ -3664,16 +3661,16 @@ function renderWatch(){
     :'<th style="color:var(--text3)">🎯 DE</th>';
 
   document.getElementById("main").innerHTML=
-    '<div class="ph"><div><h1>Watchlist</h1><p class="sub-txt">// '+wl.length+' tickers · <span id="saved">✓ Guardado</span></p></div>'+liveBadge()+'</div>'+
+    '<div class="ph"><div><h1>Watchlist</h1><p class="sub-txt">// '+wl.length+' tickers · <span id="saved">✓ Guardado</span></p></div><div class="ph-right">'+liveBadge()+'<button class="btn" style="border-color:var(--border);color:var(--text3);font-size:10px" onclick="resetWatch()">↺ Default</button></div></div>'+
     '<div class="cb" style="margin-bottom:14px">'+
     '<div class="st"><div class="stbar"></div>Agregar ticker</div>'+
     '<div style="line-height:2;margin-bottom:10px">'+quickTags+'</div>'+
     '<div style="display:flex;gap:8px">'+
     '<input class="inp" id="wc" placeholder="Custom..." maxlength="6" style="width:120px;text-transform:uppercase" onkeydown="if(event.key===\'Enter\')addCustomW()"/>'+
     '<button class="btn" onclick="addCustomW()">+ Agregar</button></div></div>'+
-    '<div class="tw"><table><thead><tr><th>Ticker</th><th>Señal</th><th>Score</th><th>Fuerza</th><th>Precio Real</th><th>Stop</th>'+deHeader+'<th>Quitar</th></tr></thead>'+
+    '<div class="tw"><table><thead><tr><th>Ticker</th><th>Señal</th><th>Score</th><th>Fuerza</th><th>Precio Real</th><th title="Referencia de baja histórica –8%">Ref. –8%</th>'+deHeader+'<th>Quitar</th></tr></thead>'+
     '<tbody>'+emptyMsg+wRows+'</tbody></table></div>'+
-    '<button class="btn" style="border-color:var(--border);color:var(--text3)" onclick="resetWatch()">↺ Restaurar default</button>';
+    '';
 
   // Async DE scores — update cells one by one as they load
   if(isPro&&wl.length){
@@ -4148,7 +4145,7 @@ function renderRisk(){
   var rA=cap*.02;
   var ev=SCENARIOS.reduce(function(s,sc){return s+sc.prob*sc.ret*cap;},0);
   var rows=S.portfolio.map(function(h){
-    var stop=h.cur*.92;var ps=rA/(h.cur-stop)*h.cur;var rr=(h.cur*.15)/(h.cur-stop);
+    var stop=h.stop||h.cur*.92;var ps=rA/(h.cur-stop)*h.cur;var rr=(h.cur*.15)/(h.cur-stop);
     return {t:h.t,cur:h.cur,stop:stop,ps:ps,rr:rr};
   });
 
@@ -4235,7 +4232,8 @@ function renderRisk(){
     kpi("Valor Esp.",D(ev),ev>=0?"+Positivo":"Negativo",ev>=0?"g":"r")+
     '</div>'+
     '<div class="st"><div class="stbar"></div>Position Sizing</div>'+
-    '<div class="tw"><table><thead><tr><th>Activo</th><th>Precio</th><th>Stop</th><th>Risk $</th><th>Tamaño</th><th>Unidades</th><th>R/R</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>'+
+    (rows.length>8?'<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-bottom:6px">Mostrando 8 de '+rows.length+' posiciones</div>':'')+
+    '<div class="tw"><table><thead><tr><th>Activo</th><th>Precio</th><th title="Referencia de baja histórica –8%">Ref. –8%</th><th>Risk $</th><th>Tamaño</th><th>Unidades</th><th>R/R</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>'+
     '<div class="grid2">'+
     '<div class="cb"><div class="st"><div class="stbar"></div>Escenarios</div>'+scRows+
     '<div style="display:flex;justify-content:space-between;padding-top:9px;border-top:1px solid var(--border);margin-top:2px"><span style="font-weight:700;color:var(--bright);font-size:12px">Valor Esperado</span><span style="font-weight:700;color:'+(ev>=0?"var(--green)":"var(--red)")+';font-family:\'Share Tech Mono\'">'+(ev>=0?"+":"")+D(ev)+'</span></div></div>'+
