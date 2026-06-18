@@ -2665,7 +2665,7 @@ function deNarrative(s,regime,vix,breadth){
     else if(s.pullbackPct<=0.20) parts.push('Pullback del '+pp+'% desde el máximo — zona de entrada con buena relación riesgo/recompensa.');
     else parts.push('Corrección del '+pp+'% desde el máximo anual — esperar señales de estabilización antes de acumular.');
   }
-  parts.push('Entrada ATR sugerida: <b>$'+s.entry+'</b> · Stop: <b>$'+s.stop+'</b> ('+( ((s.entry-s.stop)/s.entry)*100).toFixed(1)+'% riesgo) · R:R <b>'+s.rr+'x</b>.');
+  parts.push('Zona referencial de precio · ATR(14): <b>$'+s.entry+'</b> · Nivel de riesgo referencial: <b>$'+s.stop+'</b> ('+( ((s.entry-s.stop)/s.entry)*100).toFixed(1)+'% Δ) · R:R <b>'+s.rr+'x</b>.');
   return parts.join(' ');
 }
 
