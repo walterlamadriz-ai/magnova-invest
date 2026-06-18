@@ -2391,7 +2391,7 @@ async function deGetVIX(){
     var label={low:'VIX Bajo',normal:'VIX Normal',elevated:'VIX Elevado',crisis:'VIX Crisis'}[regime];
     var color={low:'var(--grn)',normal:'var(--blue)',elevated:'var(--amber)',crisis:'var(--red)'}[regime];
     var emoji={low:'🟢',normal:'🔵',elevated:'🟠',crisis:'🔴'}[regime];
-    var tip={low:'Volatilidad baja — históricamente compatible con tamaño completo de posición.',normal:'Volatilidad normal — reducir tamaño de posición ~25% es práctica habitual.',elevated:'Volatilidad alta — tamaño reducido a ~50% es común en este régimen.',crisis:'Volatilidad extrema — exposición mínima (~25%) hasta que el régimen normalice.'}[regime];
+    var tip={low:'Volatilidad baja — entorno de baja incertidumbre histórica.',normal:'Volatilidad normal — nivel dentro del rango histórico promedio.',elevated:'Volatilidad alta — entorno de mayor incertidumbre de mercado.',crisis:'Volatilidad extrema — nivel históricamente muy elevado.'}[regime];
     var result={vix:v,prev:prev,regime:regime,label:label,color:color,emoji:emoji,tip:tip,sizing:sizing};
     DE_CACHE.vix=result;return result;
   }catch(e){return{vix:null,regime:'unknown',label:'VIX N/D',color:'var(--text3)',emoji:'⚪',tip:'No se pudo obtener VIX.',sizing:1.0};}
@@ -2619,7 +2619,7 @@ async function deScoreTicker(ticker){
   var volOrderly=vol3avg<vol20avg*0.9;
   var pqLabel=pqScore>=75?'Excelente':pqScore>=55?'Bueno':pqScore>=35?'Regular':'Débil';
   var pqColor=pqScore>=75?'var(--green)':pqScore>=55?'var(--blue)':pqScore>=35?'var(--orange)':'var(--red)';
-  var pqTip=pqScore>=75?'Entrada de alta calidad — técnicamente limpio.':pqScore>=55?'Buen punto de entrada con riesgo controlado.':pqScore>=35?'Condiciones mixtas — reducir tamaño de posición.':'Entrada de baja calidad — esperar mejor setup.';
+  var pqTip=pqScore>=75?'Condiciones técnicas favorables — indicadores alineados.':pqScore>=55?'Condiciones técnicas moderadamente favorables.':pqScore>=35?'Condiciones técnicas mixtas — señales divergentes.':'Condiciones técnicas desfavorables — indicadores débiles.';
 
   // Expected Value (EV) from Bitácora trade history
   loadTrades();
@@ -2643,18 +2643,18 @@ function deNarrative(s,regime,vix,breadth){
   var parts=[];
   if(regime){
     if(regime.regime==='risk_on') parts.push('El mercado está en modo <b>Risk On</b> — SPY sobre SMA200, tendencia alcista global confirmada.');
-    else if(regime.regime==='risk_off') parts.push('El mercado está en <b>Risk Off</b> — SPY bajo SMA200. Se recomienda cautela y posiciones reducidas.');
+    else if(regime.regime==='risk_off') parts.push('El mercado está en <b>Risk Off</b> — SPY bajo SMA200. Contexto técnico de mayor incertidumbre.');
     else parts.push('Mercado en zona de <b>transición</b> — SPY entre SMA50 y SMA200. Selectividad alta.');
   }
   if(vix&&vix.vix){
     var vixVal=vix.vix.toFixed(1);
-    if(vix.regime==='low') parts.push('Volatilidad baja (VIX '+vixVal+') — entorno favorable para posiciones largas con tamaño completo.');
-    else if(vix.regime==='normal') parts.push('Volatilidad normal (VIX '+vixVal+') — usar tamaño de posición estándar.');
-    else if(vix.regime==='elevated') parts.push('Volatilidad elevada (VIX '+vixVal+') — reducir tamaño de posición al 50%.');
-    else parts.push('VIX en crisis ('+vixVal+') — mercado en pánico. Máxima cautela, sizing al 25%.');
+    if(vix.regime==='low') parts.push('Volatilidad baja (VIX '+vixVal+') — entorno de baja volatilidad histórica.');
+    else if(vix.regime==='normal') parts.push('Volatilidad normal (VIX '+vixVal+') — nivel de volatilidad dentro del rango histórico promedio.');
+    else if(vix.regime==='elevated') parts.push('Volatilidad elevada (VIX '+vixVal+') — entorno de mayor incertidumbre de mercado.');
+    else parts.push('VIX en niveles extremos ('+vixVal+') — volatilidad histórica muy elevada.');
   }
   var rsi=parseFloat(s.rsi);
-  if(rsi<=30) parts.push(s.ticker+' en zona de sobreventa (RSI '+s.rsi+') — potencial rebote técnico; confirmar soporte antes de entrar.');
+  if(rsi<=30) parts.push(s.ticker+' en zona de sobreventa (RSI '+s.rsi+') — condición técnica de sobreventa; verificar soporte como referencia.');
   else if(rsi<=50) parts.push('RSI '+s.rsi+' — momentum moderado, espacio alcista disponible sin señal de sobrecompra.');
   else if(rsi<=65) parts.push('RSI '+s.rsi+' — momentum positivo y saludable.');
   else parts.push('RSI '+s.rsi+' — zona de sobrecompra; esperar consolidación para entrada de mejor calidad.');
