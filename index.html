@@ -2326,23 +2326,34 @@ function renderSidebar(){
     '<div class="logo-sub">FinanceOS · '+( S.user&&S.user.plan?S.user.plan.toUpperCase():'')+'</div>'+
     '</div></div>';
 
-  // Section: Main
-  html+='<div class="sb-section"><div class="sb-section-label">Principal</div>';
-  var main=["news","dash","port","watch"];
-  PAGES.filter(function(p){return main.indexOf(p.id)>=0;}).forEach(function(p){
+  // Section: Mercado
+  html+='<div class="sb-section"><div class="sb-section-label">Mercado</div>';
+  var mercado=["news","dash","radar"];
+  PAGES.filter(function(p){return mercado.indexOf(p.id)>=0;}).forEach(function(p){
     var act=S.page===p.id?" act":"";
-    var action="setPage('"+p.id+"')";
-    html+='<button class="nb'+act+'" onclick="'+action+'">'+
+    html+='<button class="nb'+act+'" onclick="setPage(\''+p.id+'\')">'+
       '<span class="nb-icon">'+p.icon+'</span>'+
       '<span class="nb-label">'+p.label+'</span>'+
       '</button>';
   });
   html+='</div>';
 
-  // Section: Analytics (Pro)
-  html+='<div class="sb-section"><div class="sb-section-label">Análisis</div>';
-  var analytics=["sig","pb","comp","sentiment","radar","decision","ind","risk","back","screener"];
-  PAGES.filter(function(p){return analytics.indexOf(p.id)>=0&&!p.hidden;}).forEach(function(p){
+  // Section: Mis activos
+  html+='<div class="sb-section"><div class="sb-section-label">Mis activos</div>';
+  var misactivos=["port","watch","sig","bitacora","alert","divs","rebal"];
+  PAGES.filter(function(p){return misactivos.indexOf(p.id)>=0;}).forEach(function(p){
+    var act=S.page===p.id?" act":"";
+    html+='<button class="nb'+act+'" onclick="setPage(\''+p.id+'\')">'+
+      '<span class="nb-icon">'+p.icon+'</span>'+
+      '<span class="nb-label">'+p.label+'</span>'+
+      '</button>';
+  });
+  html+='</div>';
+
+  // Section: Análisis Pro
+  html+='<div class="sb-section"><div class="sb-section-label">Análisis Pro</div>';
+  var analisisPro=["decision","ind","risk","pb","comp","screener","back"];
+  PAGES.filter(function(p){return analisisPro.indexOf(p.id)>=0&&!p.hidden;}).forEach(function(p){
     var locked=u&&plan&&plan.locked.indexOf(p.id)>=0;
     var act=S.page===p.id?" act":"";
     var lk=locked?" lk":"";
@@ -2355,18 +2366,14 @@ function renderSidebar(){
   });
   html+='</div>';
 
-  // Section: Herramientas
-  html+='<div class="sb-section"><div class="sb-section-label">Herramientas</div>';
-  var tools=["divs","rebal","alert","bitacora","settings"];
-  PAGES.filter(function(p){return tools.indexOf(p.id)>=0;}).forEach(function(p){
+  // Configuración (fuera de grupos)
+  PAGES.filter(function(p){return p.id==='settings';}).forEach(function(p){
     var act=S.page===p.id?" act":"";
-    var actionT="setPage('"+p.id+"')";
-    html+='<button class="nb'+act+'" onclick="'+actionT+'">'+
+    html+='<button class="nb'+act+'" onclick="setPage(\'settings\')">'+
       '<span class="nb-icon">'+p.icon+'</span>'+
       '<span class="nb-label">'+p.label+'</span>'+
       '</button>';
   });
-  html+='</div>';
 
   html+='<div class="sp"></div>';
 
