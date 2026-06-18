@@ -2189,6 +2189,26 @@ function freeBanner(txt){
   if(!S.user||S.user.plan!=="free")return "";
   return '<div class="ban">⚠️ '+txt+' <button class="btn btn-up" style="margin-left:auto;padding:3px 9px;font-size:10px" onclick="openModal(\'upgrade\')">Upgrade Pro</button></div>';
 }
+function lockedBanner(title,desc){
+  var features={
+    'Indicadores Pro':['RSI · MACD · Bandas Bollinger sobre datos reales','Tabla comparativa para todos tus activos','Señales técnicas unificadas por portafolio'],
+    'Gestión de Riesgo':['Position sizing basado en tu capital y tolerancia al riesgo','Escenarios de mercado (bull/base/bear)','Análisis de correlación entre posiciones'],
+    'Simulación Histórica':['Backtesting de estrategias sobre datos históricos reales','Análisis del rendimiento de tu Bitácora','Curva de equity de tus operaciones registradas'],
+    'Screener':['Filtro técnico sobre más de 50 activos simultáneamente','Score Motor de Análisis para cada resultado','Export CSV con todos los datos'],
+    'Motor de Análisis':['Régimen de mercado SPY + scoring técnico 0–100','Entry/Stop/Target basados en ATR(14) por activo','Pullback Quality Score + lectura técnica educativa']
+  };
+  var feat=features[title]||['Herramienta de análisis técnico educativo','Datos reales de mercado','Integrado con tu Portfolio y Watchlist'];
+  return '<div style="margin:20px;padding:28px;background:var(--card2);border:1px solid var(--border);border-radius:14px;text-align:center;max-width:500px;margin-left:auto;margin-right:auto">'+
+    '<div style="font-size:32px;margin-bottom:12px">🔒</div>'+
+    '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);font-family:\'JetBrains Mono\',monospace;margin-bottom:8px">PRO</div>'+
+    '<h2 style="font-size:18px;margin-bottom:8px">'+title+'</h2>'+
+    '<p style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:20px">'+desc+'</p>'+
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;text-align:left">'+
+    feat.map(function(f){return '<div style="display:flex;align-items:flex-start;gap:10px;font-size:11px;color:var(--text2);font-family:\'JetBrains Mono\',monospace"><span style="color:var(--green);flex-shrink:0">✓</span>'+f+'</div>';}).join('')+
+    '</div>'+
+    '<button class="btn-big" onclick="openModal(\'upgrade\')" style="width:100%">Ver planes →</button>'+
+    '</div>';
+}
 function planOf(){return S.user?PLANS[S.user.plan]:PLANS.free;}
 function liveBadge(){
   var hasLive=Object.keys(LIVE).length>0;
@@ -2975,6 +2995,13 @@ function renderDecisionEngine(){
 
 // ── SCREENER (Pro) ─────────────────────────────────────────────
 function renderScreener(){
+  var plan=planOf();
+  if(plan.locked&&plan.locked.indexOf('screener')>=0){
+    document.getElementById('main').innerHTML=
+      '<div class="ph"><div><h1>🔍 Screener</h1><p class="sub-txt">// Filtro técnico · Score Motor · Export CSV</p></div></div>'+
+      lockedBanner('Screener','Filtra más de 50 activos simultáneamente por score técnico, señal y sector. Exporta resultados a CSV.');
+    return;
+  }
   var f=S.screenerFilters;
   var running=S.screenerRunning;
   var results=S.screenerResults;
@@ -4474,6 +4501,13 @@ function setNewsF(f){S.newsFilter=f;renderMain();}
 
 // ── INDICADORES (Pro) ──────────────────────────────────────────
 function renderInd(){
+  var plan=planOf();
+  if(plan.locked&&plan.locked.indexOf('ind')>=0){
+    document.getElementById('main').innerHTML=
+      '<div class="ph"><div><h1>📈 Indicadores Pro</h1><p class="sub-txt">// RSI · MACD · Bollinger Bands sobre datos reales</p></div></div>'+
+      lockedBanner('Indicadores Pro','Visualiza indicadores técnicos reales (RSI, MACD, Bandas Bollinger) sobre todos tus activos simultáneamente.');
+    return;
+  }
   var allT=[];
   S.portfolio.forEach(function(h){if(allT.indexOf(h.t)<0)allT.push(h.t);});
   S.watchlist.forEach(function(t){if(allT.indexOf(t)<0)allT.push(t);});
@@ -4518,6 +4552,13 @@ function renderInd(){
 
 // ── RISK (Pro) ─────────────────────────────────────────────────
 function renderRisk(){
+  var plan=planOf();
+  if(plan.locked&&plan.locked.indexOf('risk')>=0){
+    document.getElementById('main').innerHTML=
+      '<div class="ph"><div><h1>🛡️ Gestión de Riesgo</h1><p class="sub-txt">// Position sizing · Escenarios · Stop loss</p></div></div>'+
+      lockedBanner('Gestión de Riesgo','Calcula el tamaño correcto de cada posición según tu capital y tolerancia al riesgo. Incluye escenarios macro y análisis de correlación.');
+    return;
+  }
   var cap=S.capital;
   var rA=cap*.02;
   var ev=SCENARIOS.reduce(function(s,sc){return s+sc.prob*sc.ret*cap;},0);
