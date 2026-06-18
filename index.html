@@ -1367,7 +1367,7 @@ const PLANS={
   free:{label:"Free",maxT:5,maxA:3,maxS:5,locked:["decision","ind","risk","back","screener"],
     price:0,desc:"Portafolio básico · 5 activos · Señales limitadas"},
   trial:{label:"Trial",maxT:999,maxA:999,maxS:999,locked:[],
-    price:0,desc:"14 días gratis · Todo incluido",trialDays:14},
+    price:0,desc:"Acceso completo · Todo incluido",trialDays:14},
   pro:{label:"Pro",maxT:999,maxA:999,maxS:999,locked:[],
     price:29.99,desc:"Todo ilimitado · Análisis IA · Soporte prioritario"},
   teams:{label:"Teams",maxT:999,maxA:999,maxS:999,locked:[],
@@ -3384,7 +3384,7 @@ function renderRegister(){
     '<div class="welcome-icon">F</div>'+
     '<div>'+
     '<div class="welcome-title">Crear cuenta</div>'+
-    '<div class="welcome-sub">14 días Pro gratis · sin tarjeta</div>'+
+    '<div class="welcome-sub">Análisis técnico educativo · LATAM</div>'+
     '</div></div>'+
     '<div class="form-group">'+
     '<label class="form-label">Nombre</label>'+
@@ -3406,7 +3406,7 @@ function renderRegister(){
     'Entiendo que los análisis son educativos, no constituyen asesoría financiera ni recomendación de inversión.</label>'+
     '</div>'+
     '<div id="rerr" class="form-error">Error</div>'+
-    '<button id="rbtn" onclick="doRegister()" class="btn-big" style="width:100%;justify-content:center;padding:10px">Activar trial gratis →</button>'+
+    '<button id="rbtn" onclick="doRegister()" class="btn-big" style="width:100%;justify-content:center;padding:10px">Crear cuenta gratis →</button>'+
     '<div style="margin-top:12px;text-align:center;font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+
     '<span onclick="openTCModal(\'tc\')" style="color:var(--text3);cursor:pointer;text-decoration:underline">Términos</span> · '+
     '<span onclick="openTCModal(\'pp\')" style="color:var(--text3);cursor:pointer;text-decoration:underline">Privacidad</span> · '+
@@ -3507,7 +3507,7 @@ function renderPaywall(){
     '<div class="pw"><div style="font-size:36px;margin-bottom:12px">🔒</div>'+
     '<h2 style="margin-bottom:6px">'+m.t+'</h2>'+
     '<div style="margin-bottom:20px">'+feats+'</div>'+
-    '<button class="btn-big" onclick="openModal(\'upgrade\')">⚡ Upgrade a Pro — 14 días gratis</button></div>';
+    '<button class="btn-big" onclick="openModal(\'upgrade\')">⚡ Ver planes Pro →</button></div>';
 }
 
 // ── DASHBOARD ──────────────────────────────────────────────────
@@ -7081,7 +7081,7 @@ function renderHelp(){
     {icon:'🔀',q:'¿Cómo uso el Rebalanceo?',
      a:'Define los pesos objetivo moviendo los sliders. La herramienta calcula exactamente qué comprar y vender para llegar a esa distribución con tu capital actual.'},
     {icon:'💳',q:'¿Cómo actualizo mi plan?',
-     a:'Haz click en "Upgrade Pro" en cualquier módulo o en el sidebar. El trial de 14 días incluye acceso completo sin tarjeta de crédito.'},
+     a:'Haz click en "Upgrade Pro" en cualquier módulo o en el sidebar. Desde ahí puedes activar el plan Pro y acceder a todas las herramientas.'},
   ];
 
   document.getElementById('main').innerHTML=
@@ -7202,7 +7202,7 @@ function startTrial(){
       '<div class="modal" style="max-width:340px;text-align:center" onclick="event.stopPropagation()">'+
       '<div style="font-size:48px;margin-bottom:14px">🎉</div>'+
       '<h2 style="margin-bottom:8px">¡Trial activado!</h2>'+
-      '<p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px">Tienes 14 días de acceso completo a FinanceOS Invest Pro. Explora el Análisis IA, los Indicadores Pro, el Comparador y Chile/LATAM.</p>'+
+      '<p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:20px">Tienes acceso completo a FinanceOS Invest Pro. Explora el Análisis IA, los Indicadores Pro, el Comparador y todas las herramientas.</p>'+
       '<button class="btn-big" onclick="document.getElementById(\'mroot\').innerHTML=\'\';renderMain()" style="width:100%">Explorar FinanceOS Invest Pro →</button>'+
       '</div></div>';
   }
