@@ -3509,22 +3509,38 @@ function renderDash(){
       '<div style="font-size:12px;font-weight:600;color:var(--bright)">Screener Pro</div>'+
       '<div style="font-size:10px;color:var(--text3);margin-top:2px">Filtra las mejores oportunidades</div></div>'+
       '</div></div>';
-    // Still show regime banner
-    deGetRegime().then(function(r){
-      var el=document.getElementById('de-regime-banner');
-      if(!el)return;
-      var isFree=S.user&&S.user.plan==='free';
-      var bg=r.regime==='risk_on'?'rgba(15,180,100,.07)':r.regime==='risk_off'?'rgba(220,50,50,.07)':'rgba(234,179,8,.07)';
-      var bd=r.regime==='risk_on'?'rgba(15,180,100,.2)':r.regime==='risk_off'?'rgba(220,50,50,.2)':'rgba(234,179,8,.2)';
-      el.innerHTML='<div '+(isFree?'onclick="openModal(\'upgrade\')"':'onclick="setPage(\'decision\')"')+' style="cursor:pointer;display:flex;align-items:center;gap:10px;background:'+bg+';border:1px solid '+bd+';border-radius:10px;padding:10px 14px;margin-bottom:14px;position:relative;overflow:hidden;transition:.15s" onmouseover="this.style.opacity=\'.8\'" onmouseout="this.style.opacity=\'1\'">'+
-        '<span style="font-size:18px">'+(isFree?'🔒':r.emoji)+'</span>'+
-        '<div style="flex:1"><span style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Régimen de Mercado (SPY) · </span>'+
-        (isFree?'<span style="font-size:12px;font-weight:700;color:var(--text3)">Desbloquear con Pro</span>':'<span style="font-size:12px;font-weight:700;color:'+r.color+'">'+r.label+'</span>'+
-        '<span style="font-size:11px;color:var(--text3)"> — '+r.desc+'</span>')+
-        '</div>'+
-        '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+(isFree?'⚡ Upgrade →':'Ver análisis →')+'</span>'+
-        '</div>';
-    }).catch(function(){});
+    // Franja contexto de mercado — empty state
+    (function(){
+      Promise.all([deGetRegime().catch(function(){return null;}),deGetVIX().catch(function(){return null;})]).then(function(res){
+        var r=res[0],v=res[1];
+        var el=document.getElementById('de-regime-banner');
+        if(!el)return;
+        var isFree=S.user&&S.user.plan==='free';
+        var cards='';
+        if(r){
+          var bg=r.regime==='risk_on'?'rgba(15,180,100,.07)':r.regime==='risk_off'?'rgba(220,50,50,.07)':'rgba(234,179,8,.07)';
+          var bd=r.regime==='risk_on'?'rgba(15,180,100,.2)':r.regime==='risk_off'?'rgba(220,50,50,.2)':'rgba(234,179,8,.2)';
+          cards+='<div '+(isFree?'onclick="openModal(\'upgrade\')"':'onclick="setPage(\'decision\')"')+
+            ' style="cursor:pointer;flex:1;min-width:180px;display:flex;align-items:center;gap:10px;background:'+bg+';border:1px solid '+bd+';border-radius:10px;padding:10px 14px;transition:.15s" onmouseover="this.style.opacity=\'.8\'" onmouseout="this.style.opacity=\'1\'">'+
+            '<span style="font-size:18px">'+(isFree?'🔒':r.emoji)+'</span>'+
+            '<div style="flex:1"><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-bottom:2px;letter-spacing:.8px">RÉGIMEN SPY</div>'+
+            (isFree?'<div style="font-size:12px;font-weight:700;color:var(--text3)">Desbloquear con Pro</div>':
+              '<div style="font-size:12px;font-weight:700;color:'+r.color+'">'+r.label+'</div>'+
+              '<div style="font-size:10px;color:var(--text3)">'+r.desc+'</div>')+
+            '</div>'+
+            '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+(isFree?'⚡ Pro →':'Ver →')+'</span>'+
+            '</div>';
+        }
+        if(v&&v.vix){
+          cards+='<div style="flex:1;min-width:140px;display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px">'+
+            '<span style="font-size:18px">'+v.emoji+'</span>'+
+            '<div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-bottom:2px;letter-spacing:.8px">VOLATILIDAD</div>'+
+            '<div style="font-size:12px;font-weight:700;color:'+v.color+'">'+v.vix.toFixed(1)+' · '+v.label+'</div>'+
+            '</div></div>';
+        }
+        if(cards) el.innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">'+cards+'</div>';
+      });
+    })();
     return;
   }
 
@@ -3541,8 +3557,8 @@ function renderDash(){
     kpi("Posiciones",port.length+(plan.maxT<999?"/"+S.portfolio.length:""),"","b")+
     '</div>'+
     '<div id="de-regime-banner"></div>'+
-    '<div class="st"><div class="stbar"></div>Top Señales</div>'+
-    '<div class="tw"><table id="tbl-dash"><thead><tr><th>Activo</th><th>Señal</th>'+sortTh("dash","sc","Score")+'<th>Fuerza</th>'+sortTh("dash","price","Precio")+sortTh("dash","chg","Δ Hoy")+'<th title="Distancia al stop –8%">Stop –8%</th></tr></thead>'+
+    '<div class="st"><div class="stbar"></div>Top Indicadores</div>'+
+    '<div class="tw"><table id="tbl-dash"><thead><tr><th>Activo</th><th>Indicador</th>'+sortTh("dash","sc","Score")+'<th>Fuerza</th>'+sortTh("dash","price","Precio")+sortTh("dash","chg","Δ Hoy")+'<th title="Nivel referencial –8%">Ref. –8%</th></tr></thead>'+
     '<tbody>'+sigRows+'</tbody></table></div>'+
     '<div class="grid2">'+
     '<div class="cb"><div class="st"><div class="stbar"></div>Allocation</div>'+allocRows+'</div>'+
@@ -3564,22 +3580,38 @@ function renderDash(){
     }).join('')+
     '</div></div></div>';
 
-  // Async regime banner — visible to all plans, locked for free
-  deGetRegime().then(function(r){
-    var el=document.getElementById('de-regime-banner');
-    if(!el)return;
-    var isFree=S.user&&S.user.plan==='free';
-    var bg=r.regime==='risk_on'?'rgba(15,180,100,.07)':r.regime==='risk_off'?'rgba(220,50,50,.07)':'rgba(234,179,8,.07)';
-    var bd=r.regime==='risk_on'?'rgba(15,180,100,.2)':r.regime==='risk_off'?'rgba(220,50,50,.2)':'rgba(234,179,8,.2)';
-    el.innerHTML='<div '+(isFree?'onclick="openModal(\'upgrade\')"':'onclick="setPage(\'decision\')"')+' style="cursor:pointer;display:flex;align-items:center;gap:10px;background:'+bg+';border:1px solid '+bd+';border-radius:10px;padding:10px 14px;margin-bottom:14px;transition:.15s" onmouseover="this.style.opacity=\'.8\'" onmouseout="this.style.opacity=\'1\'">'+
-      '<span style="font-size:18px">'+(isFree?'🔒':r.emoji)+'</span>'+
-      '<div style="flex:1"><span style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Régimen de Mercado (SPY) · </span>'+
-      (isFree?'<span style="font-size:12px;font-weight:700;color:var(--text3)">Desbloquear con Plan Pro</span>':'<span style="font-size:12px;font-weight:700;color:'+r.color+'">'+r.label+'</span>'+
-      '<span style="font-size:11px;color:var(--text3)"> — '+r.desc+'</span>')+
-      '</div>'+
-      '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+(isFree?'⚡ Upgrade →':'Ver análisis →')+'</span>'+
-      '</div>';
-  }).catch(function(){});
+  // Franja contexto de mercado — SPY + VIX, visible a todos los planes
+  (function(){
+    Promise.all([deGetRegime().catch(function(){return null;}),deGetVIX().catch(function(){return null;})]).then(function(res){
+      var r=res[0],v=res[1];
+      var el=document.getElementById('de-regime-banner');
+      if(!el)return;
+      var isFree=S.user&&S.user.plan==='free';
+      var cards='';
+      if(r){
+        var bg=r.regime==='risk_on'?'rgba(15,180,100,.07)':r.regime==='risk_off'?'rgba(220,50,50,.07)':'rgba(234,179,8,.07)';
+        var bd=r.regime==='risk_on'?'rgba(15,180,100,.2)':r.regime==='risk_off'?'rgba(220,50,50,.2)':'rgba(234,179,8,.2)';
+        cards+='<div '+(isFree?'onclick="openModal(\'upgrade\')"':'onclick="setPage(\'decision\')"')+
+          ' style="cursor:pointer;flex:1;min-width:180px;display:flex;align-items:center;gap:10px;background:'+bg+';border:1px solid '+bd+';border-radius:10px;padding:10px 14px;transition:.15s" onmouseover="this.style.opacity=\'.8\'" onmouseout="this.style.opacity=\'1\'">'+
+          '<span style="font-size:18px">'+(isFree?'🔒':r.emoji)+'</span>'+
+          '<div style="flex:1"><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-bottom:2px;letter-spacing:.8px">RÉGIMEN SPY</div>'+
+          (isFree?'<div style="font-size:12px;font-weight:700;color:var(--text3)">Desbloquear con Pro</div>':
+            '<div style="font-size:12px;font-weight:700;color:'+r.color+'">'+r.label+'</div>'+
+            '<div style="font-size:10px;color:var(--text3)">'+r.desc+'</div>')+
+          '</div>'+
+          '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+(isFree?'⚡ Pro →':'Ver →')+'</span>'+
+          '</div>';
+      }
+      if(v&&v.vix){
+        cards+='<div style="flex:1;min-width:140px;display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px">'+
+          '<span style="font-size:18px">'+v.emoji+'</span>'+
+          '<div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-bottom:2px;letter-spacing:.8px">VOLATILIDAD</div>'+
+          '<div style="font-size:12px;font-weight:700;color:'+v.color+'">'+v.vix.toFixed(1)+' · '+v.label+'</div>'+
+          '</div></div>';
+      }
+      if(cards) el.innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">'+cards+'</div>';
+    });
+  })();
 }
 
 // ── PORTFOLIO ──────────────────────────────────────────────────
