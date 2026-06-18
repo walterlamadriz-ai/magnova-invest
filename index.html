@@ -1999,12 +1999,13 @@ function svgLine(data,keys,colors,W,H){
   return "<svg viewBox='0 0 "+W+" "+H+"' style='width:100%;height:"+H+"px'>"+grid+paths+"</svg>";
 }
 
-function svgBars(data,key,W,H,zero){
-  W=W||420;H=H||80;zero=zero||0;
+function svgBars(data,key,W,H,zero,refLines){
+  W=W||420;H=H||80;zero=zero||0;refLines=refLines||[];
   var vals=data.map(function(d){return d[key];}).filter(function(v){return v!=null;});
   if(!vals.length)return "";
-  var minV=Math.min.apply(null,vals.concat([zero]));
-  var maxV=Math.max.apply(null,vals.concat([zero]));
+  var allRef=refLines.map(function(r){return r.val;});
+  var minV=Math.min.apply(null,vals.concat([zero]).concat(allRef));
+  var maxV=Math.max.apply(null,vals.concat([zero]).concat(allRef));
   var rng=maxV-minV||1;
   var bw=W/data.length;
   var bars=data.map(function(d,i){
@@ -2015,7 +2016,11 @@ function svgBars(data,key,W,H,zero){
     return "<rect x='"+(i*bw+1).toFixed(1)+"' y='"+y.toFixed(1)+"' width='"+(bw-2).toFixed(1)+"' height='"+bh.toFixed(1)+"' fill='"+(pos?"var(--green)":"var(--red)")+"' opacity='.8' rx='1'/>";
   }).join("");
   var zy=((maxV-zero)/rng*H).toFixed(1);
-  return "<svg viewBox='0 0 "+W+" "+H+"' style='width:100%;height:"+H+"px'><line x1='0' y1='"+zy+"' x2='"+W+"' y2='"+zy+"' stroke='rgba(255,255,255,.1)' stroke-width='1'/>"+bars+"</svg>";
+  var refSvg=refLines.map(function(r){
+    var ry=((maxV-r.val)/rng*H).toFixed(1);
+    return "<line x1='0' y1='"+ry+"' x2='"+W+"' y2='"+ry+"' stroke='"+r.color+"' stroke-width='1' stroke-dasharray='4 3'/>";
+  }).join("");
+  return "<svg viewBox='0 0 "+W+" "+H+"' style='width:100%;height:"+H+"px'><line x1='0' y1='"+zy+"' x2='"+W+"' y2='"+zy+"' stroke='rgba(255,255,255,.1)' stroke-width='1'/>"+refSvg+bars+"</svg>";
 }
 
 function svgVol(data,W,H){
@@ -5531,7 +5536,7 @@ function renderDrawerBody(){
     content=
       '<div class="cha">'+
       '<div class="chl">RSI (14) — Sobrecomprado >70 · Sobrevendido <30<span style="color:'+(rsiVal>70?"var(--red)":rsiVal<30?"var(--green)":"var(--orange)")+'">RSI: '+rsiVal.toFixed(1)+'</span></div>'+
-      svgBars(chartData.map(function(d,i){return {rsi:rsiArr[i+1]||50};}),["rsi"],400,90,50)+
+      svgBars(chartData.map(function(d,i){return {rsi:rsiArr[i+1]||50};}),["rsi"],400,90,50,[{val:70,color:'rgba(239,68,68,0.45)'},{val:30,color:'rgba(34,197,94,0.45)'}])+
       '<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);font-family:\'Share Tech Mono\';margin-top:5px">'+
       '<span style="color:var(--green)">← Sobrevendido (BUY)</span><span>Neutral</span><span style="color:var(--red)">Sobrecomprado (SELL) →</span></div>'+
       '</div>'+
