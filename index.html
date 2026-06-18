@@ -1088,6 +1088,13 @@ tr:last-child td { border-bottom: none; }
   #mobile-header { display: flex!important; }
   .disclaimer-bar { left: 0; bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
   #mob-tab-bar { display: flex!important; }
+  /* ph-right: wrap on small screens so buttons don't overflow */
+  .ph-right { flex-wrap: wrap; gap: 6px; }
+  /* btn-big full width inside modals and locked banners */
+  .modal .btn-big, .modal-box .btn-big { width: 100%; }
+  /* suite nav: tighten padding */
+  body > div:first-child { padding: 6px 12px !important; }
+  body > div:first-child a:first-child { display: none; }
 }
 #mob-tab-bar {
   display: none;
@@ -1326,13 +1333,20 @@ div:has(>.dtab), div:has(>.rtab) {
 }
 .btn-r:hover { background: rgba(239,68,68,.18); }
 
-/* Mobile drawer adjustments */
+/* Mobile: small screen polish */
 @media (max-width: 480px) {
   .drwb { padding: 14px; }
   .drwh { padding: 14px; }
   .ind2 { grid-template-columns: 1fr; }
   .fund3 { grid-template-columns: 1fr; }
   .dtab { font-size: 10px; padding: 4px 8px; }
+  /* Full-width CTAs everywhere on small screens */
+  .btn-big { width: 100%; justify-content: center; }
+  /* krow single column on very small screens */
+  .krow { grid-template-columns: 1fr 1fr; }
+  /* ph wraps instead of overflowing */
+  .ph { flex-wrap: wrap; gap: 8px; }
+  .ph-right { width: 100%; justify-content: flex-start; }
 }
 </style>
 </head>
