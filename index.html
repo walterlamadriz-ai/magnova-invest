@@ -727,9 +727,28 @@ tr:last-child td { border-bottom: none; }
   overflow: visible;
 }
 .drw.open { right: 0; }
-@media (max-width: 440px) {
-  .drw { width: 100%; right: -100%; }
-  .drw.open { right: 0; }
+@media (max-width: 480px) {
+  .drw {
+    top: auto;
+    bottom: -92vh;
+    right: 0; left: 0;
+    width: 100%;
+    height: 92vh;
+    border-left: none;
+    border-radius: 16px 16px 0 0;
+    border-top: 1px solid var(--border);
+    transition: bottom .3s cubic-bezier(.4,0,.2,1);
+  }
+  .drw.open { bottom: 0; right: 0; }
+  .drw::before {
+    content: '';
+    display: block;
+    width: 36px; height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    margin: 10px auto 0;
+    flex-shrink: 0;
+  }
 }
 .drw.open ~ .dov { display: block; }
 .drwh {
