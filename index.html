@@ -929,6 +929,32 @@ tr:last-child td { border-bottom: none; }
   width: 100%;
   box-shadow: var(--shadow-md);
 }
+.welcome-wrap-b {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+  background: var(--bg);
+  padding: 40px 24px 48px;
+  gap: 32px;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+@media(min-width:768px){
+  .welcome-wrap-b { grid-template-columns: 3fr 2fr; gap: 48px; align-items: center; }
+}
+.welcome-col-left { display: flex; flex-direction: column; }
+.welcome-col-right { display: flex; flex-direction: column; }
+.welcome-ctx-cards { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+.welcome-ctx-card {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  min-width: 110px;
+  flex: 1;
+}
 .welcome-logo {
   display: flex; align-items: center; gap: 10px;
   margin-bottom: 28px;
@@ -3192,46 +3218,42 @@ function renderMain(){
 // ── WELCOME ────────────────────────────────────────────────────
 function renderWelcome(){
   document.getElementById('main').innerHTML=
-    '<div class="welcome-wrap">'+
-    // ── HERO ──
-    '<div class="welcome-hero">'+
+    '<div class="welcome-wrap-b">'+
+    // ── COLUMNA IZQUIERDA: contexto + propuesta de valor ──
+    '<div class="welcome-col-left">'+
     '<div style="display:inline-flex;align-items:center;gap:8px;background:var(--grn-bg);border:1px solid var(--grn-lt);border-radius:20px;padding:5px 14px;margin-bottom:22px">'+
     '<div style="width:7px;height:7px;border-radius:50%;background:var(--grn)"></div>'+
     '<span style="font-size:11px;font-family:\'JetBrains Mono\',monospace;color:var(--grn);letter-spacing:.5px">LATAM</span>'+
     '</div>'+
-    '<h1>Analiza. Decide.<br><span>Invierte con criterio.</span></h1>'+
-    '<p>Portfolio, señales técnicas, gestión de riesgo y contexto macro — en una sola plataforma para inversores de LATAM.</p>'+
-    '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:0">'+
-    '<button onclick="renderRegister()" class="btn-big" style="padding:12px 28px;font-size:14px">Empezar trial gratis — 14 días →</button>'+
-    '<button onclick="document.getElementById(\'login-anchor\').scrollIntoView({behavior:\'smooth\'})" class="btn" style="padding:12px 20px;font-size:14px">Ya tengo cuenta</button>'+
+    '<h1 style="font-size:clamp(26px,4vw,42px);font-weight:700;color:var(--bright);letter-spacing:-.03em;line-height:1.2;margin-bottom:14px">Analiza el mercado con criterio técnico.</h1>'+
+    '<p style="font-size:15px;color:var(--text2);line-height:1.7;margin-bottom:28px;max-width:480px">Motor de Análisis con scoring propio, régimen SPY y gestión de riesgo. Para inversores de LATAM que quieren un proceso, no una opinión.</p>'+
+    // Cards de contexto live
+    '<div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:10px">Contexto de mercado · Referencial</div>'+
+    '<div class="welcome-ctx-cards">'+
+    '<div id="wlc-spy" class="welcome-ctx-card">'+
+    '<div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:4px">RÉGIMEN SPY</div>'+
+    '<div style="font-size:13px;font-weight:700;color:var(--text3)">Cargando…</div>'+
     '</div>'+
-    '<p style="font-size:11px;color:var(--text3);margin:10px 0 0;font-family:\'JetBrains Mono\',monospace">Sin tarjeta de crédito · Cancela en 1 click</p>'+
-    '</div>'+
-    // ── FEATURES ──
-    '<div class="welcome-feats">'+
-    '<div class="welcome-feat"><div class="welcome-feat-icon">📊</div><h3>Portfolio Manager</h3><p>Seguimiento de tus posiciones, P&L y asset allocation con datos registrados.</p></div>'+
-    '<div class="welcome-feat"><div class="welcome-feat-icon">🎯</div><h3>Señales técnicas</h3><p>RSI, MACD, Bandas de Bollinger y más sobre datos reales de mercado.</p></div>'+
-    '<div class="welcome-feat"><div class="welcome-feat-icon">🛡️</div><h3>Gestión de riesgo</h3><p>Position sizing automático, Bull/Bear/Black Swan y R/R por activo.</p></div>'+
-    '<div class="welcome-feat"><div class="welcome-feat-icon">⚙️</div><h3>Simulación Histórica</h3><p>Prueba tus estrategias sobre datos históricos reales antes de ejecutar.</p></div>'+
-    '</div>'+
-    // ── PLANS ──
-    '<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:16px">Planes</div>'+
-    '<div class="welcome-plans">'+
-    '<div class="welcome-plan">'+
-    '<div class="welcome-plan-name">Free</div>'+
-    '<div class="welcome-plan-price"><sup>$</sup>0<small>/mes</small></div>'+
-    '<div class="welcome-plan-desc">5 activos · 3 alertas · 5 señales<br>Sin indicadores avanzados</div>'+
-    '</div>'+
-    '<div class="welcome-plan featured">'+
-    '<div class="welcome-plan-name">Pro · 14 días gratis</div>'+
-    '<div class="welcome-plan-price"><sup>$</sup>29<small>.99/mes</small></div>'+
-    '<div class="welcome-plan-desc">Todo ilimitado · Análisis IA<br>Indicadores, Riesgo y Simulación Histórica</div>'+
+    '<div id="wlc-vix" class="welcome-ctx-card">'+
+    '<div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:4px">VOLATILIDAD</div>'+
+    '<div style="font-size:13px;font-weight:700;color:var(--text3)">Cargando…</div>'+
     '</div>'+
     '</div>'+
-    // ── LOGIN BOX ──
-    '<div id="login-anchor" class="welcome-box">'+
+    // Features
+    '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px">'+
+    '<div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:16px;flex-shrink:0">🎯</span><div><div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:2px">Motor de Análisis</div><div style="font-size:12px;color:var(--text2)">Scoring 0–100 por activo con contexto SPY, RSI, MACD y niveles de precio referenciales.</div></div></div>'+
+    '<div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:16px;flex-shrink:0">🛡️</span><div><div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:2px">Gestión de riesgo</div><div style="font-size:12px;color:var(--text2)">Sizing referencial por volatilidad, indicadores técnicos por activo, simulación histórica.</div></div></div>'+
+    '<div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:16px;flex-shrink:0">📊</span><div><div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:2px">Portfolio y Watchlist</div><div style="font-size:12px;color:var(--text2)">Seguimiento de posiciones, P&L, asset allocation y screener de activos.</div></div></div>'+
+    '</div>'+
+    '<div style="font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);line-height:1.8">'+
+    '🛡 Análisis técnico educativo · No asesoría financiera · No ejecutamos órdenes'+
+    '</div>'+
+    '</div>'+
+    // ── COLUMNA DERECHA: login box ──
+    '<div class="welcome-col-right">'+
+    '<div id="login-anchor" class="welcome-box" style="margin:0">'+
     '<div class="welcome-logo">'+
-    '<div class="welcome-icon">F</div>'+
+    '<div class="welcome-icon">FI</div>'+
     '<div>'+
     '<div class="welcome-title">Iniciar sesión</div>'+
     '<div class="welcome-sub">FinanceOS Invest</div>'+
@@ -3245,15 +3267,42 @@ function renderWelcome(){
     '<input id="lp" class="inp" type="password" placeholder="••••••••" onkeydown="if(event.keyCode===13)doLogin()"/>'+
     '<div id="lerr" class="form-error">Email o contraseña incorrectos.</div>'+
     '</div>'+
-    '<button id="lbtn" onclick="doLogin()" class="btn-big" style="width:100%;justify-content:center;padding:10px">Entrar</button>'+
+    '<button id="lbtn" onclick="doLogin()" class="btn-big" style="width:100%;justify-content:center;padding:10px">Entrar →</button>'+
     '<div style="margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border);text-align:center">'+
-    '<button onclick="renderRegister()" class="btn" style="width:100%;justify-content:center">Crear cuenta — 14 días gratis →</button>'+
+    '<button onclick="renderRegister()" class="btn" style="width:100%;justify-content:center">Crear cuenta gratis →</button>'+
     '</div>'+
     '<div style="margin-top:16px;font-size:10px;color:var(--text3);text-align:center;line-height:1.6;font-family:\'JetBrains Mono\',monospace">'+
-    'Análisis educativo. No constituye asesoría financiera.</div>'+
+    'Análisis técnico educativo · No constituye asesoría financiera.<br>MAXNOVA &amp; LUCI Global LLC'+
     '</div>'+
-    '<div style="margin-top:32px;font-size:11px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">© 2026 FinanceOS · MAXNOVA & LUCI Global LLC · <a href="https://financeospro.com" style="color:var(--text3)">financeospro.com</a></div>'+
+    '</div>'+
+    '<div style="margin-top:16px;font-size:10px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">'+
+    '© 2026 FinanceOS · <a href="https://financeospro.com" style="color:var(--text3)">financeospro.com</a>'+
+    '</div>'+
+    '</div>'+
     '</div>';
+  // Cargar contexto de mercado en tiempo real — sin auth requerida
+  (async function(){
+    try{
+      var regime=await deGetRegime();
+      var spyEl=document.getElementById('wlc-spy');
+      if(spyEl&&regime){
+        var lbl=regime.regime==='risk_on'?'🟢 Risk On':regime.regime==='risk_off'?'🔴 Risk Off':'🟡 Transición';
+        var col=regime.color||'var(--text1)';
+        spyEl.innerHTML='<div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:4px">RÉGIMEN SPY</div>'+
+          '<div style="font-size:13px;font-weight:700;color:'+col+'">'+lbl+'</div>'+
+          (regime.spy?'<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">$'+regime.spy.toFixed(2)+'</div>':'');
+      }
+    }catch(e){}
+    try{
+      var vix=await deGetVIX();
+      var vixEl=document.getElementById('wlc-vix');
+      if(vixEl&&vix&&vix.vix){
+        vixEl.innerHTML='<div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:4px">VOLATILIDAD</div>'+
+          '<div style="font-size:13px;font-weight:700;color:'+vix.color+'">'+vix.emoji+' '+vix.vix.toFixed(1)+'</div>'+
+          '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">'+vix.label+'</div>';
+      }
+    }catch(e){}
+  })();
 }
 
 function renderRegister(){
