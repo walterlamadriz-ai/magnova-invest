@@ -2558,7 +2558,7 @@ async function deScoreTicker(ticker){
   // 2. RSI position (25pts — ideal 40-60)
   var rsiArr=TI.rsi(closes);var rsi=rsiArr[rsiArr.length-1];
   if(rsi>=40&&rsi<=60){score+=25;signals.push('✅ RSI neutro ('+rsi.toFixed(0)+')');}
-  else if(rsi<40){score+=20;signals.push('✅ RSI oversold ('+rsi.toFixed(0)+') — posible rebote');}
+  else if(rsi<40){score+=20;signals.push('✅ RSI oversold ('+rsi.toFixed(0)+') — condición técnica de sobreventa');}
   else if(rsi>70){score+=5;signals.push('⚠️ RSI sobrecomprado ('+rsi.toFixed(0)+')');}
   else{score+=12;signals.push('📊 RSI '+rsi.toFixed(0));}
 
