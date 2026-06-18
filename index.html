@@ -2049,7 +2049,7 @@ function loadLWScript(){
   return _lwLoadPromise;
 }
 
-function renderLWCharts(hist,sma20,sma50,bbArr){
+function renderLWCharts(hist,sma20,sma50,bbArr,sma200){
   loadLWScript().then(function(){
     var LW=window.LightweightCharts;
     if(!LW) return;
@@ -2092,6 +2092,13 @@ function renderLWCharts(hist,sma20,sma50,bbArr){
     if(s50Data.length){
       var s50s=chart.addLineSeries({color:'#3d8ef8',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
       s50s.setData(s50Data);
+    }
+    if(sma200&&sma200.length){
+      var s200Data=bars.map(function(d,i){return sma200[i]!=null?{time:d.ts,value:sma200[i]}:null;}).filter(Boolean);
+      if(s200Data.length){
+        var s200s=chart.addLineSeries({color:'#a855f7',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+        s200s.setData(s200Data);
+      }
     }
     if(bbArr&&bbArr.length){
       var bbUpData=bars.map(function(d,i){return bbArr[i]&&bbArr[i].upper!=null?{time:d.ts,value:bbArr[i].upper}:null;}).filter(Boolean);
@@ -5477,6 +5484,7 @@ function renderDrawerBody(){
   var closes=hist.map(function(d){return d.close;});
   var sma20=closes.length>=20?TI.sma(closes,20):closes.map(function(){return null;});
   var sma50=closes.length>=50?TI.sma(closes,50):closes.map(function(){return null;});
+  var sma200=closes.length>=200?TI.sma(closes,200):closes.map(function(){return null;});
   var rsiArr=closes.length>14?TI.rsi(closes):closes.map(function(){return 50;});
   var macdData=closes.length>26?TI.macd(closes):{hist:closes.map(function(){return 0;}),line:closes.map(function(){return 0;}),signal:closes.map(function(){return 0;})};
   var bbArr=closes.length>=20?TI.bb(closes):closes.map(function(){return{upper:null,lower:null,mid:null};});
@@ -5513,8 +5521,8 @@ function renderDrawerBody(){
   } else if(dTab==="chart"){
     content=
       '<div class="cha">'+
-      '<div class="chl">Velas · SMA20 · SMA50 · BB'+
-      '<div style="display:flex;gap:8px"><span style="font-size:9px;color:var(--green);font-family:\'Share Tech Mono\'">▲ Alcista</span><span style="font-size:9px;color:var(--red);font-family:\'Share Tech Mono\'">▼ Bajista</span><span style="font-size:9px;color:var(--amber);font-family:\'Share Tech Mono\'">╌ SMA20</span><span style="font-size:9px;color:var(--blue);font-family:\'Share Tech Mono\'">╌ SMA50</span></div>'+
+      '<div class="chl">Velas · SMA20 · SMA50 · SMA200 · BB'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><span style="font-size:9px;color:var(--green);font-family:\'Share Tech Mono\'">▲ Alcista</span><span style="font-size:9px;color:var(--red);font-family:\'Share Tech Mono\'">▼ Bajista</span><span style="font-size:9px;color:var(--amber);font-family:\'Share Tech Mono\'">╌ SMA20</span><span style="font-size:9px;color:var(--blue);font-family:\'Share Tech Mono\'">╌ SMA50</span>'+(sma200&&sma200.some(function(v){return v!=null;})?'<span style="font-size:9px;color:#a855f7;font-family:\'Share Tech Mono\'">╌ SMA200</span>':'')+'</div>'+
       '</div>'+
       '<div id="lw-chart-main" style="height:210px;width:100%;border-radius:6px;overflow:hidden"></div>'+
       '</div>'+
@@ -5541,7 +5549,7 @@ function renderDrawerBody(){
       '</div>'+
       '<div class="cha">'+
       '<div class="chl">MACD Line vs Signal</div>'+
-      svgLine(chartData.map(function(d,i){return {macdLine:macdData.line[i]||null,macdSig:macdData.signal[i]||null};}),["macdLine","macdSig"],["var(--orange)","var(--orange)"],400,70)+
+      svgLine(chartData.map(function(d,i){return {macdLine:macdData.line[i]||null,macdSig:macdData.signal[i]||null};}),["macdLine","macdSig"],["var(--orange)","var(--blue)"],400,70)+
       '</div>'+
       '<div class="ind2">'+
       '<div class="icard"><div class="icl">MACD Hist.</div><div class="icv" style="color:'+(macdH>=0?"var(--green)":"var(--red)")+'">'+macdH.toFixed(3)+'</div><div class="ics">'+(macdH>=0?"Momentum alcista":"Momentum bajista")+'</div></div>'+
@@ -5682,7 +5690,7 @@ function renderDrawerBody(){
     '<button class="btn" style="border-color:var(--border);color:var(--text3)" onclick="closeDrawer()">Cerrar</button>'+
     '</div>';
 
-  if(dTab==='chart') setTimeout(function(){renderLWCharts(hist,sma20,sma50,bbArr);},320);
+  if(dTab==='chart') setTimeout(function(){renderLWCharts(hist,sma20,sma50,bbArr,sma200);},320);
 }
 
 
