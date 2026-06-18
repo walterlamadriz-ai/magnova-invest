@@ -8169,17 +8169,17 @@ sb.auth.onAuthStateChange(function(event,session){
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     Dashboard
   </button>
-  <button class="mob-tab" id="mbt-port" onclick="setPage('port');updateMobTabs()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-    Portfolio
-  </button>
   <button class="mob-tab" id="mbt-watch" onclick="setPage('watch');updateMobTabs()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
     Watchlist
   </button>
-  <button class="mob-tab" id="mbt-sig" onclick="setPage('sig');updateMobTabs()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    Señales
+  <button class="mob-tab" id="mbt-decision" onclick="setPage('decision');updateMobTabs()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+    Motor
+  </button>
+  <button class="mob-tab" id="mbt-port" onclick="setPage('port');updateMobTabs()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    Portfolio
   </button>
   <button class="mob-tab" id="mbt-news" onclick="setPage('news');updateMobTabs()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><path d="M4 11h8"/><path d="M4 7h4"/><path d="M4 15h4"/><rect x="2" y="7" width="6" height="13" rx="1"/></svg>
@@ -8188,7 +8188,7 @@ sb.auth.onAuthStateChange(function(event,session){
 </nav>
 <script>
 function updateMobTabs(){
-  ['dash','port','watch','sig','news'].forEach(function(p){
+  ['dash','watch','decision','port','news'].forEach(function(p){
     var el=document.getElementById('mbt-'+p);
     if(el) el.classList.toggle('act',S.page===p);
   });
