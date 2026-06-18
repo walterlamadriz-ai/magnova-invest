@@ -2837,7 +2837,7 @@ function renderDecisionEngine(){
             var narr=deNarrative(s,regime,vix,breadth);
             var nid='narr-'+s.ticker;
             return '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">'+
-              '<button onclick="var el=document.getElementById(\''+nid+'\');el.style.display=el.style.display===\'none\'?\'block\':\'none\';this.textContent=el.style.display===\'none\'?\'💡 ¿Por qué AHORA? ▸\':\'💡 ¿Por qué AHORA? ▾\'" style="background:transparent;border:none;color:var(--text3);font-size:10px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;padding:0">💡 ¿Por qué AHORA? ▸</button>'+
+              '<button onclick="var el=document.getElementById(\''+nid+'\');el.style.display=el.style.display===\'none\'?\'block\':\'none\';this.textContent=el.style.display===\'none\'?\'📊 Lectura técnica actual ▸\':\'📊 Lectura técnica actual ▾\'" style="background:transparent;border:none;color:var(--text3);font-size:10px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;padding:0">📊 Lectura técnica actual ▸</button>'+
               '<div id="'+nid+'" style="display:none;margin-top:8px;padding:10px 12px;background:var(--card3);border-radius:8px;font-size:11px;line-height:1.7;color:var(--text2)">'+narr+'</div>'+
               '</div>';
           })()+
@@ -4740,7 +4740,7 @@ function renderAlert(){
     var cur=getLivePrice(a.asset);
     var triggered=a.type==="Max"?cur>=a.trigger:cur<=a.trigger;
     var dist=a.type==="Max"?(a.trigger-cur)/cur:(cur-a.trigger)/cur;
-    var action=triggered?(a.type==="Max"?"Considerar venta":"Verificar stop"):"Mantener";
+    var action=triggered?(a.type==="Max"?"Verificar indicadores":"Revisar niveles"):"En seguimiento";
     return {asset:a.asset,type:a.type,trigger:a.trigger,cur:cur,triggered:triggered,dist:dist,action:action};
   });
   var triggered=rows.filter(function(r){return r.triggered;});
