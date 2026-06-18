@@ -6587,7 +6587,7 @@ async function generateRadarReport(){
     '    {"id":"health","title":"Score de Salud","content":"Análisis del score '+health.total+'/100. Qué sub-score está más débil y cómo mejorar. 3-4 oraciones."},\n'+
     '    {"id":"macro","title":"Contexto Macro","content":"Qué pasó en mercados esta semana y cómo afecta ESPECÍFICAMENTE a las posiciones de este portfolio. 3-4 oraciones."},\n'+
     '    {"id":"portfolio","title":"Diagnóstico del Portfolio","content":"Análisis posición por posición. Cuál mantener, cuál reducir, cuál promediar. Menciona tickers concretos. 4-5 oraciones."},\n'+
-    '    {"id":"entries","title":"Oportunidades Técnicas","content":"Hasta 2 activos con señal BUY según indicadores técnicos. Para cada uno: ticker, zona de soporte técnico de referencia, stop sugerido por ATR, target por extensión, ratio R/R estimado, y contexto en 1 línea. Solo análisis técnico — no constituye recomendación de inversión."},\n'+
+    '    {"id":"entries","title":"Oportunidades Técnicas","content":"Hasta 2 activos con condición técnica favorable según indicadores. Para cada uno: ticker, zona referencial de precio de soporte, nivel de riesgo referencial por ATR, proyección técnica referencial, ratio R/R estimado, y contexto en 1 línea. Solo análisis técnico educativo — no constituye asesoría financiera ni recomendación de inversión."},\n'+
     '    {"id":"exits","title":"Señales de Alerta","content":"Posiciones con señal técnica de debilidad según los indicadores. Indica cuáles vigilar y por qué. El usuario decide cuándo actuar."},\n'+
     '    {"id":"practice","title":"Práctica de la Semana","content":"UNA sola práctica de gestión de portfolio específica para este inversor, basada en su perfil '+riskLabel+' y sus datos actuales. Concreta, aplicable esta semana."},\n'+
     '    {"id":"action","title":"Puntos de Atención","content":"3 puntos de seguimiento técnico para esta semana. Formato: \'1. [Observación técnica con ticker y nivel de referencia]\'. Análisis educativo, no directivo."}\n'+
@@ -7112,7 +7112,7 @@ function renderHelp(){
     {icon:'⚖️',q:'¿Qué significa la correlación en el Comparador?',
      a:'1.0 = activos se mueven igual (no diversifican). 0 = independientes. -1.0 = se mueven opuesto. Para diversificar bien, busca pares con correlación < 0.5.'},
     {icon:'🔀',q:'¿Cómo uso el Rebalanceo?',
-     a:'Define los pesos objetivo moviendo los sliders. La herramienta calcula exactamente qué comprar y vender para llegar a esa distribución con tu capital actual.'},
+     a:'Define los pesos objetivo moviendo los sliders. La herramienta calcula los ajustes técnicos referenciales para llegar a esa distribución con tu capital actual. La decisión de actuar es exclusiva del usuario.'},
     {icon:'💳',q:'¿Cómo actualizo mi plan?',
      a:'Haz click en "Upgrade Pro" en cualquier módulo o en el sidebar. Desde ahí puedes activar el plan Pro y acceder a todas las herramientas.'},
   ];
