@@ -3947,16 +3947,16 @@ function renderSig(){
   }).join("");
 
   document.getElementById("main").innerHTML=
-    '<div class="ph"><div><h1>Señales Técnicas</h1><p class="sub-txt">// Score histórico — Trend×30% + Vol×20% + RSI×25% + MACD×25% · No es recomendación de inversión</p></div>'+liveBadge()+'</div>'+
-    freeBanner("Plan Free: "+plan.maxS+" señales de "+ALL_SIG.length+".")+
+    '<div class="ph"><div><h1>Señales Técnicas</h1><p class="sub-txt">// Indicadores de referencia educativa · No constituyen señal de compra o venta · Score: Trend×30% + Vol×20% + RSI×25% + MACD×25%</p></div>'+liveBadge()+'</div>'+
+    freeBanner("Plan Free: "+plan.maxS+" indicadores de "+ALL_SIG.length+".")+
     '<div style="margin-bottom:14px">'+filterBtns+'</div>'+
     '<div class="krow">'+
     kpi("Total",sigs.length,"","b")+
-    kpi("Señal Alta",sigs.filter(function(s){return s.sig==="BUY";}).length,"","g")+
-    kpi("Señal Media",sigs.filter(function(s){return s.sig==="HOLD";}).length,"","a")+
-    kpi("Señal Baja",sigs.filter(function(s){return s.sig==="SELL";}).length,"","r")+
+    kpi("Indicador Alto",sigs.filter(function(s){return s.sig==="BUY";}).length,"","g")+
+    kpi("Indicador Medio",sigs.filter(function(s){return s.sig==="HOLD";}).length,"","a")+
+    kpi("Indicador Bajo",sigs.filter(function(s){return s.sig==="SELL";}).length,"","r")+
     '</div>'+
-    '<div class="tw"><table id="tbl-sig"><thead><tr><th>Ticker</th><th>Señal</th>'+sortTh("sig","sc","Score")+'<th>Fuerza</th>'+sortTh("sig","price","Precio")+sortTh("sig","chg","Δ Hoy")+'<th>Stop –8%</th><th>Watch</th></tr></thead>'+
+    '<div class="tw"><table id="tbl-sig"><thead><tr><th>Ticker</th><th>Indicador</th>'+sortTh("sig","sc","Score")+'<th>Fuerza</th>'+sortTh("sig","price","Precio")+sortTh("sig","chg","Δ Hoy")+'<th>Ref. –8%</th><th>Watch</th></tr></thead>'+
     '<tbody>'+rows+'</tbody></table></div>'+
     '<div style="margin-top:12px;padding:8px 10px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">'+
     '⚠ Los sesgos mostrados resultan de modelos técnicos automatizados (Trend×30% · Vol×20% · RSI×25% · MACD×25%). '+
