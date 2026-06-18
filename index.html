@@ -2033,6 +2033,8 @@ function svgVol(data,W,H){
 // ── LIGHTWEIGHT CHARTS (Candlestick) ───────────────────────────
 var _lwLoaded=false;
 var _lwLoadPromise=null;
+var _lwChartMain=null;
+var _lwChartVol=null;
 
 function loadLWScript(){
   if(_lwLoaded) return Promise.resolve();
@@ -2054,6 +2056,8 @@ function renderLWCharts(hist,sma20,sma50,bbArr){
     var mainEl=document.getElementById('lw-chart-main');
     var volEl=document.getElementById('lw-chart-vol');
     if(!mainEl||!volEl) return;
+    if(_lwChartMain){try{_lwChartMain.remove();}catch(e){} _lwChartMain=null;}
+    if(_lwChartVol){try{_lwChartVol.remove();}catch(e){} _lwChartVol=null;}
     // Filter valid OHLCV bars
     var bars=hist.filter(function(d){return d.ts&&d.open&&d.high&&d.low&&d.close;});
     if(!bars.length) return;
@@ -2062,7 +2066,7 @@ function renderLWCharts(hist,sma20,sma50,bbArr){
     var textColor='#8a9bbd';
     var gridColor='rgba(255,255,255,0.04)';
 
-    var chart=LW.createChart(mainEl,{
+    _lwChartMain=LW.createChart(mainEl,{
       width:mainEl.clientWidth||mainEl.offsetWidth||300,
       height:210,
       layout:{background:{type:'solid',color:bgColor},textColor:textColor,fontFamily:"'Share Tech Mono',monospace",fontSize:9},
@@ -2071,6 +2075,7 @@ function renderLWCharts(hist,sma20,sma50,bbArr){
       timeScale:{timeVisible:false,borderColor:'rgba(255,255,255,0.07)'},
       rightPriceScale:{borderColor:'rgba(255,255,255,0.07)'},
     });
+    var chart=_lwChartMain;
 
     var candleSeries=chart.addCandlestickSeries({
       upColor:'#22c55e',downColor:'#ef4444',wickUpColor:'#22c55e',wickDownColor:'#ef4444',
@@ -2103,7 +2108,7 @@ function renderLWCharts(hist,sma20,sma50,bbArr){
     chart.timeScale().fitContent();
 
     // Volume chart
-    var volChart=LW.createChart(volEl,{
+    _lwChartVol=LW.createChart(volEl,{
       width:volEl.clientWidth||volEl.offsetWidth||300,
       height:60,
       layout:{background:{type:'solid',color:bgColor},textColor:textColor},
@@ -2112,6 +2117,7 @@ function renderLWCharts(hist,sma20,sma50,bbArr){
       rightPriceScale:{borderColor:'rgba(255,255,255,0.07)'},
       crosshair:{mode:LW.CrosshairMode.Hidden},
     });
+    var volChart=_lwChartVol;
     var volSeries=volChart.addHistogramSeries({
       color:'rgba(255,255,255,0.15)',priceFormat:{type:'volume'},priceScaleId:'',
     });
