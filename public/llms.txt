@@ -4,31 +4,32 @@
 
 ## What is FinanceOS Invest?
 
-FinanceOS Invest Pro is a professional investment analysis platform built for Spanish-speaking investors in Latin America who trade US markets (NYSE, NASDAQ). It provides a systematic, rules-based investment process powered by real-time market data from Yahoo Finance.
+FinanceOS Invest Pro is a technical analysis platform built for Spanish-speaking investors in Latin America who trade US markets (NYSE, NASDAQ). It provides a systematic, rules-based analytical process powered by real-time market data from Yahoo Finance.
 
-**Price**: $29.99 USD/month — 14 days free trial
+**Price**: $29.99 USD/month
 **URL**: https://invest.financeospro.com
 **Language**: Spanish (designed for LATAM investors)
 
 ## Core features
 
-### Decision Engine
+### Decision Engine (Motor de Análisis)
 - Detects live market regime: Risk On / Neutral / Risk Off based on SPY vs SMA200 and SMA50
-- VIX regime: adjusts position sizing based on volatility level (low/normal/elevated/crisis)
+- VIX regime: adjusts position sizing reference based on volatility level (low/normal/elevated/crisis)
 - Market Breadth: uses % of S&P 500 stocks above SMA200 as confirmation signal
 - Sector Rotation: calculates 22-day sector ETF return vs SPY to identify leading sectors
 
 ### Pullback Quality Score (0-100)
-- RSI zone 40-60 = 40 points (ideal entry zone)
+- RSI zone 40-60 = 40 points (technically favorable zone)
 - Price above SMA50 = 25 points
 - Price above SMA200 = 20 points
 - Pullback 5-20% from 52-week high = 15 points
 
-### Risk Management
-- Entry, stop-loss, and two scale-out targets calculated automatically using ATR(14)
-- T1 = Entry + 1.5×ATR (close 33% of position)
-- T2 = Entry + 3.0×ATR (close another 33%)
-- Trail remaining 34% — stop at 1×ATR below entry
+### Technical Reference Levels
+- Referential price zones calculated using ATR(14) volatility — educational indicators only
+- T1 reference: current price + 1.5×ATR
+- T2 reference: current price + 3.0×ATR
+- Risk reference level: calculated based on 1×ATR from reference price
+- All levels are technical references — not investment advice or instructions
 
 ### Stock Screener
 - Filter stocks by DE Score, sector RS, RSI range, and pullback quality
@@ -36,7 +37,7 @@ FinanceOS Invest Pro is a professional investment analysis platform built for Sp
 
 ### Portfolio
 - Track positions with P&L
-- Integration with Decision Engine signals
+- Integration with Decision Engine technical data
 
 ### Earnings Calendar
 - Next earnings date per ticker with expected move
@@ -44,11 +45,15 @@ FinanceOS Invest Pro is a professional investment analysis platform built for Sp
 
 ## Who is this for?
 
-Latin American investors and traders who:
+Latin American investors who:
 - Invest in US stocks and ETFs from Mexico, Colombia, Chile, Argentina, Venezuela, Peru
-- Want a systematic process (not gut feeling) for buy/sell decisions
-- Need clear entry, stop, and target levels before entering any trade
-- Are serious about risk management and position sizing
+- Want a systematic analytical process based on technical indicators, not gut feeling
+- Want to see technical reference levels before making their own decisions
+- Are serious about understanding risk and position sizing
+
+## Important disclaimer
+
+FinanceOS Invest provides technical analysis tools for educational purposes. All data is referential and may have delays. This platform does not constitute financial advice, does not execute orders, and is not a broker. All investment decisions are the exclusive responsibility of the user.
 
 ## Company
 
