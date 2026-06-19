@@ -992,6 +992,77 @@ tr:last-child td { border-bottom: none; }
 }
 .welcome-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
 
+/* ── WELCOME v3 ────────────────────────────────────────── */
+.wv3-outer{min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
+.wv3-wrap{flex:1;display:grid;grid-template-columns:1fr;gap:32px;align-items:center;padding:28px 24px 20px;max-width:1100px;margin:0 auto;width:100%}
+@media(min-width:900px){.wv3-wrap{grid-template-columns:3fr 2fr;gap:48px;padding:32px 40px 24px}}
+.wv3-left{display:flex;flex-direction:column;gap:22px;max-width:560px}
+.wv3-right{display:flex;flex-direction:column;align-items:center}
+.wv3-badge{display:inline-flex;align-items:center;gap:7px;background:var(--grn-bg);border:1px solid var(--grn-lt);border-radius:20px;padding:4px 13px;align-self:flex-start}
+.wv3-badge span{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--grn);letter-spacing:.5px}
+.wv3-dot{width:6px;height:6px;border-radius:50%;background:var(--grn);flex-shrink:0;animation:wv3pulse 2s ease-in-out infinite}
+@keyframes wv3pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.wv3-h1{font-size:clamp(28px,4.5vw,46px);font-weight:700;color:var(--bright);letter-spacing:-.03em;line-height:1.15;margin:0}
+.wv3-sub{font-size:15px;color:var(--text2);line-height:1.7;max-width:480px;margin:0}
+.wv3-ctx-label{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+.wv3-ctx-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wv3-ctx-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.wv3-ctx-ttl{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.wv3-ctx-val{font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:6px}
+.wv3-ctx-hint{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);margin-top:2px}
+.wv3-scores-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.wv3-score-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.wv3-score-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.wv3-score-ticker{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--bright)}
+.wv3-score-circle{width:34px;height:34px;border-radius:50%;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.wv3-score-rsi{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text2);margin-bottom:3px}
+.wv3-score-smas{display:flex;gap:8px;font-size:9px;font-family:'JetBrains Mono',monospace}
+.wv3-scores-note{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);margin-top:6px}
+.wv3-feats{display:flex;flex-direction:column;gap:12px}
+.wv3-feat{display:flex;align-items:flex-start;gap:10px}
+.wv3-feat-icon{font-size:17px;flex-shrink:0;margin-top:1px}
+.wv3-feat-title{font-size:13px;font-weight:600;color:var(--bright);margin-bottom:2px}
+.wv3-feat-desc{font-size:12px;color:var(--text2);line-height:1.5}
+.wv3-disc{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);line-height:1.7}
+.wv3-auth-card{background:var(--card);border:0.5px solid var(--border2);border-radius:20px;padding:28px 28px 24px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.35)}
+.wv3-auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.wv3-auth-icon{width:34px;height:34px;border-radius:8px;background:var(--grn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.wv3-auth-name{font-size:15px;color:var(--text)}
+.wv3-auth-name b{color:var(--grn);font-weight:700}
+.wv3-tabs{display:grid;grid-template-columns:1fr 1fr;position:relative;background:var(--bg2);border-radius:10px;padding:4px;margin-bottom:20px}
+.wv3-tab-slider{position:absolute;top:4px;bottom:4px;width:calc(50% - 4px);background:var(--card);border-radius:7px;box-shadow:0 2px 8px rgba(0,0,0,.28);transition:transform .25s cubic-bezier(.4,0,.2,1);pointer-events:none}
+.wv3-tab-slider.r{transform:translateX(calc(100% + 4px))}
+.wv3-tab-btn{position:relative;z-index:1;padding:7px 0;font-size:12px;font-weight:500;background:transparent;border:none;cursor:pointer;transition:color .15s;font-family:inherit;width:100%}
+.wv3-tab-btn.active{color:var(--bright)}
+.wv3-tab-btn:not(.active){color:var(--text2)}
+.wv3-panel{display:none;flex-direction:column;gap:13px}
+.wv3-panel.show{display:flex}
+.wv3-field-label{display:block;font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;font-family:'JetBrains Mono',monospace}
+.wv3-field-wrap{position:relative}
+.wv3-field-wrap input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--bright);outline:none;transition:border-color .15s;box-sizing:border-box;font-family:inherit}
+.wv3-field-wrap input:focus{border-color:var(--grn)}
+.wv3-field-wrap input::placeholder{color:var(--text3)}
+.wv3-eye-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);padding:3px 4px;line-height:1}
+.wv3-eye-btn:hover{color:var(--text)}
+.wv3-forgot{text-align:right;margin-top:4px}
+.wv3-forgot a{font-size:11px;color:var(--grn);text-decoration:none}
+.wv3-forgot a:hover{text-decoration:underline}
+.wv3-submit{width:100%;border-radius:10px;padding:11px;font-size:13px;font-weight:600;color:#fff;background:var(--grn);border:none;cursor:pointer;transition:opacity .15s,transform .08s;box-shadow:0 6px 20px -8px var(--grn);font-family:inherit}
+.wv3-submit:hover{opacity:.9;transform:translateY(-1px)}
+.wv3-submit:active{transform:scale(.98)}
+.wv3-submit:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.wv3-err{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--red);display:none;line-height:1.5}
+.wv3-legal{font-size:10px;color:var(--text3);text-align:center;line-height:1.6}
+.wv3-legal a{color:var(--grn);text-decoration:none;cursor:pointer}
+.wv3-legal a:hover{text-decoration:underline}
+.wv3-check-row{display:flex;align-items:flex-start;gap:8px;cursor:pointer}
+.wv3-check-row input[type=checkbox]{margin-top:2px;width:14px;height:14px;accent-color:var(--grn);flex-shrink:0;cursor:pointer}
+.wv3-check-txt{font-size:11px;color:var(--text2);line-height:1.5}
+.wv3-check-txt a{color:var(--grn);text-decoration:none;cursor:pointer}
+.wv3-pricing{margin-top:14px;text-align:center;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3);line-height:1.9}
+.wv3-pricing .wv3-grn{color:var(--grn)}
+.wv3-footer{padding:10px 24px;text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3)}
+
 .form-label {
   display: block;
   font-size: 11px; font-weight: 500;
@@ -3322,132 +3393,111 @@ function renderMain(){
 // ── WELCOME ────────────────────────────────────────────────────
 function renderWelcome(){
   document.getElementById('main').innerHTML=
-    '<div class="welcome-wrap-b">'+
-    // ── COLUMNA IZQUIERDA: contexto + propuesta de valor ──
-    '<div class="welcome-col-left">'+
-    '<div style="display:inline-flex;align-items:center;gap:8px;background:var(--grn-bg);border:1px solid var(--grn-lt);border-radius:20px;padding:5px 14px;margin-bottom:22px">'+
-    '<div style="width:7px;height:7px;border-radius:50%;background:var(--grn)"></div>'+
-    '<span style="font-size:11px;font-family:\'JetBrains Mono\',monospace;color:var(--grn);letter-spacing:.5px">LATAM</span>'+
-    '</div>'+
-    '<h1 style="font-size:clamp(26px,4vw,42px);font-weight:700;color:var(--bright);letter-spacing:-.03em;line-height:1.2;margin-bottom:14px">Analiza el mercado con criterio técnico.</h1>'+
-    '<p style="font-size:15px;color:var(--text2);line-height:1.7;margin-bottom:28px;max-width:480px">Motor de Análisis con scoring propio, régimen SPY y gestión de riesgo. Para inversores de LATAM que quieren un proceso, no una opinión.</p>'+
+    '<div class="wv3-outer">'+
+    '<div class="wv3-wrap">'+
+    // ── COLUMNA IZQUIERDA ──
+    '<div class="wv3-left">'+
+    '<div class="wv3-badge"><div class="wv3-dot"></div><span>FinanceOS Invest · v3.0</span></div>'+
+    '<h1 class="wv3-h1">Analiza el mercado<br>con criterio técnico.</h1>'+
+    '<p class="wv3-sub">Motor de Análisis con régimen SPY, scoring técnico 0–100 por activo e indicadores RSI/MACD/ATR. Para inversores de LATAM — sin opiniones, solo datos.</p>'+
     // Cards de contexto live
-    '<div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:10px">Contexto de mercado · Referencial</div>'+
-    '<div class="welcome-ctx-cards">'+
-    '<div id="wlc-spy" class="welcome-ctx-card">'+
-    '<div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:4px">RÉGIMEN SPY</div>'+
-    '<div style="font-size:13px;font-weight:700;color:var(--text3)">Cargando…</div>'+
+    '<div>'+
+    '<div class="wv3-ctx-label">// Contexto de mercado · Referencial · Tiempo real</div>'+
+    '<div class="wv3-ctx-grid">'+
+    '<div id="wlc-spy" class="wv3-ctx-card">'+
+    '<div class="wv3-ctx-ttl">RÉGIMEN SPY</div>'+
+    '<div class="wv3-ctx-val" style="color:var(--text3)">Cargando…</div>'+
     '</div>'+
-    '<div id="wlc-vix" class="welcome-ctx-card">'+
-    '<div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:4px">VOLATILIDAD</div>'+
-    '<div style="font-size:13px;font-weight:700;color:var(--text3)">Cargando…</div>'+
+    '<div id="wlc-vix" class="wv3-ctx-card">'+
+    '<div class="wv3-ctx-ttl">VOLATILIDAD VIX</div>'+
+    '<div class="wv3-ctx-val" style="color:var(--text3)">Cargando…</div>'+
     '</div>'+
+    '</div></div>'+
+    // Score preview
+    '<div>'+
+    '<div class="wv3-ctx-label">// Scores técnicos · Muestra</div>'+
+    '<div class="wv3-scores-grid">'+
+    '<div class="wv3-score-card"><div class="wv3-score-head"><span class="wv3-score-ticker">AAPL</span><div class="wv3-score-circle" style="background:var(--grn-bg);border-color:var(--grn);color:var(--grn)"><span id="wv3-s-aapl">0</span></div></div><div class="wv3-score-rsi">RSI 52</div><div class="wv3-score-smas"><span style="color:var(--grn)">SMA50 ✓</span><span style="color:var(--grn)">SMA200 ✓</span></div></div>'+
+    '<div class="wv3-score-card"><div class="wv3-score-head"><span class="wv3-score-ticker">NVDA</span><div class="wv3-score-circle" style="background:rgba(245,158,11,.10);border-color:var(--amber);color:var(--amber)"><span id="wv3-s-nvda">0</span></div></div><div class="wv3-score-rsi">RSI 48</div><div class="wv3-score-smas"><span style="color:var(--grn)">SMA50 ✓</span><span style="color:var(--red)">SMA200 ✗</span></div></div>'+
+    '<div class="wv3-score-card"><div class="wv3-score-head"><span class="wv3-score-ticker">MSFT</span><div class="wv3-score-circle" style="background:var(--grn-bg);border-color:var(--grn);color:var(--grn)"><span id="wv3-s-msft">0</span></div></div><div class="wv3-score-rsi">RSI 55</div><div class="wv3-score-smas"><span style="color:var(--grn)">SMA50 ✓</span><span style="color:var(--grn)">SMA200 ✓</span></div></div>'+
+    '</div>'+
+    '<div class="wv3-scores-note">Accede para ver scores en tiempo real de tu watchlist</div>'+
     '</div>'+
     // Features
-    '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:28px">'+
-    '<div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:16px;flex-shrink:0">🎯</span><div><div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:2px">Motor de Análisis</div><div style="font-size:12px;color:var(--text2)">Scoring 0–100 por activo con contexto SPY, RSI, MACD y niveles de precio referenciales.</div></div></div>'+
-    '<div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:16px;flex-shrink:0">🛡️</span><div><div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:2px">Gestión de riesgo</div><div style="font-size:12px;color:var(--text2)">Sizing referencial por volatilidad, indicadores técnicos por activo, simulación histórica.</div></div></div>'+
-    '<div style="display:flex;align-items:flex-start;gap:10px"><span style="font-size:16px;flex-shrink:0">📊</span><div><div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:2px">Portfolio y Watchlist</div><div style="font-size:12px;color:var(--text2)">Seguimiento de posiciones, P&L, asset allocation y screener de activos.</div></div></div>'+
+    '<div class="wv3-feats">'+
+    '<div class="wv3-feat"><span class="wv3-feat-icon">🎯</span><div><div class="wv3-feat-title">Motor de Análisis</div><div class="wv3-feat-desc">Régimen SPY + VIX + scoring técnico 0–100 por activo.</div></div></div>'+
+    '<div class="wv3-feat"><span class="wv3-feat-icon">🛡️</span><div><div class="wv3-feat-title">Gestión de Riesgo Referencial</div><div class="wv3-feat-desc">Niveles ATR(14) calculados por volatilidad histórica.</div></div></div>'+
+    '<div class="wv3-feat"><span class="wv3-feat-icon">📊</span><div><div class="wv3-feat-title">Portfolio y Screener</div><div class="wv3-feat-desc">Seguimiento P&amp;L, watchlist y filtro técnico sobre 50+ activos.</div></div></div>'+
     '</div>'+
-    '<div style="font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);line-height:1.8">'+
-    '🛡 Análisis técnico educativo · No asesoría financiera · No ejecutamos órdenes'+
+    '<div class="wv3-disc">🛡 Análisis técnico educativo · No asesoría financiera · No somos bróker · No ejecutamos órdenes</div>'+
+    '</div>'+ // end wv3-left
+    // ── COLUMNA DERECHA ──
+    '<div class="wv3-right">'+
+    '<div class="wv3-auth-card">'+
+    '<div class="wv3-auth-logo"><div class="wv3-auth-icon">FI</div><div class="wv3-auth-name">FinanceOS <b>Invest</b></div></div>'+
+    // Tabs
+    '<div class="wv3-tabs">'+
+    '<div id="wv3-slider" class="wv3-tab-slider"></div>'+
+    '<button id="wv3-tab-login" class="wv3-tab-btn active" onclick="wv3Tab(\'login\')">Iniciar sesión</button>'+
+    '<button id="wv3-tab-reg" class="wv3-tab-btn" onclick="wv3Tab(\'reg\')">Crear cuenta</button>'+
     '</div>'+
+    // Panel login
+    '<div id="wv3-panel-login" class="wv3-panel show">'+
+    '<div><label class="wv3-field-label">EMAIL</label><div class="wv3-field-wrap"><input id="le" type="email" placeholder="tu@email.com" autocomplete="email" onkeydown="if(event.keyCode===13)doLogin()"/></div></div>'+
+    '<div><label class="wv3-field-label">CONTRASEÑA</label><div class="wv3-field-wrap"><input id="lp" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.keyCode===13)doLogin()"/><button type="button" class="wv3-eye-btn" id="wv3-eye-lp" onclick="wv3TogglePwd(\'lp\',\'wv3-eye-lp\')">ver</button></div><div class="wv3-forgot"><a href="#" onclick="wv3ForgotPwd();return false;">¿Olvidaste tu contraseña?</a></div></div>'+
+    '<div id="lerr" class="wv3-err"></div>'+
+    '<button id="lbtn" class="wv3-submit" onclick="doLogin()">Entrar →</button>'+
+    '<div class="wv3-legal">Al acceder aceptas nuestros <a onclick="openTCModal(\'tc\');return false;" href="#">Términos de Uso</a> y <a onclick="openTCModal(\'pp\');return false;" href="#">Política de Privacidad</a>.</div>'+
     '</div>'+
-    // ── COLUMNA DERECHA: login box ──
-    '<div class="welcome-col-right">'+
-    '<div id="login-anchor" class="welcome-box" style="margin:0">'+
-    '<div class="welcome-logo">'+
-    '<div class="welcome-icon">FI</div>'+
-    '<div>'+
-    '<div class="welcome-title">Iniciar sesión</div>'+
-    '<div class="welcome-sub">FinanceOS Invest</div>'+
-    '</div></div>'+
-    '<div class="form-group">'+
-    '<label class="form-label">Email</label>'+
-    '<input id="le" class="inp" type="email" placeholder="tu@email.com" onkeydown="if(event.keyCode===13)doLogin()"/>'+
+    // Panel register
+    '<div id="wv3-panel-reg" class="wv3-panel">'+
+    '<div><label class="wv3-field-label">NOMBRE</label><div class="wv3-field-wrap"><input id="rn" type="text" placeholder="Tu nombre" autocomplete="name"/></div></div>'+
+    '<div><label class="wv3-field-label">EMAIL</label><div class="wv3-field-wrap"><input id="re" type="email" placeholder="tu@email.com" autocomplete="email"/></div></div>'+
+    '<div><label class="wv3-field-label">CONTRASEÑA</label><div class="wv3-field-wrap"><input id="rp" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/><button type="button" class="wv3-eye-btn" id="wv3-eye-rp" onclick="wv3TogglePwd(\'rp\',\'wv3-eye-rp\')">ver</button></div></div>'+
+    '<label class="wv3-check-row"><input id="rdisc" type="checkbox"/><span class="wv3-check-txt">He leído y acepto los <a onclick="openTCModal(\'tc\');return false;" href="#">Términos de Uso</a> y la <a onclick="openTCModal(\'pp\');return false;" href="#">Política de Privacidad</a>. Entiendo que los análisis son educativos y no constituyen asesoría financiera.</span></label>'+
+    '<div id="rerr" class="wv3-err"></div>'+
+    '<button id="rbtn" class="wv3-submit" onclick="doRegister()">Crear cuenta gratis →</button>'+
     '</div>'+
-    '<div class="form-group">'+
-    '<label class="form-label">Contraseña</label>'+
-    '<input id="lp" class="inp" type="password" placeholder="••••••••" onkeydown="if(event.keyCode===13)doLogin()"/>'+
-    '<div id="lerr" class="form-error">Email o contraseña incorrectos.</div>'+
-    '</div>'+
-    '<button id="lbtn" onclick="doLogin()" class="btn-big" style="width:100%;justify-content:center;padding:10px">Entrar →</button>'+
-    '<div style="margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border);text-align:center">'+
-    '<button onclick="renderRegister()" class="btn" style="width:100%;justify-content:center">Crear cuenta gratis →</button>'+
-    '</div>'+
-    '<div style="margin-top:16px;font-size:10px;color:var(--text3);text-align:center;line-height:1.6;font-family:\'JetBrains Mono\',monospace">'+
-    'Análisis técnico educativo · No constituye asesoría financiera.<br>MAXNOVA &amp; LUCI Global LLC'+
-    '</div>'+
-    '</div>'+
-    '<div style="margin-top:16px;font-size:10px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">'+
-    '© 2026 FinanceOS · <a href="https://financeospro.com" style="color:var(--text3)">financeospro.com</a>'+
-    '</div>'+
-    '</div>'+
-    '</div>';
+    '</div>'+ // end wv3-auth-card
+    '<div class="wv3-pricing"><div><span class="wv3-grn">✓</span> Plan Free incluido sin tarjeta de crédito</div><div><span class="wv3-grn">✓</span> Invest Pro · US$29.99/mes — cancela cuando quieras</div></div>'+
+    '</div>'+ // end wv3-right
+    '</div>'+ // end wv3-wrap
+    '<div class="wv3-footer">© 2025–2026 MAXNOVA &amp; LUCI Global LLC · No somos asesores financieros · Datos referenciales</div>'+
+    '</div>'; // end wv3-outer
+  // Animaciones de count-up en score cards
+  wv3CountUp('wv3-s-aapl',78,400);
+  wv3CountUp('wv3-s-nvda',64,550);
+  wv3CountUp('wv3-s-msft',80,700);
   // Cargar contexto de mercado en tiempo real — sin auth requerida
   (async function(){
     try{
       var regime=await deGetRegime();
       var spyEl=document.getElementById('wlc-spy');
       if(spyEl&&regime){
-        var lbl=regime.regime==='risk_on'?'🟢 Risk On':regime.regime==='risk_off'?'🔴 Risk Off':'🟡 Transición';
-        var col=regime.color||'var(--text1)';
-        spyEl.innerHTML='<div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:4px">RÉGIMEN SPY</div>'+
-          '<div style="font-size:13px;font-weight:700;color:'+col+'">'+lbl+'</div>'+
-          (regime.spy?'<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">$'+regime.spy.toFixed(2)+'</div>':'');
+        var lbl=regime.regime==='risk_on'?'RISK ON':regime.regime==='risk_off'?'RISK OFF':'TRANSICIÓN';
+        var col=regime.color||'var(--text2)';
+        var dot=regime.regime==='risk_on'?'<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--grn);margin-right:4px;vertical-align:middle;animation:wv3pulse 2s ease-in-out infinite"></span>':'';
+        var hint=regime.spy?'SPY $'+regime.spy.toFixed(2):'SPY sobre SMA200';
+        spyEl.innerHTML='<div class="wv3-ctx-ttl">RÉGIMEN SPY</div>'+
+          '<div class="wv3-ctx-val" style="color:'+col+'">'+dot+lbl+'</div>'+
+          '<div class="wv3-ctx-hint">'+hint+'</div>';
       }
     }catch(e){}
     try{
       var vix=await deGetVIX();
       var vixEl=document.getElementById('wlc-vix');
       if(vixEl&&vix&&vix.vix){
-        vixEl.innerHTML='<div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:4px">VOLATILIDAD</div>'+
-          '<div style="font-size:13px;font-weight:700;color:'+vix.color+'">'+vix.emoji+' '+vix.vix.toFixed(1)+'</div>'+
-          '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">'+vix.label+'</div>';
+        vixEl.innerHTML='<div class="wv3-ctx-ttl">VOLATILIDAD VIX</div>'+
+          '<div class="wv3-ctx-val" style="color:'+vix.color+'">'+vix.vix.toFixed(1)+'</div>'+
+          '<div class="wv3-ctx-hint">'+vix.label+'</div>';
       }
     }catch(e){}
   })();
 }
 
 function renderRegister(){
-  document.getElementById('main').innerHTML=
-    '<div class="welcome-wrap">'+
-    '<div class="welcome-box">'+
-    '<div class="welcome-logo">'+
-    '<div class="welcome-icon">F</div>'+
-    '<div>'+
-    '<div class="welcome-title">Crear cuenta</div>'+
-    '<div class="welcome-sub">Análisis técnico educativo · LATAM</div>'+
-    '</div></div>'+
-    '<div class="form-group">'+
-    '<label class="form-label">Nombre</label>'+
-    '<input id="rn" class="inp" type="text" placeholder="Tu nombre"/>'+
-    '</div>'+
-    '<div class="form-group">'+
-    '<label class="form-label">Email</label>'+
-    '<input id="re" class="inp" type="email" placeholder="tu@email.com"/>'+
-    '</div>'+
-    '<div class="form-group">'+
-    '<label class="form-label">Contraseña</label>'+
-    '<input id="rp" class="inp" type="password" placeholder="Mínimo 6 caracteres"/>'+
-    '</div>'+
-    '<div class="form-group" style="display:flex;align-items:flex-start;gap:8px">'+
-    '<input id="rdisc" type="checkbox" style="margin-top:2px;flex-shrink:0;width:14px;height:14px"/>'+
-    '<label for="rdisc" style="font-size:11px;color:var(--text2);line-height:1.5;cursor:pointer">'+
-    'He leído y acepto los <span onclick="openTCModal(\'tc\')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Términos de Uso</span> y la '+
-    '<span onclick="openTCModal(\'pp\')" style="color:var(--blue);cursor:pointer;text-decoration:underline">Política de Privacidad</span>. '+
-    'Entiendo que los análisis son educativos, no constituyen asesoría financiera ni recomendación de inversión.</label>'+
-    '</div>'+
-    '<div id="rerr" class="form-error">Error</div>'+
-    '<button id="rbtn" onclick="doRegister()" class="btn-big" style="width:100%;justify-content:center;padding:10px">Crear cuenta gratis →</button>'+
-    '<div style="margin-top:12px;text-align:center;font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+
-    '<span onclick="openTCModal(\'tc\')" style="color:var(--text3);cursor:pointer;text-decoration:underline">Términos</span> · '+
-    '<span onclick="openTCModal(\'pp\')" style="color:var(--text3);cursor:pointer;text-decoration:underline">Privacidad</span> · '+
-    'MAXNOVA & LUCI Global LLC</div>'+
-    '<div style="margin-top:12px;padding-top:14px;border-top:0.5px solid var(--border);text-align:center">'+
-    '<button onclick="renderWelcome()" class="btn" style="width:100%;justify-content:center">Ya tengo cuenta</button>'+
-    '</div>'+
-    '</div></div>';
+  renderWelcome();
+  wv3Tab('reg');
 }
 
 function openTCModal(tab){
@@ -8042,6 +8092,61 @@ async function sbSeedPortfolio(userId){
 }
 
 // ── AUTH ACTIONS ──────────────────────────────────────────────
+// ── WELCOME v3 helpers ────────────────────────────────────────
+function wv3Tab(t){
+  var slider=document.getElementById('wv3-slider');
+  var loginBtn=document.getElementById('wv3-tab-login');
+  var regBtn=document.getElementById('wv3-tab-reg');
+  var loginPanel=document.getElementById('wv3-panel-login');
+  var regPanel=document.getElementById('wv3-panel-reg');
+  if(!slider) return;
+  if(t==='login'){
+    slider.classList.remove('r');
+    loginBtn.classList.add('active');regBtn.classList.remove('active');
+    loginPanel.classList.add('show');regPanel.classList.remove('show');
+  } else {
+    slider.classList.add('r');
+    regBtn.classList.add('active');loginBtn.classList.remove('active');
+    regPanel.classList.add('show');loginPanel.classList.remove('show');
+  }
+}
+function wv3TogglePwd(inputId, btnId){
+  var inp=document.getElementById(inputId);
+  var btn=document.getElementById(btnId);
+  if(!inp||!btn) return;
+  if(inp.type==='password'){inp.type='text';btn.textContent='ocultar';}
+  else{inp.type='password';btn.textContent='ver';}
+}
+function wv3CountUp(targetId, finalVal, delay){
+  var el=document.getElementById(targetId);
+  if(!el) return;
+  var dur=700, startTime=null;
+  setTimeout(function(){
+    requestAnimationFrame(function tick(ts){
+      if(!startTime) startTime=ts;
+      var p=Math.min(1,(ts-startTime)/dur);
+      var eased=1-Math.pow(1-p,3);
+      el.textContent=Math.round(finalVal*eased);
+      if(p<1) requestAnimationFrame(tick);
+    });
+  }, delay);
+}
+async function wv3ForgotPwd(){
+  var emailEl=document.getElementById('le');
+  var email=emailEl?emailEl.value.trim():'';
+  var err=document.getElementById('lerr');
+  if(!email){
+    if(err){err.style.display='block';err.style.color='var(--red)';err.textContent='Ingresa tu email primero.';}
+    return;
+  }
+  var res=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin});
+  if(res.error){
+    if(err){err.style.display='block';err.style.color='var(--red)';err.textContent='Error al enviar. Verifica tu email.';}
+  } else {
+    if(err){err.style.display='block';err.style.color='var(--grn)';err.textContent='Email de recuperación enviado. Revisa tu bandeja.';}
+  }
+}
+
 async function doLogin(){
   var e=document.getElementById("le").value.trim();
   var p=document.getElementById("lp").value;
