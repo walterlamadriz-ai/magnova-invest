@@ -286,6 +286,11 @@ body {
 /* ── LAYOUT ── */
 .app { display:flex; min-height:100vh; }
 
+/* Pre-auth: hide sidebar + topbar so welcome screen is full-width */
+body.no-auth .sb { display: none !important; }
+body.no-auth #topbar { display: none !important; }
+body.no-auth .main { margin-left: 0 !important; margin-top: 0 !important; }
+
 /* ── SIDEBAR ── */
 .sb {
   width: var(--sb-w);
@@ -2557,7 +2562,12 @@ function closeModal(){
 // ── SIDEBAR ────────────────────────────────────────────────────
 function renderSidebar(){
   var u=S.user;
-  if(!u){document.getElementById("sb").innerHTML="";return;}
+  if(!u){
+    document.getElementById("sb").innerHTML="";
+    document.body.classList.add("no-auth");
+    return;
+  }
+  document.body.classList.remove("no-auth");
   var plan=u?PLANS[u.plan]:null;
 
   // Logo
