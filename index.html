@@ -1608,9 +1608,9 @@ const PAGES=[
   {id:"dash",     icon:"◈", label:"Dashboard"},
   {id:"port",     icon:"💼",label:"Portfolio"},
   {id:"watch",    icon:"👁",label:"Watchlist"},
-  {id:"sig",      icon:"⚡",label:"Señales"},
-  {id:"pb",       icon:"📐",label:"Position Builder"},
-  {id:"comp",     icon:"⚖️",label:"Comparador"},
+  {id:"sig",      icon:"⚡",label:"Señales",hidden:true},
+  {id:"pb",       icon:"📐",label:"Position Builder",hidden:true},
+  {id:"comp",     icon:"⚖️",label:"Comparador",hidden:true},
   {id:"sentiment",icon:"🌡",label:"Sentimiento",hidden:true},
   {id:"radar",    icon:"📡",label:"Radar Financiero"},
   {id:"decision", icon:"🎯",label:"Motor de Análisis",pro:true},
@@ -1618,8 +1618,8 @@ const PAGES=[
   {id:"risk",     icon:"🛡️",label:"Riesgo",pro:true},
   {id:"back",     icon:"📉",label:"Simulación Histórica",pro:true},
   {id:"screener", icon:"🔍",label:"Buscador",pro:true},
-  {id:"divs",     icon:"💰",label:"Dividendos"},
-  {id:"rebal",    icon:"🔀",label:"Rebalanceo"},
+  {id:"divs",     icon:"💰",label:"Dividendos",hidden:true},
+  {id:"rebal",    icon:"🔀",label:"Rebalanceo",hidden:true},
   {id:"alert",    icon:"🔔",label:"Alertas"},
   {id:"bitacora", icon:"📋",label:"Bitácora"},
   {id:"settings", icon:"⚙️",label:"Configuración"}
@@ -2553,6 +2553,9 @@ function toggleMobileMenu(force){
   if(bd) bd.style.display=open?'block':'none';
 }
 function setPage(p){
+  if(p==='sig'||p==='comp')p='screener';
+  if(p==='rebal'||p==='divs')p='port';
+  if(p==='pb')p='risk';
   S.page=p;
   closeDrawer();
   toggleMobileMenu(false);
