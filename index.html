@@ -4668,13 +4668,19 @@ function renderNews(){
   }).join('');
 
   // ── Indices widget ────────────────────────────────────────────
-  var IDXS=[
-    {n:"S&P 500",v:"7,230.12",c:"+0.29%",up:true},
-    {n:"NASDAQ",v:"25,114",c:"+0.89%",up:true},
-    {n:"DOW",v:"49,499",c:"-0.31%",up:false},
-    {n:"S&P VIX",v:"16.99",c:"+0.59%",up:true},
-    {n:"Dollar Idx",v:"97.99",c:"-0.02%",up:false}
-  ];
+  // Build IDXS from MARKET_BAR live data when available, fallback to static
+  var IDX_MAP={'^GSPC':{n:'S&P 500',v:'5,308.13',c:'+0.23%',up:true},'^IXIC':{n:'NASDAQ',v:'18,900',c:'+0.89%',up:true},'^DJI':{n:'Dow 30',v:'42,100',c:'-0.19%',up:false},'^VIX':{n:'VIX',v:'16.8',c:'-4.2%',up:false},'BTC-USD':{n:'Bitcoin USD',v:'$97,400',c:'+2.1%',up:true}};
+  if(MARKET_BAR.length){
+    MARKET_BAR.forEach(function(b){
+      if(!IDX_MAP[b.sym]) return;
+      var isUp=(b.changePct||0)>=0;
+      var sign=isUp?'+':'';
+      var pct=sign+(b.changePct||0).toFixed(2)+'%';
+      var val=b.sym==='BTC-USD'?'$'+(b.price/1000).toFixed(1)+'K':b.sym==='^VIX'?b.price.toFixed(2):b.price>=10000?b.price.toLocaleString('en-US',{maximumFractionDigits:0}):b.price.toFixed(2);
+      IDX_MAP[b.sym]={n:IDX_MAP[b.sym].n,v:val,c:pct,up:isUp};
+    });
+  }
+  var IDXS=[IDX_MAP['^GSPC'],IDX_MAP['^IXIC'],IDX_MAP['^DJI'],IDX_MAP['^VIX'],IDX_MAP['BTC-USD']];
   var idxRows=IDXS.map(function(x){
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">'+
       '<span style="font-size:11px;font-weight:600;color:var(--bright);font-family:\'JetBrains Mono\',monospace">'+x.n+'</span>'+
