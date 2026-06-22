@@ -4475,6 +4475,23 @@ function renderNews(){
     return '<button onclick="setNewsF(\''+c+'\')" style="padding:5px 14px;border-radius:6px;border:1px solid '+(on?'rgba(245,158,11,.4)':'var(--border)')+';background:'+(on?'rgba(245,158,11,.1)':'transparent')+';color:'+(on?'var(--amber)':'var(--text3)')+';font-size:10px;font-weight:'+(on?'700':'500')+';cursor:pointer;font-family:\'JetBrains Mono\',monospace;transition:.15s">'+c+'</button>';
   }).join(' ');
 
+  // ── Helpers para thumbnails ──────────────────────────────────
+  function newsDomain(link){
+    try{return new URL(link).hostname.replace('www.','');}catch(e){return '';}
+  }
+  function newsFavicon(link,sz){
+    var d=newsDomain(link);
+    return d?'https://www.google.com/s2/favicons?domain='+d+'&sz='+(sz||32):'';
+  }
+  var catEmoji={Fed:'🏦',Earnings:'📊',Geopolítica:'🌍',Macro:'📈','IA & Tech':'🤖'};
+  var catGrad={
+    Fed:'linear-gradient(160deg,#1a0a2e,#2d1060)',
+    Earnings:'linear-gradient(160deg,#0a2218,#0f3320)',
+    Geopolítica:'linear-gradient(160deg,#2a0a0a,#3d1010)',
+    Macro:'linear-gradient(160deg,#0a1628,#0e2244)',
+    'IA & Tech':'linear-gradient(160deg,#1a1200,#2d2000)'
+  };
+
   // ── Tag + impact styles ───────────────────────────────────────
   var tagSt={
     Fed:'background:rgba(139,92,246,.12);color:#a78bfa',
@@ -4523,15 +4540,29 @@ function renderNews(){
     var pts=sparkPts[featItem.impact]||sparkPts.neutral;
     featCard=
       '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;display:flex;min-height:145px;cursor:pointer;transition:.15s" '+(featItem.link?'onclick="window.open(\''+featItem.link+'\',\'_blank\',\'noopener\')"':'')+' onmouseover="this.style.borderColor=\'rgba(247,147,26,.3)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
-      // Thumbnail with spark chart
-      '<div style="width:195px;flex-shrink:0;background:linear-gradient(160deg,#091428,#0e2244);position:relative;overflow:hidden">'+
-      '<svg viewBox="0 0 195 145" style="position:absolute;bottom:0;left:0;width:100%;height:75px">'+
-      '<polyline points="0,70 40,55 80,42 120,48 160,28 195,15" fill="none" stroke="'+sparkCol+'" stroke-width="2" stroke-linecap="round"/>'+
-      '<polygon points="0,70 40,55 80,42 120,48 160,28 195,15 195,75 0,75" fill="'+sparkCol.replace(')',', .07)').replace('var(--','rgba(').replace('green','38,166,91').replace('red','232,65,66').replace('orange','247,147,26').replace('a78bfa','167,139,250')+'"/>'+
-      '</svg>'+
-      (featItem.breaking?'<div style="position:absolute;top:10px;left:10px;background:var(--red);color:#fff;font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;letter-spacing:1px;font-family:\'JetBrains Mono\',monospace">BREAKING</div>':'')+
-      '<div style="position:absolute;top:'+(featItem.breaking?'30':'10')+'px;left:10px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.35);font-family:\'JetBrains Mono\',monospace">'+featItem.cat+'</div>'+
-      '</div>'+
+      // Thumbnail: gradiente por categoría + emoji + favicon fuente
+      (function(){
+        var grad=catGrad[featItem.cat]||'linear-gradient(160deg,#091428,#0e2244)';
+        var emoji=catEmoji[featItem.cat]||'📰';
+        var fav=newsFavicon(featItem.link||'',64);
+        var fadeFill=impCol[featItem.impact]==='var(--grn)'?'rgba(61,190,122,.12)':impCol[featItem.impact]==='var(--red)'?'rgba(248,113,113,.12)':'rgba(245,158,11,.12)';
+        return '<div style="width:195px;flex-shrink:0;background:'+grad+';position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center">'+
+          // emoji grande centrado
+          '<div style="font-size:52px;line-height:1;opacity:.85;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))">'+emoji+'</div>'+
+          // favicon fuente
+          (fav?'<div style="position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:5px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;overflow:hidden">'+
+            '<img src="'+fav+'" style="width:18px;height:18px;object-fit:contain" onerror="this.parentElement.style.display=\'none\'">'+
+          '</div>':'')+
+          // breaking badge
+          (featItem.breaking?'<div style="position:absolute;top:10px;left:10px;background:var(--red);color:#fff;font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;letter-spacing:1px;font-family:\'JetBrains Mono\',monospace">BREAKING</div>':'')+
+          // fade inferior con color de impacto
+          '<div style="position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to top,'+fadeFill+',transparent)"></div>'+
+          // sparkline al fondo
+          '<svg viewBox="0 0 195 50" style="position:absolute;bottom:0;left:0;width:100%;height:50px;opacity:.5">'+
+            '<polyline points="'+pts+'" fill="none" stroke="'+sparkCol+'" stroke-width="1.5" stroke-linecap="round"/>'+
+          '</svg>'+
+        '</div>';
+      })()+
       // Body
       '<div style="padding:14px 16px;flex:1;display:flex;flex-direction:column;justify-content:space-between">'+
       '<div>'+
