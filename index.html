@@ -3722,7 +3722,7 @@ function renderPaywall(){
     back:{t:"Simulación Histórica",f:["SMA Crossover sobre datos reales","Equity curve + Win Rate","Analizador de Bitácora"]}
   };
   var m=map[S.page]||{t:"Módulo Pro",f:[]};
-  var feats=m.f.map(function(f){return '<div style="display:flex;gap:8px;font-size:12px;font-family:\'Share Tech Mono\';color:var(--text);padding:4px 0"><span style="color:var(--grn);font-weight:700">✓</span>'+f+'</div>';}).join("");
+  var feats=m.f.map(function(f){return '<div style="display:flex;gap:8px;font-size:12px;font-family:\'JetBrains Mono\';color:var(--text);padding:4px 0"><span style="color:var(--grn);font-weight:700">✓</span>'+f+'</div>';}).join("");
   document.getElementById("main").innerHTML=
     '<div class="pw"><div style="font-size:36px;margin-bottom:12px">🔒</div>'+
     '<h2 style="margin-bottom:6px">'+m.t+'</h2>'+
@@ -3934,7 +3934,7 @@ function renderPort(){
       return '<button onclick="setUserCurrency(\''+c+'\')" style="padding:3px 7px;border:none;border-radius:4px;font-size:9px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;background:'+(active?'var(--orange-bg)':'transparent')+';color:'+(active?'var(--amber)':'var(--text3)')+';font-weight:'+(active?'700':'400')+'">'+c+'</button>';
     }).join('')+
     '</div>'+
-    (plan.maxT>=999||S.portfolio.length<plan.maxT?'<button class="btn" onclick="openModal(\'addpos\')">+ Agregar</button>':'<span style="font-size:10px;color:var(--amber);font-family:\'Share Tech Mono\'">Límite Free ('+plan.maxT+')</span>')+
+    (plan.maxT>=999||S.portfolio.length<plan.maxT?'<button class="btn" onclick="openModal(\'addpos\')">+ Agregar</button>':'<span style="font-size:10px;color:var(--amber);font-family:\'JetBrains Mono\'">Límite Free ('+plan.maxT+')</span>')+
     '</div></div>'+
     (S.portfolio.length>0&&S.portfolio[0]&&S.portfolio[0].id<=10&&!localStorage.getItem('mv_demo_dismissed')?
       '<div style="background:rgba(234,179,8,.12);border:1px solid rgba(234,179,8,.35);border-radius:8px;padding:10px 14px;margin:0 20px 14px;display:flex;align-items:center;gap:10px;font-size:11px;font-family:\'JetBrains Mono\',monospace">'+
@@ -4227,7 +4227,7 @@ function renderWatch(){
       '</tr>';
   }).join("");
 
-  var emptyMsg=wl.length===0?'<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px;font-family:\'Share Tech Mono\'">Lista vacía — agrega tickers arriba</td></tr>':'';
+  var emptyMsg=wl.length===0?'<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px;font-family:\'JetBrains Mono\'">Lista vacía — agrega tickers arriba</td></tr>':'';
 
   var deHeader=isPro
     ?'<th onclick="setPage(\'decision\')" style="cursor:pointer;color:var(--blue)" title="Ver Motor de Análisis completo">🎯 DE Score</th>'
@@ -4686,8 +4686,8 @@ function renderNews(){
       }).join('');
       return '<div class="grid2" style="gap:14px;margin-top:12px">'+
         '<div class="cb" style="text-align:center">'+
-        '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:\'Share Tech Mono\';margin-bottom:8px">Score Global</div>'+
-        '<div style="font-size:52px;font-weight:800;color:'+sentColor+';line-height:1;font-family:\'Share Tech Mono\'">'+d.value+'</div>'+
+        '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:\'JetBrains Mono\';margin-bottom:8px">Score Global</div>'+
+        '<div style="font-size:52px;font-weight:800;color:'+sentColor+';line-height:1;font-family:\'JetBrains Mono\'">'+d.value+'</div>'+
         '<div style="font-size:14px;font-weight:700;color:'+sentColor+';margin-top:6px">'+d.label+'</div>'+
         '<div style="font-size:10px;color:var(--text3);margin-top:4px;font-family:\'JetBrains Mono\',monospace">'+buy+' Alcistas · '+(t-buy-sell)+' Neutros · '+sell+' Bajistas</div>'+
         '</div>'+
@@ -4732,9 +4732,9 @@ function renderInd(){
     var lp=getLivePrice(t);
     var col=s.sig==="BUY"?"var(--grn)":s.sig==="SELL"?"var(--red)":"var(--amber)";
     return '<div onclick="openDrawer(\''+t+'\','+lp+')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;transition:.15s;text-align:center;min-width:76px;box-shadow:var(--shadow)" onmouseover="this.style.borderColor=\'var(--aborder)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
-      '<div style="font-size:12px;font-weight:700;color:var(--bright);font-family:\'Share Tech Mono\'">'+t+'</div>'+
-      '<div style="font-size:10px;color:'+col+';font-family:\'Share Tech Mono\';margin-top:1px">'+sigLabel(s.sig)+'</div>'+
-      '<div style="font-size:10px;color:var(--text3);font-family:\'Share Tech Mono\'">$'+fmtD(lp)+'</div></div>';
+      '<div style="font-size:12px;font-weight:700;color:var(--bright);font-family:\'JetBrains Mono\'">'+t+'</div>'+
+      '<div style="font-size:10px;color:'+col+';font-family:\'JetBrains Mono\';margin-top:1px">'+sigLabel(s.sig)+'</div>'+
+      '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\'">$'+fmtD(lp)+'</div></div>';
   }).join("");
 
   document.getElementById("main").innerHTML=
@@ -4784,16 +4784,16 @@ function renderRisk(){
     var pnl=sc.prob*sc.ret*cap;
     return '<div class="scrow">'+
       '<div style="width:110px;font-size:12px;font-weight:600;color:var(--bright)">'+sc.name+'</div>'+
-      '<div style="width:30px;font-size:10px;color:var(--text3);font-family:\'Share Tech Mono\'">'+(sc.prob*100).toFixed(0)+'%</div>'+
+      '<div style="width:30px;font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\'">'+(sc.prob*100).toFixed(0)+'%</div>'+
       '<div style="flex:1;height:5px;background:var(--card3);border-radius:2px"><div style="height:100%;width:'+Math.min(Math.abs(sc.ret)*200,100)+'%;background:'+(sc.ret>=0?"var(--grn)":"var(--red)")+';border-radius:2px"></div></div>'+
-      '<div style="width:70px;text-align:right;font-size:11px;font-weight:600;font-family:\'Share Tech Mono\';color:'+(pnl>=0?"var(--grn)":"var(--red)")+'">'+(pnl>=0?"+":"")+D(pnl)+'</div></div>';
+      '<div style="width:70px;text-align:right;font-size:11px;font-weight:600;font-family:\'JetBrains Mono\';color:'+(pnl>=0?"var(--grn)":"var(--red)")+'">'+(pnl>=0?"+":"")+D(pnl)+'</div></div>';
   }).join("");
 
   var rrRows=rows.slice(0,6).map(function(r){
     return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+
-      '<div style="width:44px;font-size:11px;font-family:\'Share Tech Mono\';font-weight:600;color:var(--bright)">'+r.t+'</div>'+
+      '<div style="width:44px;font-size:11px;font-family:\'JetBrains Mono\';font-weight:600;color:var(--bright)">'+r.t+'</div>'+
       '<div style="flex:1;height:4px;background:var(--card3);border-radius:2px"><div style="height:100%;width:'+Math.min(r.rr/4*100,100)+'%;background:'+(r.rr>=2?"var(--grn)":r.rr>=1.5?"var(--amber)":"var(--red)")+';border-radius:2px"></div></div>'+
-      '<div style="width:32px;font-size:11px;font-family:\'Share Tech Mono\';font-weight:600;color:'+(r.rr>=2?"var(--grn)":"var(--amber)")+'">'+fmtD(r.rr)+'x</div></div>';
+      '<div style="width:32px;font-size:11px;font-family:\'JetBrains Mono\';font-weight:600;color:'+(r.rr>=2?"var(--grn)":"var(--amber)")+'">'+fmtD(r.rr)+'x</div></div>';
   }).join("");
 
   // ── Asignación sugerida por perfil de riesgo
@@ -4856,9 +4856,9 @@ function renderRisk(){
     '<div class="tw"><table><thead><tr><th>Activo</th><th>Precio</th><th title="Referencia de baja histórica –8%">Ref. –8%</th><th>Risk $</th><th>Tamaño</th><th>Unidades</th><th>R/R</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>'+
     '<div class="grid2">'+
     '<div class="cb"><div class="st"><div class="stbar"></div>Escenarios</div>'+scRows+
-    '<div style="display:flex;justify-content:space-between;padding-top:9px;border-top:1px solid var(--border);margin-top:2px"><span style="font-weight:700;color:var(--bright);font-size:12px">Valor Esperado</span><span style="font-weight:700;color:'+(ev>=0?"var(--grn)":"var(--red)")+';font-family:\'Share Tech Mono\'">'+(ev>=0?"+":"")+D(ev)+'</span></div></div>'+
+    '<div style="display:flex;justify-content:space-between;padding-top:9px;border-top:1px solid var(--border);margin-top:2px"><span style="font-weight:700;color:var(--bright);font-size:12px">Valor Esperado</span><span style="font-weight:700;color:'+(ev>=0?"var(--grn)":"var(--red)")+';font-family:\'JetBrains Mono\'">'+(ev>=0?"+":"")+D(ev)+'</span></div></div>'+
     '<div class="cb"><div class="st"><div class="stbar"></div>R/R por Activo</div>'+rrRows+
-    '<div style="font-size:10px;color:var(--text3);font-family:\'Share Tech Mono\';margin-top:4px">Mínimo recomendado: 2.0x</div></div>'+
+    '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\';margin-top:4px">Mínimo recomendado: 2.0x</div></div>'+
     '</div>';
 }
 
@@ -5136,8 +5136,8 @@ function renderAlert(){
   var monoCards=mono.map(function(m){
     return '<div class="mc"><div style="font-size:18px;margin-bottom:6px">'+m.icon+'</div>'+
       '<div style="font-size:12px;font-weight:600;color:var(--bright);margin-bottom:2px">'+m.t+'</div>'+
-      '<div style="font-size:10px;color:var(--text3);font-family:\'Share Tech Mono\';line-height:1.4">'+m.d+'</div>'+
-      '<div style="font-size:11px;font-weight:700;color:var(--amber);margin-top:7px;font-family:\'Share Tech Mono\'">'+m.p+'</div></div>';
+      '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\';line-height:1.4">'+m.d+'</div>'+
+      '<div style="font-size:11px;font-weight:700;color:var(--amber);margin-top:7px;font-family:\'JetBrains Mono\'">'+m.p+'</div></div>';
   }).join("");
 
   document.getElementById("main").innerHTML=
@@ -5149,7 +5149,7 @@ function renderAlert(){
     'Si cierras la app, las alertas no se dispararán. Para alertas permanentes, configura niveles de precio en tu broker.'+
     '</div></div>'+
     freeBanner("Plan Free: "+plan.maxA+"/"+allA.length+" alertas.")+
-    (triggered.length>0?'<div style="background:var(--rbg);border:1px solid var(--rborder);border-radius:8px;padding:12px;margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px;font-family:\'Share Tech Mono\'">⚠️ '+triggered.length+' ALERTA(S) ACTIVADA(S)</div>'+triggered.map(function(r){return '<div style="font-size:11px;color:var(--text);font-family:\'Share Tech Mono\';margin-top:3px">'+r.asset+' · '+(r.type==="Max"?"↑":"↓")+' $'+fmtD(r.trigger)+' · Actual: $'+fmtD(r.cur)+' · '+r.action+'</div>';}).join("")+'</div>':'')+
+    (triggered.length>0?'<div style="background:var(--rbg);border:1px solid var(--rborder);border-radius:8px;padding:12px;margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px;font-family:\'JetBrains Mono\'">⚠️ '+triggered.length+' ALERTA(S) ACTIVADA(S)</div>'+triggered.map(function(r){return '<div style="font-size:11px;color:var(--text);font-family:\'JetBrains Mono\';margin-top:3px">'+r.asset+' · '+(r.type==="Max"?"↑":"↓")+' $'+fmtD(r.trigger)+' · Actual: $'+fmtD(r.cur)+' · '+r.action+'</div>';}).join("")+'</div>':'')+
     '<div class="krow">'+
     kpi("🔴 Activas",triggered.length,"","r")+
     kpi("🟢 En Rango",rows.filter(function(r){return !r.triggered;}).length,"","g")+
@@ -5640,13 +5640,13 @@ function renderDrawerHead(ticker,price){
     '<div style="flex:1">'+
     '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">'+
     '<div style="font-size:19px;font-weight:700;color:var(--bright)">'+ticker+'</div>'+
-    '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--card2);border:1px solid var(--border);color:var(--text3);font-family:\'Share Tech Mono\'">'+(lq?lq.exchange:"NASDAQ")+'</span>'+
-    '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:'+(isLN?"var(--gbg)":"var(--ambg)")+';border:1px solid '+(isLN?"var(--gborder)":"var(--amborder)")+';color:'+(isLN?"var(--grn)":"var(--amber)")+';font-family:\'Share Tech Mono\'">'+(isLN?"LIVE":"Estimado")+'</span>'+
+    '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:var(--card2);border:1px solid var(--border);color:var(--text3);font-family:\'JetBrains Mono\'">'+(lq?lq.exchange:"NASDAQ")+'</span>'+
+    '<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:'+(isLN?"var(--gbg)":"var(--ambg)")+';border:1px solid '+(isLN?"var(--gborder)":"var(--amborder)")+';color:'+(isLN?"var(--grn)":"var(--amber)")+';font-family:\'JetBrains Mono\'">'+(isLN?"LIVE":"Estimado")+'</span>'+
     marketStatusBadge()+
     '</div>'+
     '<div style="display:flex;align-items:baseline;gap:8px;margin-top:5px;flex-wrap:wrap">'+
-    '<div style="font-size:21px;font-weight:700;font-family:\'Share Tech Mono\';color:var(--bright)">$'+dp.toFixed(2)+'</div>'+
-    (dc!==null?'<span style="font-size:13px;font-weight:600;font-family:\'Share Tech Mono\';color:'+(cp?"var(--grn)":"var(--red)")+'">'+(cp?"+":"")+da.toFixed(2)+' ('+(cp?"+":"")+((dc||0)*100).toFixed(2)+'%)</span>':'<span style="font-size:10px;color:var(--text3)">cargando...</span>')+
+    '<div style="font-size:21px;font-weight:700;font-family:\'JetBrains Mono\';color:var(--bright)">$'+dp.toFixed(2)+'</div>'+
+    (dc!==null?'<span style="font-size:13px;font-weight:600;font-family:\'JetBrains Mono\';color:'+(cp?"var(--grn)":"var(--red)")+'">'+(cp?"+":"")+da.toFixed(2)+' ('+(cp?"+":"")+((dc||0)*100).toFixed(2)+'%)</span>':'<span style="font-size:10px;color:var(--text3)">cargando...</span>')+
     '</div>'+
     (function(){
       var parts=[];
@@ -5654,7 +5654,7 @@ function renderDrawerHead(ticker,price){
       if(lq&&lq.volume) parts.push('Vol: '+fmtV(lq.volume));
       var earn=dEarnCache[ticker];
       if(earn&&earn.nextDate) parts.push('<span style="color:var(--amber)">📅 Earnings: '+earn.nextDate+(earn.nextEpsEst!=null?' · EPS est. $'+fmtD(earn.nextEpsEst):'')+'</span>');
-      return parts.length?'<div style="font-size:10px;color:var(--text3);font-family:\'Share Tech Mono\';margin-top:3px">'+parts.join(' · ')+'</div>':'';
+      return parts.length?'<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\';margin-top:3px">'+parts.join(' · ')+'</div>':'';
     })()+
     '</div>'+
     '<button style="background:transparent;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px;border-radius:5px;line-height:1" onclick="closeDrawer()">✕</button>';
@@ -5776,7 +5776,7 @@ function renderDrawerBody(){
     content=
       '<div class="cha">'+
       '<div class="chl">Velas · SMA20 · SMA50 · SMA200 · BB'+
-      '<div style="display:flex;gap:8px;flex-wrap:wrap"><span style="font-size:9px;color:var(--grn);font-family:\'Share Tech Mono\'">▲ Alcista</span><span style="font-size:9px;color:var(--red);font-family:\'Share Tech Mono\'">▼ Bajista</span><span style="font-size:9px;color:var(--amber);font-family:\'Share Tech Mono\'">╌ SMA20</span><span style="font-size:9px;color:var(--blue);font-family:\'Share Tech Mono\'">╌ SMA50</span>'+(sma200&&sma200.some(function(v){return v!=null;})?'<span style="font-size:9px;color:#a855f7;font-family:\'Share Tech Mono\'">╌ SMA200</span>':'')+'</div>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><span style="font-size:9px;color:var(--grn);font-family:\'JetBrains Mono\'">▲ Alcista</span><span style="font-size:9px;color:var(--red);font-family:\'JetBrains Mono\'">▼ Bajista</span><span style="font-size:9px;color:var(--amber);font-family:\'JetBrains Mono\'">╌ SMA20</span><span style="font-size:9px;color:var(--blue);font-family:\'JetBrains Mono\'">╌ SMA50</span>'+(sma200&&sma200.some(function(v){return v!=null;})?'<span style="font-size:9px;color:#a855f7;font-family:\'JetBrains Mono\'">╌ SMA200</span>':'')+'</div>'+
       '</div>'+
       '<div id="lw-chart-main" style="height:210px;width:100%;border-radius:6px;overflow:hidden"></div>'+
       '</div>'+
@@ -5786,7 +5786,7 @@ function renderDrawerBody(){
       '<div class="cha">'+
       '<div class="chl">RSI (14) — Sobrecomprado >70 · Sobrevendido <30<span style="color:'+(rsiVal>70?"var(--red)":rsiVal<30?"var(--grn)":"var(--amber)")+'">RSI: '+rsiVal.toFixed(1)+'</span></div>'+
       svgBars(chartData.map(function(d,i){return {rsi:rsiArr[i+1]||50};}),["rsi"],400,90,50,[{val:70,color:'rgba(239,68,68,0.45)'},{val:30,color:'rgba(34,197,94,0.45)'}])+
-      '<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);font-family:\'Share Tech Mono\';margin-top:5px">'+
+      '<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\';margin-top:5px">'+
       '<span style="color:var(--grn)">← Sobrevendido (BUY)</span><span>Neutral</span><span style="color:var(--red)">Sobrecomprado (SELL) →</span></div>'+
       '</div>'+
       '<div class="ind2">'+
@@ -5916,9 +5916,9 @@ function renderDrawerBody(){
         '<div style="color:var(--text3);font-size:11px;font-family:\'JetBrains Mono\',monospace">Cargando rango...</div>')+
       '</div>'+
       '<div class="cha" style="margin-top:0">'+
-      '<div style="font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-family:\'Share Tech Mono\';margin-bottom:8px">Niveles clave</div>'+
+      '<div style="font-size:9px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;font-family:\'JetBrains Mono\';margin-bottom:8px">Niveles clave</div>'+
       [["Ref. Baja (-8%)","$"+(cur*.92).toFixed(2),"var(--red)"],["SMA 20","$"+s20Last.toFixed(2),"var(--amber)"],["Precio actual","$"+cur.toFixed(2),"var(--bright)"],["Ref. Alta (+12%)","$"+(cur*1.12).toFixed(2),"var(--grn)"]].map(function(r){
-        return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;font-family:\'Share Tech Mono\'"><span style="color:var(--text3)">'+r[0]+'</span><span style="color:'+r[2]+';font-weight:500">'+r[1]+'</span></div>';
+        return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px;font-family:\'JetBrains Mono\'"><span style="color:var(--text3)">'+r[0]+'</span><span style="color:'+r[2]+';font-weight:500">'+r[1]+'</span></div>';
       }).join("")+
       '</div>'+
       '<div style="margin-top:12px;padding:8px 10px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">'+
@@ -5932,7 +5932,7 @@ function renderDrawerBody(){
     '<div class="sigb '+sigClass+'">'+
     '<div style="font-size:24px">'+sigIcon+'</div>'+
     '<div><div style="font-size:13px;font-weight:700;color:'+sigColor+'">'+sigLabel(sig.sig)+' — Score '+sig.sc+'/100</div>'+
-    '<div style="font-size:11px;font-family:\'Share Tech Mono\';color:var(--text);margin-top:2px">'+
+    '<div style="font-size:11px;font-family:\'JetBrains Mono\';color:var(--text);margin-top:2px">'+
     (sig.sig==="BUY"?"Tendencia histórica alcista · Indicador alto":sig.sig==="SELL"?"Presión vendedora histórica · Indicador bajo":"Sin tendencia clara · Indicador medio")+
     '</div></div></div>'+
     '<div>'+tabBtns+'</div>'+
