@@ -1345,6 +1345,18 @@ tr:last-child td { border-bottom: none; }
   background: currentColor;
 }
 
+/* ── FOS DESIGN SYSTEM ── */
+.fos-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.fos-section-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.fos-section-label::before { content: ''; display: block; width: 3px; height: 12px; background: var(--grn); border-radius: 2px; }
+.fos-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.fos-table th { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.fos-table td { padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text); vertical-align: middle; }
+.fos-table tr:last-child td { border-bottom: none; }
+.fos-table tr:hover td { background: var(--card2); }
+.fos-module-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; gap: 12px; }
+.fos-module-title { font-size: 16px; font-weight: 700; color: var(--bright); margin: 0; line-height: 1.2; }
+.fos-module-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); margin-top: 2px; }
 /* ── DASHBOARD v2 ── */
 .dash-wrap { padding: 20px 24px; }
 .dash-kpi { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
@@ -3924,8 +3936,8 @@ function renderPort(){
 
   var isProPort=planOf().locked.indexOf('decision')<0;
   document.getElementById("main").innerHTML=
-    '<div class="ph">'+
-    '<div><h1>Portfolio Manager</h1><p class="sub-txt">// Editable · <span id="saved">✓ Guardado</span></p></div>'+
+    '<div class="fos-module-header">'+
+    '<div><div class="fos-module-title">Portfolio Manager</div><div class="fos-module-sub">Editable · <span id="saved">✓ Guardado</span></div></div>'+
     '<div class="ph-right">'+liveBadge()+(isProPort?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">🎯 Motor →</button>':'')+
     // Currency selector
     '<div style="display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:2px">'+
@@ -3952,7 +3964,7 @@ function renderPort(){
     '<span style="font-size:12px;color:var(--text3)">Capital:</span>'+
     '<input class="inp" type="number" value="'+S.capital+'" onchange="updateCap(this.value)" style="width:130px"/>'+
     '</div>'+
-    '<div class="tw"><table id="tbl-port"><thead><tr>'+
+    '<div class="tw"><table id="tbl-port" class="fos-table"><thead><tr>'+
     '<th>Activo</th><th>Tipo</th><th>Unidades</th><th>Entrada</th>'+sortTh("port","price","Precio")+sortTh("port","chg","Δ Hoy")+sortTh("port","val","Valor")+sortTh("port","pnl","P&L")+sortTh("port","ret","Retorno")+'<th>Peso</th><th>Acc.</th>'+
     '</tr></thead><tbody>'+rows+
     '<tr class="tot"><td colspan="5">TOTAL</td><td>$'+fmt(totM)+'</td>'+
@@ -4234,14 +4246,14 @@ function renderWatch(){
     :'<th style="color:var(--text3)">🎯 DE</th>';
 
   document.getElementById("main").innerHTML=
-    '<div class="ph"><div><h1>Watchlist</h1><p class="sub-txt">// '+wl.length+' tickers · <span id="saved">✓ Guardado</span></p></div><div class="ph-right">'+liveBadge()+(isPro?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">🎯 Motor →</button>':'')+' <button class="btn" style="border-color:var(--border);color:var(--text3);font-size:10px" onclick="resetWatch()">↺ Default</button></div></div>'+
+    '<div class="fos-module-header"><div><div class="fos-module-title">Watchlist</div><div class="fos-module-sub">'+wl.length+' tickers · <span id="saved">✓ Guardado</span></div></div><div class="ph-right">'+liveBadge()+(isPro?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">🎯 Motor →</button>':'')+' <button class="btn" style="border-color:var(--border);color:var(--text3);font-size:10px" onclick="resetWatch()">↺ Default</button></div></div>'+
     '<div class="cb" style="margin-bottom:14px">'+
     '<div class="st"><div class="stbar"></div>Agregar ticker</div>'+
     '<div style="line-height:2;margin-bottom:10px">'+quickTags+'</div>'+
     '<div style="display:flex;gap:8px">'+
     '<input class="inp" id="wc" placeholder="Custom..." maxlength="6" style="width:120px;text-transform:uppercase" onkeydown="if(event.key===\'Enter\')addCustomW()"/>'+
     '<button class="btn" onclick="addCustomW()">+ Agregar</button></div></div>'+
-    '<div class="tw"><table id="tbl-watch"><thead><tr><th>Ticker</th><th>Señal</th>'+sortTh("watch","sc","Score")+'<th>Fuerza</th>'+sortTh("watch","price","Precio")+sortTh("watch","chg","Δ Hoy")+'<th title="Distancia al stop –8%">Stop –8%</th>'+deHeader+'<th>Quitar</th></tr></thead>'+
+    '<div class="tw"><table id="tbl-watch" class="fos-table"><thead><tr><th>Ticker</th><th>Señal</th>'+sortTh("watch","sc","Score")+'<th>Fuerza</th>'+sortTh("watch","price","Precio")+sortTh("watch","chg","Δ Hoy")+'<th title="Distancia al stop –8%">Stop –8%</th>'+deHeader+'<th>Quitar</th></tr></thead>'+
     '<tbody>'+emptyMsg+wRows+'</tbody></table></div>'+
     '';
 
@@ -4738,13 +4750,13 @@ function renderInd(){
   }).join("");
 
   document.getElementById("main").innerHTML=
-    '<div class="ph"><div><h1>Indicadores Técnicos</h1><p class="sub-txt">// Click en cualquier ticker para análisis completo</p></div></div>'+
+    '<div class="fos-module-header"><div><div class="fos-module-title">Indicadores Técnicos</div><div class="fos-module-sub">Click en cualquier ticker para análisis completo en el gráfico</div></div></div>'+
     '<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">'+
     '<input class="inp" id="ind-in" placeholder="Buscar ticker..." style="width:150px;text-transform:uppercase" maxlength="6" onkeydown="if(event.key===\'Enter\'){var t=this.value.toUpperCase().trim();if(t){var s=ALL_SIG.find(function(x){return x.t===t;});openDrawer(t,s&&s.p?s.p:100);}}"/>'+
     '<button class="btn" onclick="var t=document.getElementById(\'ind-in\').value.toUpperCase().trim();if(t){var s=ALL_SIG.find(function(x){return x.t===t;});openDrawer(t,s&&s.p?s.p:100);}">📊 Analizar</button>'+
     '</div>'+
     '<div class="st"><div class="stbar"></div>Portfolio — Click para análisis completo</div>'+
-    '<div class="tw"><table><thead><tr><th>Ticker</th><th>Señal</th><th>Score</th><th>RSI</th><th>Precio Real</th><th>SMA20</th><th>Ver</th></tr></thead><tbody>'+portRows+'</tbody></table></div>'+
+    '<div class="tw"><table class="fos-table"><thead><tr><th>Ticker</th><th>Señal</th><th>Score</th><th>RSI</th><th>Precio Real</th><th>SMA20</th><th>Ver</th></tr></thead><tbody>'+portRows+'</tbody></table></div>'+
     '<div style="margin-top:8px;font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;padding:8px 0">'+
     '💡 Indicadores reales disponibles en el gráfico — click en cualquier ticker para abrir el análisis completo.'+
     '</div>'+
@@ -4842,7 +4854,7 @@ function renderRisk(){
   }
 
   document.getElementById("main").innerHTML=
-    '<div class="ph"><div><h1>Gestión de Riesgo</h1><p class="sub-txt">// Position Sizing · Niveles de Referencia · Escenarios · '+S.portfolio.length+' posiciones</p></div></div>'+
+    '<div class="fos-module-header"><div><div class="fos-module-title">Gestión de Riesgo</div><div class="fos-module-sub">Position Sizing · Niveles de Referencia · Escenarios · '+S.portfolio.length+' posiciones</div></div></div>'+
     allocHtml+
     '<div class="krow">'+
     kpi("Capital",D(cap),"","g")+
@@ -4853,7 +4865,7 @@ function renderRisk(){
     '</div>'+
     '<div class="st"><div class="stbar"></div>Position Sizing</div>'+
     (rows.length>8?'<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-bottom:6px">Mostrando 8 de '+rows.length+' posiciones</div>':'')+
-    '<div class="tw"><table><thead><tr><th>Activo</th><th>Precio</th><th title="Referencia de baja histórica –8%">Ref. –8%</th><th>Risk $</th><th>Tamaño</th><th>Unidades</th><th>R/R</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>'+
+    '<div class="tw"><table class="fos-table"><thead><tr><th>Activo</th><th>Precio</th><th title="Referencia de baja histórica –8%">Ref. –8%</th><th>Risk $</th><th>Tamaño</th><th>Unidades</th><th>R/R</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>'+
     '<div class="grid2">'+
     '<div class="cb"><div class="st"><div class="stbar"></div>Escenarios</div>'+scRows+
     '<div style="display:flex;justify-content:space-between;padding-top:9px;border-top:1px solid var(--border);margin-top:2px"><span style="font-weight:700;color:var(--bright);font-size:12px">Valor Esperado</span><span style="font-weight:700;color:'+(ev>=0?"var(--grn)":"var(--red)")+';font-family:\'JetBrains Mono\'">'+(ev>=0?"+":"")+D(ev)+'</span></div></div>'+
