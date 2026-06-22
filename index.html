@@ -3015,6 +3015,23 @@ async function deGetEarnings(ticker){
   }catch(e){return null;}
 }
 
+function deSetTab(tab){
+  var gPane=document.getElementById('de-pane-global');
+  var aPane=document.getElementById('de-pane-assets');
+  var gBtn=document.getElementById('de-tab-global');
+  var aBtn=document.getElementById('de-tab-assets');
+  if(!gPane||!aPane) return;
+  if(tab==='global'){
+    gPane.style.display='';aPane.style.display='none';
+    gBtn.style.background='var(--grn)';gBtn.style.color='#0a1208';
+    aBtn.style.background='transparent';aBtn.style.color='var(--text3)';
+  } else {
+    gPane.style.display='none';aPane.style.display='';
+    aBtn.style.background='var(--grn)';aBtn.style.color='#0a1208';
+    gBtn.style.background='transparent';gBtn.style.color='var(--text3)';
+  }
+}
+
 function renderDecisionEngine(){
   var main=document.getElementById('main');
   main.innerHTML='<div class="ph"><div><h1>🎯 Motor de Análisis</h1><p class="sub-txt">// Régimen SPY · Volatilidad VIX · Scoring técnico 0–100 por activo</p></div>'+
@@ -3239,7 +3256,14 @@ function renderDecisionEngine(){
         eItems+'</div>';
     }
 
-    document.getElementById('de-body').innerHTML=regimeCard+vixCard+earningsCard+actionGuide+scoresHtml+disclaimer;
+    var tabNav=
+      '<div style="display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:3px;margin-bottom:16px;width:fit-content">'+
+      '<button id="de-tab-global" onclick="deSetTab(\'global\')" style="padding:5px 16px;border:none;border-radius:6px;font-size:11px;font-family:\'JetBrains Mono\',monospace;font-weight:600;cursor:pointer;background:var(--grn);color:#0a1208;transition:.15s">🌐 Mercado Global</button>'+
+      '<button id="de-tab-assets" onclick="deSetTab(\'assets\')" style="padding:5px 16px;border:none;border-radius:6px;font-size:11px;font-family:\'JetBrains Mono\',monospace;font-weight:600;cursor:pointer;background:transparent;color:var(--text3);transition:.15s">📊 Por Activo</button>'+
+      '</div>';
+    var globalPane='<div id="de-pane-global">'+regimeCard+vixCard+earningsCard+'</div>';
+    var assetsPane='<div id="de-pane-assets" style="display:none">'+actionGuide+scoresHtml+disclaimer+'</div>';
+    document.getElementById('de-body').innerHTML=tabNav+globalPane+assetsPane;
     drawSPYMiniChart(regime);
   }).catch(function(err){
     document.getElementById('de-body').innerHTML='<div style="color:var(--red);font-size:12px;padding:20px">Error al cargar datos: '+err.message+'</div>';
@@ -3846,6 +3870,29 @@ function renderDash(){
     '<div class="tw"><table class="fos-table"><thead><tr><th>Ticker</th><th>Acc.</th><th>Entrada</th><th>Actual</th><th>P&amp;L $</th><th>P&amp;L %</th></tr></thead>'+
     '<tbody>'+portRows+'</tbody></table></div></div>';
 
+  // ── Mini-news widget ──
+  var miniNews=(function(){
+    var news=getNewsData().slice(0,3);
+    var impColor={'critical':'var(--red)','bullish':'var(--grn)','bearish':'var(--red)','neutral':'var(--amber)'};
+    var items=news.map(function(n){
+      var c=impColor[n.impact]||'var(--text3)';
+      var ago=n.hoursAgo?n.hoursAgo+'h ago':'—';
+      return '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start;cursor:pointer" onclick="setPage(\'news\')">'+
+        '<div style="width:4px;height:4px;border-radius:50%;background:'+c+';margin-top:6px;flex-shrink:0"></div>'+
+        '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:11px;font-weight:600;color:var(--bright);line-height:1.4;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+n.title+'</div>'+
+        '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+n.cat+' · '+ago+'</div>'+
+        '</div></div>';
+    }).join('');
+    return '<div class="fos-card" style="margin-top:14px">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 0">'+
+      '<div class="fos-section-label">Noticias</div>'+
+      '<button onclick="setPage(\'news\')" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Ver todo →</button>'+
+      '</div>'+
+      '<div style="padding:0 16px 6px">'+items+'</div>'+
+      '</div>';
+  })();
+
   // ── Right: Market context + Quick actions ──
   var rightCol=
     '<div id="de-regime-banner" class="dash-ctx-card" style="margin-bottom:14px"><div class="dash-ctx-loading">// Cargando contexto…</div></div>'+
@@ -3854,7 +3901,7 @@ function renderDash(){
     '<div class="dash-actions">'+
     '<div class="dash-action-btn" onclick="setPage(\'decision\')"><div style="font-size:16px;margin-bottom:4px">🎯</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Motor</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Régimen SPY</div></div>'+
     '<div class="dash-action-btn" onclick="setPage(\'ind\')"><div style="font-size:16px;margin-bottom:4px">📈</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Indicadores</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">RSI · MACD · BB</div></div>'+
-    '<div class="dash-action-btn" onclick="setPage(\'pb\')"><div style="font-size:16px;margin-bottom:4px">📐</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Position Builder</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">R/R · Sizing</div></div>'+
+    '<div class="dash-action-btn" onclick="setPage(\'risk\')"><div style="font-size:16px;margin-bottom:4px">🛡️</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Riesgo</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Sizing · R/R</div></div>'+
     '<div class="dash-action-btn" onclick="setPage(\'screener\')"><div style="font-size:16px;margin-bottom:4px">🔍</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Screener</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Filtrar activos</div></div>'+
     '</div></div>';
 
@@ -3862,7 +3909,7 @@ function renderDash(){
     '<div class="dash-wrap">'+
     '<div class="dash-kpi">'+kpiCards+'</div>'+
     '<div class="dash-body">'+
-    '<div>'+sigCard+portCard+'</div>'+
+    '<div>'+sigCard+portCard+miniNews+'</div>'+
     '<div>'+rightCol+'</div>'+
     '</div></div>';
 
