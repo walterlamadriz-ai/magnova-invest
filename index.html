@@ -4656,15 +4656,9 @@ function renderNews(){
     moverRows+
     '</div>'+
 
-    // Economic Calendar
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">'+
-    '<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--card2);display:flex;justify-content:space-between;align-items:center">'+
-    '<span style="font-size:11px;font-weight:700;color:var(--white)">Calendario Económico</span>'+
-    '<span style="font-size:9px;color:var(--orange);cursor:pointer;font-family:\'JetBrains Mono\',monospace">Completo →</span>'+
-    '</div>'+
-    '<div style="padding:6px 14px 3px;font-size:9px;font-weight:700;color:var(--orange);font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)">Semana 5–9 Mayo 2026</div>'+
-    calItems+
-    '</div>'+
+    // Economic Calendar — oculto hasta integración con API real de calendario
+    // (CAL_DATA contiene fechas de Mayo 2026 — stale)
+    ''+ /* placeholder para futura integración */
 
     '</div>'+ // end right col
     '</div>'+ // end grid
@@ -4718,15 +4712,15 @@ function renderInd(){
   var portRows=S.portfolio.map(function(h){
     var s=ALL_SIG.find(function(x){return x.t===h.t;})||{sig:"HOLD",sc:60};
     var lp=getLivePrice(h.t);
-    var rsiE=Math.floor(45+Math.random()*30);
-    var sma20E=(lp*0.975).toFixed(2);
+    var rsiE='—';
+    var sma20E='—';
     return '<tr class="trow" onclick="openDrawer(\''+h.t+'\','+lp+')">'+
       '<td style="font-weight:600;color:var(--bright)">'+h.t+' <span style="font-size:9px;color:var(--text3)">↗</span></td>'+
       '<td>'+badge(s.sig)+'</td>'+
-      '<td style="font-weight:700;color:'+(s.sc>=72?"var(--green)":s.sc>=52?"var(--orange)":"var(--red)")+'">'+s.sc+'</td>'+
-      '<td style="color:'+(rsiE>70?"var(--red)":rsiE<30?"var(--green)":"var(--orange)")+'">'+rsiE+'</td>'+
+      '<td style="font-weight:700;color:'+(s.sc>=72?"var(--grn)":s.sc>=52?"var(--amber)":"var(--red)")+'">'+s.sc+'</td>'+
+      '<td style="color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+rsiE+'</td>'+
       '<td style="font-weight:600">$'+fmtD(lp)+'</td>'+
-      '<td style="color:'+(lp>parseFloat(sma20E)?"var(--green)":"var(--red)")+'">$'+sma20E+' '+(lp>parseFloat(sma20E)?"↑":"↓")+'</td>'+
+      '<td style="color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+sma20E+'</td>'+
       '<td><button class="btn" style="padding:2px 8px;font-size:10px">📊 Ver</button></td></tr>';
   }).join("");
 
@@ -4747,7 +4741,10 @@ function renderInd(){
     '<button class="btn" onclick="var t=document.getElementById(\'ind-in\').value.toUpperCase().trim();if(t){var s=ALL_SIG.find(function(x){return x.t===t;});openDrawer(t,s&&s.p?s.p:100);}">📊 Analizar</button>'+
     '</div>'+
     '<div class="st"><div class="stbar"></div>Portfolio — Click para análisis completo</div>'+
-    '<div class="tw"><table><thead><tr><th>Ticker</th><th>Señal</th><th>Score</th><th>RSI est.</th><th>Precio Real</th><th>SMA20 est.</th><th>Ver</th></tr></thead><tbody>'+portRows+'</tbody></table></div>'+
+    '<div class="tw"><table><thead><tr><th>Ticker</th><th>Señal</th><th>Score</th><th>RSI</th><th>Precio Real</th><th>SMA20</th><th>Ver</th></tr></thead><tbody>'+portRows+'</tbody></table></div>'+
+    '<div style="margin-top:8px;font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;padding:8px 0">'+
+    '💡 Indicadores reales disponibles en el gráfico — click en cualquier ticker para abrir el análisis completo.'+
+    '</div>'+
     '<div class="st"><div class="stbar"></div>Todos los tickers — Click para abrir análisis</div>'+
     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">'+tickerCards+'</div>';
 }
@@ -5019,7 +5016,7 @@ function btRenderSim(){
     kpi("Retorno Total",pct(res.totalReturn),D(res.finalCapital-res.capital),res.totalReturn>=0?"g":"r")+
     kpi("Profit Factor",res.profitFactor!=null?res.profitFactor.toFixed(2):"—","ratio","a")+
     kpi("Max Drawdown",pct(res.maxDrawdownPct),"caída máx","r")+
-    kpi("vs SPY","—","benchmark próximamente","b")+
+    kpi("Max Drawdown %",pct(res.maxDrawdownPct),"caída máx acumulada","r")+
     '</div>'+
     '<div class="cb" style="margin-bottom:14px">'+
     '<div class="st"><div class="stbar"></div>Equity Curve — '+BT.ticker+' · SMA'+BT.fast+'/'+BT.slow+'</div>'+
@@ -5142,6 +5139,12 @@ function renderAlert(){
 
   document.getElementById("main").innerHTML=
     '<div class="ph"><div><h1>Alertas & Monetización</h1><p class="sub-txt">// Monitor de precios + modelo SaaS</p></div></div>'+
+    '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start">'+
+    '<span style="font-size:16px;flex-shrink:0">⚠️</span>'+
+    '<div style="font-size:11px;color:var(--amber);line-height:1.6">'+
+    '<b>Las alertas solo se activan mientras esta pestaña está abierta en tu navegador.</b> '+
+    'Si cierras la app, las alertas no se dispararán. Para alertas permanentes, configura niveles de precio en tu broker.'+
+    '</div></div>'+
     freeBanner("Plan Free: "+plan.maxA+"/"+allA.length+" alertas.")+
     (triggered.length>0?'<div style="background:var(--rbg);border:1px solid var(--rborder);border-radius:8px;padding:12px;margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px;font-family:\'Share Tech Mono\'">⚠️ '+triggered.length+' ALERTA(S) ACTIVADA(S)</div>'+triggered.map(function(r){return '<div style="font-size:11px;color:var(--text);font-family:\'Share Tech Mono\';margin-top:3px">'+r.asset+' · '+(r.type==="Max"?"↑":"↓")+' $'+fmtD(r.trigger)+' · Actual: $'+fmtD(r.cur)+' · '+r.action+'</div>';}).join("")+'</div>':'')+
     '<div class="krow">'+
