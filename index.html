@@ -4465,15 +4465,15 @@ function renderNews(){
   ];
   var quickLinks=QUICK.map(function(q){
     var on=f===q.cat;
-    return '<span onclick="setNewsF(\''+q.cat+'\')" style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;border:1px solid '+(on?'var(--orange-bd)':'var(--border)')+';background:'+(on?'var(--orange-bg)':'var(--card2)')+';color:'+(on?'var(--amber)':'var(--text2)')+';font-size:10px;font-weight:600;cursor:pointer;font-family:\'JetBrains Mono\',monospace;transition:.15s;white-space:nowrap" onmouseover="this.style.borderColor=\'var(--orange-bd)\';this.style.color=\'var(--amber)\'" onmouseout="this.style.borderColor=\''+(on?'var(--orange-bd)':'var(--border)')+'\';this.style.color=\''+(on?'var(--amber)':'var(--text2)')+'\'">'+q.label+'</span>';
+    return '<span onclick="setNewsF(\''+q.cat+'\')" style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;border:1px solid '+(on?'rgba(245,158,11,.4)':'var(--border)')+';background:'+(on?'rgba(245,158,11,.1)':'var(--card2)')+';color:'+(on?'var(--amber)':'var(--text2)')+';font-size:10px;font-weight:600;cursor:pointer;font-family:\'JetBrains Mono\',monospace;transition:.15s;white-space:nowrap">'+q.label+'</span>';
   }).join('');
 
   // ── Category filter tabs ──────────────────────────────────────
   var CATS=["Todo","Fed","Earnings","Geopolítica","Macro","IA & Tech"];
   var catTabs=CATS.map(function(c){
     var on=f===c;
-    return '<button onclick="setNewsF(\''+c+'\')" style="padding:5px 13px;border-radius:6px;border:1px solid '+(on?'var(--orange-bd)':'var(--border)')+';background:'+(on?'var(--orange-bg)':'transparent')+';color:'+(on?'var(--amber)':'var(--text3)')+';font-size:10px;font-weight:'+(on?'700':'500')+';cursor:pointer;font-family:\'JetBrains Mono\',monospace;transition:.15s;margin-right:4px">'+c+'</button>';
-  }).join('');
+    return '<button onclick="setNewsF(\''+c+'\')" style="padding:5px 14px;border-radius:6px;border:1px solid '+(on?'rgba(245,158,11,.4)':'var(--border)')+';background:'+(on?'rgba(245,158,11,.1)':'transparent')+';color:'+(on?'var(--amber)':'var(--text3)')+';font-size:10px;font-weight:'+(on?'700':'500')+';cursor:pointer;font-family:\'JetBrains Mono\',monospace;transition:.15s">'+c+'</button>';
+  }).join(' ');
 
   // ── Tag + impact styles ───────────────────────────────────────
   var tagSt={
@@ -4653,85 +4653,81 @@ function renderNews(){
   // ── Assemble ──────────────────────────────────────────────────
   document.getElementById("main").innerHTML=
 
-    // Header
-    '<div class="ph">'+
-    '<div><h1>Contexto de Mercado</h1>'+
-    '<p class="sub-txt">// '+new Date().toLocaleDateString("es-CL",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+'</p></div>'+
-    '<div style="display:flex;align-items:center;gap:8px">'+
-    '<div class="live"><div class="livd"></div>LIVE</div>'+
-    '</div></div>'+
+    // ── HEADER ──
+    '<div class="fos-module-header" style="padding:16px 20px 0">'+
+      '<div>'+
+        '<div class="fos-module-title">Contexto de Mercado</div>'+
+        '<div class="fos-module-sub">'+new Date().toLocaleDateString("es-CL",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+'</div>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+        (usingStaticNews&&_newsFetched?'<span style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);padding:3px 8px;border-radius:5px">⚠ Modo ejemplo</span>':'')+
+        '<div class="live"><div class="livd"></div>LIVE</div>'+
+      '</div>'+
+    '</div>'+
+
+    // ── TICKER STRIP ──
+    '<div style="margin:12px 20px 0;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;overflow-x:auto;scrollbar-width:none">'+tickerStrip+'</div>'+
 
     offlineNotice+
-
-    // Ticker strip
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;overflow:hidden;display:flex;overflow-x:auto;scrollbar-width:none;margin-bottom:12px">'+tickerStrip+'</div>'+
-
-    // Breaking banner
     breakingBanner+
 
-    // Static news notice
-    (usingStaticNews&&_newsFetched?
-      '<div style="background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.25);border-radius:8px;padding:9px 14px;margin-bottom:12px;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--amber);display:flex;align-items:center;gap:8px">'+
-      '<span>⚠️</span><span>Mostrando noticias de ejemplo — no se pudo conectar con el feed en vivo. Los datos son referenciales.</span></div>':'')+
-
-    // Quick Links
-    '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;overflow-x:auto;scrollbar-width:none">'+
-    '<span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:\'JetBrains Mono\',monospace;flex-shrink:0">Trending:</span>'+
-    quickLinks+
+    // ── FILTROS INTEGRADOS ──
+    '<div style="padding:12px 20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border)">'+
+      '<div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">'+
+        '<span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:\'JetBrains Mono\',monospace;margin-right:4px">Categoría:</span>'+
+        catTabs+
+      '</div>'+
+      '<div style="height:16px;width:1px;background:var(--border);flex-shrink:0;display:none" class="cat-divider"></div>'+
+      '<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-left:auto">'+
+        '<span style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:\'JetBrains Mono\',monospace">Tendencias:</span>'+
+        quickLinks+
+      '</div>'+
     '</div>'+
 
-    // Category tabs
-    '<div style="margin-bottom:14px;display:flex;flex-wrap:wrap;gap:0">'+catTabs+'</div>'+
-
-    // 2-col layout
-    '<div style="display:grid;grid-template-columns:1fr 270px;gap:18px;align-items:start">'+
+    // ── BODY 2-COL ──
+    '<div style="display:grid;grid-template-columns:1fr 268px;gap:0;align-items:start">'+
 
     // LEFT: news feed
-    '<div>'+
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--amber)">'+
-    '<div style="font-size:15px;font-weight:700;color:var(--bright);letter-spacing:-.2px">'+
-    (f==='Todo'?'Últimas Noticias':'Noticias · '+f)+
-    '</div>'+
-    '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+filtered.length+' artículos</span>'+
+    '<div style="padding:16px 20px;border-right:1px solid var(--border)">'+
+
+    // feed header
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'+
+      '<div class="fos-section-label">'+
+        (f==='Todo'?'Últimas Noticias':'Noticias — '+f)+
+      '</div>'+
+      '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;background:var(--card2);border:1px solid var(--border);border-radius:4px;padding:2px 7px">'+filtered.length+' artículos</span>'+
     '</div>'+
     featCard+
-    '<div>'+newsListHtml+'</div>'+
+    '<div style="margin-top:10px">'+newsListHtml+'</div>'+
     '</div>'+
 
     // RIGHT: sidebar
-    '<div style="display:flex;flex-direction:column;gap:12px">'+
+    '<div style="padding:16px 16px;display:flex;flex-direction:column;gap:14px">'+
 
-    // Indices widget
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">'+
-    '<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--card2)">'+
-    '<span style="font-size:11px;font-weight:700;color:var(--bright)">Índices Principales</span>'+
-    '</div>'+
-    '<div style="padding:4px 14px 8px">'+idxRows+'</div>'+
+    // Índices
+    '<div class="fos-card" style="overflow:hidden">'+
+      '<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--card2);display:flex;align-items:center;justify-content:space-between">'+
+        '<span class="fos-section-label" style="margin:0">Índices</span>'+
+        '<span style="font-size:8px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">~15min delay</span>'+
+      '</div>'+
+      '<div style="padding:4px 14px 8px">'+idxRows+'</div>'+
     '</div>'+
 
     // Market Movers
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">'+
-    '<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--card2);display:flex;justify-content:space-between;align-items:center">'+
-    '<span style="font-size:11px;font-weight:700;color:var(--bright)">Market Movers</span>'+
-    '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+lastUpdStr+'</span>'+
-    '</div>'+
-    '<div style="display:flex;gap:0;border-bottom:1px solid var(--border)">'+
-    '<span style="font-size:9px;font-weight:700;padding:6px 12px;cursor:pointer;color:var(--amber);border-bottom:2px solid var(--amber);font-family:\'JetBrains Mono\',monospace">Activos</span>'+
-    '<span style="font-size:9px;font-weight:600;padding:6px 12px;cursor:pointer;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Ganadores</span>'+
-    '<span style="font-size:9px;font-weight:600;padding:6px 12px;cursor:pointer;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Perdedores</span>'+
-    '</div>'+
-    moverRows+
+    '<div class="fos-card" style="overflow:hidden">'+
+      '<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--card2);display:flex;justify-content:space-between;align-items:center">'+
+        '<span class="fos-section-label" style="margin:0">Market Movers</span>'+
+        '<span style="font-size:8px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+lastUpdStr+'</span>'+
+      '</div>'+
+      moverRows+
     '</div>'+
 
-    // Economic Calendar — oculto hasta integración con API real de calendario
-    // (CAL_DATA contiene fechas de Mayo 2026 — stale)
-    ''+ /* placeholder para futura integración */
-
-    '</div>'+ // end right col
+    '</div>'+ // end right
     '</div>'+ // end grid
 
-    // Sentiment section unified below news
-    '<div class="st" style="margin-top:24px"><div class="stbar"></div>Índice de Sentimiento del Mercado</div>'+
+    // ── SENTIMIENTO ──
+    '<div style="padding:20px;border-top:1px solid var(--border)">'+
+    '<div class="fos-section-label" style="margin-bottom:14px">Índice de Sentimiento del Mercado</div>'+
     (function(){
       var d=calcSentiment();
       var buy=ALL_SIG.filter(function(s){return s.sig==='BUY';}).length;
@@ -4748,17 +4744,26 @@ function renderNews(){
           '<span style="font-size:11px;font-weight:700;color:'+(cw>=60?'var(--grn)':cw>=40?'var(--amber)':'var(--red)')+';font-family:\'JetBrains Mono\',monospace;width:30px;text-align:right">'+cw+'</span>'+
           '</div></div>';
       }).join('');
-      return '<div class="grid2" style="gap:14px;margin-top:12px">'+
-        '<div class="cb" style="text-align:center">'+
-        '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:\'JetBrains Mono\';margin-bottom:8px">Score Global</div>'+
-        '<div style="font-size:52px;font-weight:800;color:'+sentColor+';line-height:1;font-family:\'JetBrains Mono\'">'+d.value+'</div>'+
-        '<div style="font-size:14px;font-weight:700;color:'+sentColor+';margin-top:6px">'+d.label+'</div>'+
-        '<div style="font-size:10px;color:var(--text3);margin-top:4px;font-family:\'JetBrains Mono\',monospace">'+buy+' Alcistas · '+(t-buy-sell)+' Neutros · '+sell+' Bajistas</div>'+
+      return '<div style="display:grid;grid-template-columns:200px 1fr;gap:14px">'+
+        '<div class="fos-card" style="padding:20px 16px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center">'+
+          '<div style="width:88px;height:88px;border-radius:50%;background:conic-gradient('+sentColor+' '+d.value+'%, rgba(255,255,255,.06) '+d.value+'%);display:flex;align-items:center;justify-content:center;margin-bottom:12px">'+
+            '<div style="width:68px;height:68px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center">'+
+              '<span style="font-size:26px;font-weight:800;color:'+sentColor+';font-family:\'JetBrains Mono\',monospace">'+d.value+'</span>'+
+            '</div>'+
+          '</div>'+
+          '<div style="font-size:14px;font-weight:700;color:'+sentColor+';margin-bottom:6px">'+d.label+'</div>'+
+          '<div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.8">'+
+            '<span style="color:var(--grn)">▲ '+buy+'</span> · '+(t-buy-sell)+' · <span style="color:var(--red)">▼ '+sell+'</span>'+
+          '</div>'+
         '</div>'+
-        '<div class="cb"><div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:10px">Componentes</div>'+compRows+'</div>'+
+        '<div class="fos-card" style="padding:16px">'+
+          '<div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;font-family:\'JetBrains Mono\',monospace;margin-bottom:12px">Componentes del Score</div>'+
+          compRows+
+        '</div>'+
         '</div>';
     })()+
-    newsUpdStr;
+    newsUpdStr+
+    '</div>'; // cierre wrapper sentimiento
 }
 function setNewsF(f){S.newsFilter=f;renderMain();}
 
