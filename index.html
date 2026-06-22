@@ -4392,6 +4392,30 @@ function setSigF(f){S.sigFilter=f;renderMain();}
 var LIVE_NEWS=[];
 var _newsFetched=false;
 
+// ── MARKET BAR ─────────────────────────────────────────────────
+var MARKET_BAR=[];
+var _barFetched=false;
+
+async function fetchMarketBar(){
+  if(!_USE_EDGE) return;
+  try{
+    var cached=JSON.parse(localStorage.getItem('mv_market_bar')||'null');
+    if(cached&&(Date.now()-cached.ts)<3*60*1000&&cached.items&&cached.items.length){
+      MARKET_BAR=cached.items;_barFetched=true;return;
+    }
+  }catch(e){/* silent */}
+  try{
+    var res=await fetchWithTimeout('/api/marketbar',7000);
+    if(!res.ok) throw new Error('marketbar '+res.status);
+    var data=await res.json();
+    if(data.items&&data.items.length){
+      MARKET_BAR=data.items;
+      localStorage.setItem('mv_market_bar',JSON.stringify({ts:Date.now(),items:MARKET_BAR}));
+    }
+  }catch(e){console.warn('fetchMarketBar failed',e);}
+  _barFetched=true;
+}
+
 async function fetchLiveNews(){
   if(!_USE_EDGE) return;
   // Check localStorage cache first (15 min TTL)
@@ -4447,9 +4471,14 @@ function loadNewsCache(){
 }
 
 function renderNews(){
-  // Fetch live news on first visit, re-render when done
+  // Fetch live news + market bar on first visit, re-render when done
   if(!_newsFetched){
-    fetchLiveNews().then(function(){renderMain();}).catch(function(){});
+    Promise.all([
+      fetchLiveNews(),
+      fetchMarketBar()
+    ]).then(function(){renderMain();}).catch(function(){});
+  } else if(!_barFetched){
+    fetchMarketBar().then(function(){renderMain();}).catch(function(){});
   }
   var activeNews=getNewsData();
   var usingStaticNews=!LIVE_NEWS.length;
@@ -4540,25 +4569,36 @@ function renderNews(){
     var pts=sparkPts[featItem.impact]||sparkPts.neutral;
     featCard=
       '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;display:flex;min-height:145px;cursor:pointer;transition:.15s" '+(featItem.link?'onclick="window.open(\''+featItem.link+'\',\'_blank\',\'noopener\')"':'')+' onmouseover="this.style.borderColor=\'rgba(247,147,26,.3)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
-      // Thumbnail: gradiente por categoría + emoji + favicon fuente
+      // Thumbnail: imagen real si existe, sino gradiente+emoji+favicon
       (function(){
         var grad=catGrad[featItem.cat]||'linear-gradient(160deg,#091428,#0e2244)';
         var emoji=catEmoji[featItem.cat]||'📰';
-        var fav=newsFavicon(featItem.link||'',64);
-        var fadeFill=impCol[featItem.impact]==='var(--grn)'?'rgba(61,190,122,.12)':impCol[featItem.impact]==='var(--red)'?'rgba(248,113,113,.12)':'rgba(245,158,11,.12)';
+        var fav=newsFavicon(featItem.link||'',32);
+        var realImg=featItem.image||null;
+        if(realImg){
+          // Real photo from Yahoo Finance — show it with dark overlay for text legibility
+          return '<div style="width:195px;flex-shrink:0;position:relative;overflow:hidden;background:#0a0e17">'+
+            '<img src="'+realImg+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block" '+
+              'onerror="this.parentElement.style.background=\''+grad+'\';this.remove()">'+
+            // gradient overlay so breaking badge is readable
+            '<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.35) 0%,transparent 50%,rgba(0,0,0,.25) 100%)"></div>'+
+            (featItem.breaking?'<div style="position:absolute;top:10px;left:10px;background:var(--red);color:#fff;font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;letter-spacing:1px;font-family:\'JetBrains Mono\',monospace">BREAKING</div>':'')+
+            // source favicon chip bottom-right
+            (fav?'<div style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.55);border-radius:5px;padding:3px 6px;display:flex;align-items:center;gap:5px">'+
+              '<img src="'+fav+'" style="width:12px;height:12px;object-fit:contain" onerror="this.parentElement.style.display=\'none\'">'+
+              '<span style="font-size:8px;color:rgba(255,255,255,.7);font-family:\'JetBrains Mono\',monospace">'+featItem.source+'</span>'+
+            '</div>':'')+
+          '</div>';
+        }
+        // Fallback: category gradient + emoji + favicon
         return '<div style="width:195px;flex-shrink:0;background:'+grad+';position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center">'+
-          // emoji grande centrado
           '<div style="font-size:52px;line-height:1;opacity:.85;filter:drop-shadow(0 2px 8px rgba(0,0,0,.4))">'+emoji+'</div>'+
-          // favicon fuente
           (fav?'<div style="position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:5px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;overflow:hidden">'+
             '<img src="'+fav+'" style="width:18px;height:18px;object-fit:contain" onerror="this.parentElement.style.display=\'none\'">'+
           '</div>':'')+
-          // breaking badge
           (featItem.breaking?'<div style="position:absolute;top:10px;left:10px;background:var(--red);color:#fff;font-size:8px;font-weight:700;padding:2px 7px;border-radius:3px;letter-spacing:1px;font-family:\'JetBrains Mono\',monospace">BREAKING</div>':'')+
-          // fade inferior con color de impacto
-          '<div style="position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(to top,'+fadeFill+',transparent)"></div>'+
-          // sparkline al fondo
-          '<svg viewBox="0 0 195 50" style="position:absolute;bottom:0;left:0;width:100%;height:50px;opacity:.5">'+
+          '<div style="position:absolute;bottom:0;left:0;right:0;height:50px;background:linear-gradient(to top,rgba(0,0,0,.3),transparent)"></div>'+
+          '<svg viewBox="0 0 195 50" style="position:absolute;bottom:0;left:0;width:100%;height:50px;opacity:.4">'+
             '<polyline points="'+pts+'" fill="none" stroke="'+sparkCol+'" stroke-width="1.5" stroke-linecap="round"/>'+
           '</svg>'+
         '</div>';
@@ -4663,21 +4703,57 @@ function renderNews(){
   saveNewsCache({savedAt:Date.now()});
   var newsUpdStr=cached&&cached.savedAt?'<div style="margin-top:8px;padding:6px 10px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">NewsAPI · actualizado '+timeAgo(cached.savedAt)+'</div>':'';
 
-  // ── Ticker strip ──────────────────────────────────────────────
-  var STRIPS=[
-    {sym:"S&P 500",val:"7,230",chg:"+0.29%",up:true},{sym:"NASDAQ",val:"25,114",chg:"+0.89%",up:true},
-    {sym:"DOW",val:"49,499",chg:"-0.31%",up:false},{sym:"VIX",val:"16.8",chg:"-4.2%",up:false},
-    {sym:"Oil WTI",val:"$94.2",chg:"-1.8%",up:false},{sym:"Gold",val:"$2,840",chg:"+0.4%",up:true},
-    {sym:"10Y UST",val:"4.41%",chg:"+0.06",up:false},{sym:"BTC",val:"$97.4K",chg:"+2.1%",up:true},
-    {sym:"USD/CLP",val:"$958",chg:"+0.3%",up:false}
+  // ── Ticker strip (Yahoo Finance style) ───────────────────────
+  var STATIC_STRIPS=[
+    {sym:'^GSPC',label:'S&P 500',   price:5308, change:12.4,  changePct:0.23, spark:null},
+    {sym:'^DJI', label:'Dow 30',    price:42100,change:-80,   changePct:-0.19,spark:null},
+    {sym:'^IXIC',label:'Nasdaq',    price:18900,change:168,   changePct:0.89, spark:null},
+    {sym:'^RUT', label:'Russell 2K',price:2080, change:-5,    changePct:-0.24,spark:null},
+    {sym:'CL=F', label:'Crude Oil', price:72.4, change:-1.2,  changePct:-1.63,spark:null},
+    {sym:'GC=F', label:'Gold',      price:2340, change:8.4,   changePct:0.36, spark:null},
+    {sym:'SI=F', label:'Silver',    price:29.8, change:0.3,   changePct:1.02, spark:null},
+    {sym:'EURUSD=X',label:'EUR/USD',price:1.085,change:0.001, changePct:0.09, spark:null},
+    {sym:'^TNX', label:'10-Yr Bond',price:4.41, change:0.06,  changePct:1.38, spark:null},
+    {sym:'BTC-USD',label:'Bitcoin', price:97400,change:2100,  changePct:2.20, spark:null},
+    {sym:'^VIX', label:'VIX',       price:16.8, change:-0.7,  changePct:-4.00,spark:null},
   ];
-  // Patch live prices into strip
-  if(LIVE["AAPL"]) STRIPS[0].val=LIVE["AAPL"].price.toFixed(0);
-  var tickerStrip=STRIPS.map(function(t){
-    return '<div style="display:flex;flex-direction:column;align-items:center;min-width:72px;flex-shrink:0;padding:8px 10px;border-right:1px solid var(--border);cursor:pointer;transition:.15s" onmouseover="this.style.background=\'rgba(255,255,255,.03)\'" onmouseout="this.style.background=\'transparent\'">'+
-      '<div style="font-size:9px;font-weight:600;color:var(--text2);font-family:\'JetBrains Mono\',monospace;letter-spacing:.5px">'+t.sym+'</div>'+
-      '<div style="font-size:12px;font-weight:700;color:var(--bright);font-family:\'JetBrains Mono\',monospace;margin-top:1px">'+t.val+'</div>'+
-      '<div style="font-size:9px;font-weight:600;font-family:\'JetBrains Mono\',monospace;color:'+(t.up?'var(--grn)':'var(--red)')+'">'+t.chg+'</div>'+
+  var barItems=MARKET_BAR.length?MARKET_BAR:STATIC_STRIPS;
+
+  function fmtBarPrice(sym,price){
+    if(!price&&price!==0) return '—';
+    if(sym==='EURUSD=X') return price.toFixed(4);
+    if(sym==='^TNX') return price.toFixed(2)+'%';
+    if(sym==='BTC-USD') return '$'+Number(price).toLocaleString('en-US',{maximumFractionDigits:0});
+    if(price>=10000) return Number(price).toLocaleString('en-US',{maximumFractionDigits:0});
+    if(price>=100)   return Number(price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    return Number(price).toFixed(2);
+  }
+  function fmtBarChg(change,changePct){
+    if(change===null||change===undefined) return '';
+    var sign=change>=0?'+':'';
+    return sign+(typeof changePct==='number'?changePct.toFixed(2)+'%':change.toFixed(2));
+  }
+  function miniSpark(pts,isUp){
+    if(!pts||pts.length<2) return '';
+    var w=64,h=20;
+    var valid=pts.filter(function(v){return v!==null&&v!==undefined;});
+    if(valid.length<2) return '';
+    var mn=Math.min.apply(null,valid),mx=Math.max.apply(null,valid),rng=mx-mn||1;
+    var coords=valid.map(function(v,i){
+      return (i/(valid.length-1)*w).toFixed(1)+','+(h-(v-mn)/rng*h).toFixed(1);
+    }).join(' ');
+    var col=isUp?'#00b050':'#ff4444';
+    return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" style="display:block;margin-top:2px"><polyline points="'+coords+'" fill="none" stroke="'+col+'" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+  }
+
+  var tickerStrip=barItems.map(function(t){
+    var isUp=(t.change||t.changePct||0)>=0;
+    var col=isUp?'#00b050':'#ff4444';
+    return '<div style="display:flex;flex-direction:column;justify-content:center;min-width:80px;flex-shrink:0;padding:6px 12px;border-right:1px solid rgba(255,255,255,0.07);cursor:pointer;transition:.15s;height:100%" onmouseover="this.style.background=\'rgba(255,255,255,.06)\'" onmouseout="this.style.background=\'transparent\'">'+
+      '<div style="font-size:10px;font-weight:400;color:#a0a6b0;font-family:\'JetBrains Mono\',monospace;letter-spacing:.3px;white-space:nowrap">'+t.label+'</div>'+
+      '<div style="font-size:13px;font-weight:600;color:#ffffff;font-family:\'JetBrains Mono\',monospace;margin-top:1px;white-space:nowrap">'+fmtBarPrice(t.sym,t.price)+'</div>'+
+      '<div style="font-size:10px;font-weight:500;font-family:\'JetBrains Mono\',monospace;color:'+col+';white-space:nowrap">'+fmtBarChg(t.change,t.changePct)+'</div>'+
+      miniSpark(t.spark,isUp)+
       '</div>';
   }).join('');
 
@@ -4696,8 +4772,11 @@ function renderNews(){
       '</div>'+
     '</div>'+
 
-    // ── TICKER STRIP ──
-    '<div style="margin:12px 20px 0;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;overflow-x:auto;scrollbar-width:none">'+tickerStrip+'</div>'+
+    // ── TICKER STRIP (Yahoo Finance style) ──
+    '<div style="margin:10px 20px 0;background:#0f1629;border:1px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;height:68px;display:flex;align-items:stretch;overflow-x:auto;scrollbar-width:none;position:relative">'+
+      tickerStrip+
+      (!MARKET_BAR.length&&_barFetched?'<div style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:9px;color:rgba(255,255,255,.25);font-family:\'JetBrains Mono\',monospace">datos estáticos</div>':'')+
+    '</div>'+
 
     offlineNotice+
     breakingBanner+
