@@ -4628,7 +4628,7 @@ function renderNews(){
     var radius=isFirst?'8px 8px 0 0':isLast?'0 0 8px 8px':'0';
     var thumb=n.image?
       '<div style="width:72px;height:52px;border-radius:6px;flex-shrink:0;overflow:hidden;position:relative;background:var(--card2)">'+
-        '<img src="'+n.image+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.innerHTML=\'<svg viewBox=\\\"0 0 64 46\\\" style=\\\"width:100%;height:100%;display:block\\\"><polyline points=\\\"'+pts2+'\\\" fill=\\\"none\\\" stroke=\\\"'+sc+'\\\" stroke-width=\\\"2\\\" stroke-linecap=\\\"round\\\"/></svg>\'">'+
+        '<img src="'+n.image+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\'">'+
         (n.breaking?'<div style="position:absolute;top:3px;left:3px;background:var(--red);color:#fff;font-size:6px;font-weight:700;padding:1px 4px;border-radius:2px;letter-spacing:.5px;font-family:\'JetBrains Mono\',monospace">LIVE</div>':'')+
       '</div>':
       '<div style="width:72px;height:52px;border-radius:6px;flex-shrink:0;background:'+(catGrad[n.cat]||'var(--card2)')+';overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center">'+
@@ -4708,7 +4708,7 @@ function renderNews(){
   var cached=loadNewsCache();
   var offlineNotice='';
   if(!navigator.onLine&&cached){
-    offlineNotice='<div style="background:var(--orange-bg);border:1px solid var(--orange-bd);border-radius:7px;padding:8px 12px;margin-bottom:12px;font-size:10px;color:var(--amber);font-family:\'JetBrains Mono\',monospace">📡 Sin conexión — mostrando datos cacheados de '+new Date(cached.savedAt||Date.now()).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})+'</div>';
+    offlineNotice='<div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);border-radius:7px;padding:8px 12px;margin-bottom:12px;font-size:10px;color:var(--amber);font-family:\'JetBrains Mono\',monospace">📡 Sin conexión — mostrando datos cacheados de '+new Date(cached.savedAt||Date.now()).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})+'</div>';
   }
   // Save to cache for offline use
   saveNewsCache({savedAt:Date.now()});
