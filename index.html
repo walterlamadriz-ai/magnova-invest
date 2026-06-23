@@ -2459,9 +2459,10 @@ function updateLivePricesInDOM(){
     var t=el.getAttribute('data-live-change');
     if(LIVE[t]){
       var q=LIVE[t];
-      var pct=(q.changePercent||0).toFixed(2);
-      el.textContent=(q.changePercent>=0?'+':'')+pct+'%';
-      el.style.color=q.changePercent>=0?'var(--grn)':'var(--red)';
+      // LIVE usa changePct como FRACCIÓN (0.0234 = 2.34%) → ×100
+      var v=(q.changePct||0)*100;
+      el.textContent=(v>=0?'+':'')+v.toFixed(2)+'%';
+      el.style.color=v>=0?'var(--grn)':'var(--red)';
     }
   });
   updateLiveBadge();
@@ -3897,7 +3898,7 @@ function renderDash(){
       return '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start;cursor:pointer" onclick="setPage(\'news\')">'+
         '<div style="width:4px;height:4px;border-radius:50%;background:'+c+';margin-top:6px;flex-shrink:0"></div>'+
         '<div style="flex:1;min-width:0">'+
-        '<div style="font-size:11px;font-weight:600;color:var(--bright);line-height:1.4;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+n.title+'</div>'+
+        '<div style="font-size:11px;font-weight:600;color:var(--bright);line-height:1.4;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(n.title)+'</div>'+
         '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+n.cat+' · '+ago+'</div>'+
         '</div></div>';
     }).join('');
@@ -4600,7 +4601,7 @@ function renderNews(){
             // source favicon chip bottom-right
             (fav?'<div style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.55);border-radius:5px;padding:3px 6px;display:flex;align-items:center;gap:5px">'+
               '<img src="'+fav+'" style="width:12px;height:12px;object-fit:contain" onerror="this.parentElement.style.display=\'none\'">'+
-              '<span style="font-size:8px;color:rgba(255,255,255,.7);font-family:\'JetBrains Mono\',monospace">'+featItem.source+'</span>'+
+              '<span style="font-size:8px;color:rgba(255,255,255,.7);font-family:\'JetBrains Mono\',monospace">'+esc(featItem.source)+'</span>'+
             '</div>':'')+
           '</div>';
         }
@@ -4621,11 +4622,11 @@ function renderNews(){
       '<div style="padding:14px 16px;flex:1;display:flex;flex-direction:column;justify-content:space-between">'+
       '<div>'+
       '<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;padding:2px 7px;border-radius:3px;margin-bottom:8px;display:inline-block;font-family:\'JetBrains Mono\',monospace;'+fts+'">'+featItem.cat+'</span>'+
-      '<div style="font-size:14px;font-weight:700;color:var(--bright);line-height:1.35;margin-bottom:6px;letter-spacing:-.1px">'+featItem.title+'</div>'+
-      '<div style="font-size:11px;color:var(--text2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+featItem.body+'</div>'+
+      '<div style="font-size:14px;font-weight:700;color:var(--bright);line-height:1.35;margin-bottom:6px;letter-spacing:-.1px">'+esc(featItem.title)+'</div>'+
+      '<div style="font-size:11px;color:var(--text2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+esc(featItem.body)+'</div>'+
       '</div>'+
       '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:8px">'+
-      '<span style="font-size:10px;font-weight:600;color:var(--text2);font-family:\'JetBrains Mono\',monospace">'+featItem.source+'</span>'+
+      '<span style="font-size:10px;font-weight:600;color:var(--text2);font-family:\'JetBrains Mono\',monospace">'+esc(featItem.source)+'</span>'+
       '<span style="width:3px;height:3px;border-radius:50%;background:var(--text3);display:inline-block"></span>'+
       '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+relTime(featItem.hoursAgo)+'</span>'+
       '<span style="padding:2px 8px;border-radius:3px;font-size:9px;font-weight:700;font-family:\'JetBrains Mono\',monospace;background:'+impBg[featItem.impact]+';color:'+impCol[featItem.impact]+'">'+impLabel[featItem.impact]+'</span>'+
@@ -4653,10 +4654,10 @@ function renderNews(){
       thumb+
       // Content
       '<div style="flex:1;min-width:0">'+
-      '<div style="font-size:12px;font-weight:600;color:var(--bright);line-height:1.35;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+n.title+'</div>'+
+      '<div style="font-size:12px;font-weight:600;color:var(--bright);line-height:1.35;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+esc(n.title)+'</div>'+
       '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+
       '<span style="font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:1px 6px;border-radius:3px;font-family:\'JetBrains Mono\',monospace;'+ts+'">'+n.cat+'</span>'+
-      '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+n.source+'</span>'+
+      '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+esc(n.source)+'</span>'+
       '<span style="width:3px;height:3px;border-radius:50%;background:var(--text3);display:inline-block"></span>'+
       '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+relTime(n.hoursAgo)+'</span>'+
       '<span style="margin-left:auto;font-size:9px;font-weight:700;font-family:\'JetBrains Mono\',monospace;color:'+impCol[n.impact]+'">'+impLabel[n.impact]+'</span>'+
@@ -4939,7 +4940,7 @@ function renderInd(){
     var s=ALL_SIG.find(function(x){return x.t===t;})||{sig:"HOLD",sc:60,p:100};
     var lp=getLivePrice(t);
     var col=s.sig==="BUY"?"var(--grn)":s.sig==="SELL"?"var(--red)":"var(--amber)";
-    return '<div onclick="openDrawer(\''+t+'\','+lp+')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;transition:.15s;text-align:center;min-width:76px;box-shadow:var(--shadow)" onmouseover="this.style.borderColor=\'var(--aborder)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
+    return '<div onclick="openDrawer(\''+t+'\','+lp+')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;transition:.15s;text-align:center;min-width:76px;box-shadow:var(--shadow)" onmouseover="this.style.borderColor=\'var(--grn-lt)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
       '<div style="font-size:12px;font-weight:700;color:var(--bright);font-family:\'JetBrains Mono\'">'+t+'</div>'+
       '<div style="font-size:10px;color:'+col+';font-family:\'JetBrains Mono\';margin-top:1px">'+sigLabel(s.sig)+'</div>'+
       '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\'">$'+fmtD(lp)+'</div></div>';
