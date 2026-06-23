@@ -16,7 +16,14 @@
 <!-- SEO & GEO -->
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
-<link rel="apple-touch-icon" sizes="180x180" href="/favicon.svg"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
+<!-- PWA -->
+<link rel="manifest" href="/manifest.webmanifest"/>
+<meta name="theme-color" content="#0d1117"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Invest"/>
 <link rel="canonical" href="https://invest.financeospro.com/"/>
 <meta name="author" content="Walter Lamadriz — MAXNOVA & LUCI Global LLC"/>
 <meta name="keywords" content="análisis técnico acciones, plataforma inversiones LATAM, señales técnicas, gestión riesgo portafolio, decision engine inversiones, screener acciones, finanzas LATAM"/>
@@ -1152,6 +1159,9 @@ tr:last-child td { border-bottom: none; }
   .page-body { padding: 16px; }
   .g2, .g3 { grid-template-columns: 1fr; }
   .g-sidebar { grid-template-columns: 1fr; }
+  /* responsive collapse for inline 2-col grids with a fixed px sidebar */
+  .resp2 { grid-template-columns: 1fr !important; }
+  .resp2 > div[style*="border-right"] { border-right: none !important; }
   .krow { grid-template-columns: repeat(2,1fr); }
   table { font-size: 11px; }
   td, th { padding: 7px 10px; }
@@ -4810,7 +4820,7 @@ function renderNews(){
     '</div>'+
 
     // ── BODY 2-COL ──
-    '<div style="display:grid;grid-template-columns:1fr 268px;gap:0;align-items:start">'+
+    '<div class="resp2" style="display:grid;grid-template-columns:1fr 268px;gap:0;align-items:start">'+
 
     // LEFT: news feed
     '<div style="padding:16px 20px;border-right:1px solid var(--border)">'+
@@ -4869,7 +4879,7 @@ function renderNews(){
           '<span style="font-size:11px;font-weight:700;color:'+(cw>=60?'var(--grn)':cw>=40?'var(--amber)':'var(--red)')+';font-family:\'JetBrains Mono\',monospace;width:30px;text-align:right">'+cw+'</span>'+
           '</div></div>';
       }).join('');
-      return '<div style="display:grid;grid-template-columns:200px 1fr;gap:14px">'+
+      return '<div class="resp2" style="display:grid;grid-template-columns:200px 1fr;gap:14px">'+
         '<div class="fos-card" style="padding:20px 16px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center">'+
           '<div style="width:88px;height:88px;border-radius:50%;background:conic-gradient('+sentColor+' '+d.value+'%, rgba(255,255,255,.06) '+d.value+'%);display:flex;align-items:center;justify-content:center;margin-bottom:12px">'+
             '<div style="width:68px;height:68px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center">'+
@@ -6640,7 +6650,7 @@ function renderSentimentWidget(){
     '<div class="ph-right">'+vixStatus+
     '<button id="sent-refresh" onclick="refreshSentiment()" class="btn" style="padding:5px 12px;font-size:11px">⟳ Actualizar VIX</button>'+
     '</div></div>'+
-    '<div style="display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start">'+
+    '<div class="resp2" style="display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start">'+
     '<div style="display:flex;flex-direction:column;gap:12px">'+
     '<div class="cb" style="text-align:center">'+
     buildDial(d.score,d.color,210)+
@@ -7269,7 +7279,7 @@ function renderRadar(){
     '</div>'+
 
     // Two column layout
-    '<div style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start">'+
+    '<div class="resp2" style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start">'+
 
     // LEFT: history sidebar
     '<div>'+
@@ -7613,7 +7623,19 @@ function startTrial(){
 // ── DEMO MODE (realistic fictional data) ──────────────────────
 
 function installPWA(){
-  if(_deferredPrompt){_deferredPrompt.prompt();_deferredPrompt=null;}
+  if(_deferredPrompt){
+    _deferredPrompt.prompt();
+    _deferredPrompt.userChoice.then(function(){_deferredPrompt=null;});
+    return;
+  }
+  // iOS Safari has no beforeinstallprompt — show manual instructions
+  var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+  if(isIOS){
+    if(typeof toast==='function') toast('Toca Compartir → "Agregar a inicio"');
+    else alert('Para instalar: toca el botón Compartir y elige "Agregar a pantalla de inicio".');
+  } else {
+    if(typeof toast==='function') toast('Usa el menú del navegador → Instalar app');
+  }
 }
 
 
@@ -7844,7 +7866,7 @@ function renderComp(){
     '<div class="ph"><div><h1>Comparador de Activos</h1>'+
     '<p class="sub-txt">// Performance normalizado · Correlación · Sharpe ratio</p></div>'+
     '<div class="ph-right">'+liveBadge()+'</div></div>'+
-    '<div style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start">'+
+    '<div class="resp2" style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start">'+
     '<div>'+
     '<div class="cb" style="margin-bottom:10px">'+
     '<div class="st"><div class="stbar"></div>Tickers</div>'+
@@ -8176,6 +8198,20 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('/sw.js').catch(function(){/* silent */});
   });
 }
+
+// ── PWA INSTALL ───────────────────────────────────────────────────
+var _deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();
+  _deferredPrompt=e;
+  // Reveal any install buttons (data-pwa-install) that were hidden
+  document.querySelectorAll('[data-pwa-install]').forEach(function(el){el.style.display='';});
+});
+window.addEventListener('appinstalled',function(){
+  _deferredPrompt=null;
+  document.querySelectorAll('[data-pwa-install]').forEach(function(el){el.style.display='none';});
+  if(typeof toast==='function') toast('App instalada ✓');
+});
 
 
 function toggleTheme(){
