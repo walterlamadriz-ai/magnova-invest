@@ -51,11 +51,22 @@ export default async function handler(req) {
   const isSubscription = product === 'invest_pro';
   const origin = req.headers.get('origin') || 'https://invest.financeospro.com';
 
+  // Seguridad: solo aceptar success/cancelUrl del cliente si son del mismo origen
+  // permitido (evita open-redirect / phishing). Si no, usar el default.
+  const ALLOWED_REDIRECT_HOSTS = ['invest.financeospro.com','financeospro.com'];
+  const safeRedirect = (candidate, fallback) => {
+    if (!candidate || typeof candidate !== 'string') return fallback;
+    try {
+      const u = new URL(candidate);
+      return (u.protocol === 'https:' && ALLOWED_REDIRECT_HOSTS.includes(u.hostname)) ? candidate : fallback;
+    } catch { return fallback; }
+  };
+
   const sessionPayload = {
     mode: isSubscription ? 'subscription' : 'payment',
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: successUrl || `${origin}/activate?session_id={CHECKOUT_SESSION_ID}&product=${product}`,
-    cancel_url: cancelUrl || `${origin}/`,
+    success_url: safeRedirect(successUrl, `${origin}/activate?session_id={CHECKOUT_SESSION_ID}&product=${product}`),
+    cancel_url: safeRedirect(cancelUrl, `${origin}/`),
     metadata: { product, userId: userId || '' },
     ...(email ? { customer_email: email } : {}),
     ...(isSubscription ? {
