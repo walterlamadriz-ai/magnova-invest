@@ -3802,7 +3802,7 @@ function renderDash(){
   }
   function chgBadge(lqd){
     if(!lqd||lqd.changePct==null) return '<span style="color:var(--text3);font-family:\'JetBrains Mono\',monospace">—</span>';
-    var v=lqd.changePct,c=v>=0?'var(--grn)':'var(--red)',arrow=v>=0?'▲':'▼';
+    var v=(lqd.changePct||0)*100,c=v>=0?'var(--grn)':'var(--red)',arrow=v>=0?'▲':'▼';
     return '<span style="color:'+c+';font-family:\'JetBrains Mono\',monospace">'+arrow+' '+(v>=0?'+':'')+v.toFixed(2)+'%</span>';
   }
   function fmtMoney(n){ return n==null||isNaN(n)?'—':'$'+fmtD(n); }
@@ -8149,11 +8149,12 @@ async function bootLiveData(){
   _bootRunning=true;
   if(_bootInterval) clearInterval(_bootInterval);
 
-  // Boot: only fetch portfolio + watchlist (ALL_SIG fetched lazily on Signals page)
+  // Boot: portfolio + watchlist + top señales del dashboard
   var tickers=[];
   S.portfolio.forEach(function(h){if(tickers.indexOf(h.t)<0)tickers.push(h.t);});
   S.watchlist.forEach(function(t){if(tickers.indexOf(t)<0)tickers.push(t);});
-  // ALL_SIG fetched lazily — reduces boot from ~20 to ~18 requests
+  // Top 8 de ALL_SIG: el dashboard muestra Top Señales con su Δ% live
+  ALL_SIG.slice(0,8).forEach(function(s){if(tickers.indexOf(s.t)<0)tickers.push(s.t);});
 
   // ① Show cached prices instantly — user sees something immediately
   try{
@@ -8167,10 +8168,16 @@ async function bootLiveData(){
     }
   }catch(e){/* silent */}
 
-  // ② Fetch fresh in background — update DOM as each batch arrives
+  // ② Fetch fresh in background — re-render current page so tablas sin data-live
+  //    (dashboard Top Señales / Portfolio) reflejen los precios recién cargados
   refreshLive(tickers).then(function(){
     updateLiveBadge();
     updateLivePricesInDOM();
+    // El dashboard arma sus tablas en render-time (sin data-live-*), así que
+    // necesita un re-render completo para mostrar precios y Δ% live.
+    if(S.user&&(S.page==='dash'||S.page==='port'||S.page==='watch')){
+      try{ renderMain(); }catch(e){/* silent */}
+    }
   }).catch(function(){});
 
   // ③ Auto-refresh every 5 min (only when tab visible and during market hours)
