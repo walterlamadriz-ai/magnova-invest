@@ -5564,8 +5564,8 @@ function mScoreInfo(mr){
     {factor:'Sector RS',pts:'×mult',desc:'Multiplicador sectorial: sector líder = 1.2×, neutro = 1.0×, rezagado = 0.7×. Ajusta el score final.'},
     {factor:'ATR(14)',pts:'referencial',desc:'Entry/Stop/Target calculados con ATR(14): Stop = Entry − 1×ATR · Target = Entry + 2×ATR · R:R objetivo ≥ 2.0×.'}
   ];
-  mr.innerHTML='<div class="modal-overlay" onclick="closeModal()">'+
-    '<div class="modal-box" onclick="event.stopPropagation()" style="max-width:540px">'+
+  mr.innerHTML='<div class="overlay" onclick="closeModal()">'+
+    '<div class="modal" onclick="event.stopPropagation()" style="max-width:540px">'+
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'+
     '<h2 style="margin:0;font-size:16px">¿Cómo se calcula el Score?</h2>'+
     '<button onclick="closeModal()" style="background:transparent;border:none;color:var(--text3);font-size:18px;cursor:pointer">✕</button>'+
