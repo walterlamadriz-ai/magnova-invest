@@ -3785,7 +3785,9 @@ function renderPaywall(){
 function renderDash(){
   var plan=planOf();
   var port=S.portfolio.slice(0,plan.maxT);
-  port.forEach(function(h){if(LIVE[h.t])h.cur=LIVE[h.t].price;});
+  // Precio actual: live si existe, sino el último conocido, sino el costo
+  // (evita NaN/"—" mientras cargan los precios o si el fetch falla)
+  port.forEach(function(h){h.cur=LIVE[h.t]?LIVE[h.t].price:(h.cur||h.cost);});
   var totC=port.reduce(function(s,h){return s+h.sh*h.cost;},0);
   var totM=port.reduce(function(s,h){return s+h.sh*h.cur;},0);
   var pnl=totM-totC;
@@ -3968,7 +3970,9 @@ function dashLoadContext(){
 function renderPort(){
   var plan=planOf();
   var port=S.portfolio.slice(0,plan.maxT);
-  port.forEach(function(h){if(LIVE[h.t])h.cur=LIVE[h.t].price;});
+  // Precio actual: live si existe, sino el último conocido, sino el costo
+  // (evita NaN/"—" mientras cargan los precios o si el fetch falla)
+  port.forEach(function(h){h.cur=LIVE[h.t]?LIVE[h.t].price:(h.cur||h.cost);});
   var totM=port.reduce(function(s,h){return s+h.sh*h.cur;},0);
   var totC=port.reduce(function(s,h){return s+h.sh*h.cost;},0);
   var totP=totM-totC;
@@ -8634,6 +8638,7 @@ renderDisclaimer();
     }
   }catch(e){ console.error("boot session check failed",e); }
   render();
+  if(S.user) bootLiveData(); // arranca carga de precios live (portfolio/watchlist/señales)
 })();
 
 sb.auth.onAuthStateChange(function(event,session){
@@ -8641,7 +8646,7 @@ sb.auth.onAuthStateChange(function(event,session){
     S.user=null;S.page="news";
     render();
   } else if(event==="SIGNED_IN"&&session&&session.user){
-    sbLoadUserData(session.user).then(function(){ render(); });
+    sbLoadUserData(session.user).then(function(){ render(); bootLiveData(); });
   }
 });
 
