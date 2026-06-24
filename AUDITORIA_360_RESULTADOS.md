@@ -63,13 +63,13 @@ noticias), F8 (token muerto). **Pendiente de decisión de negocio:** F1 (activar
 | F1 | D1 | **P0** | `index.html:7597` CTA→`startTrial()`; `doUpgrade()` def `5409`, 0 llamadas | Sin camino de pago: el upgrade activa trial, el checkout Stripe es código muerto → ingreso $0 | ⏳ decisión |
 | F2 | B1 | P1 | `api/create-checkout.js:54-58` | `success/cancelUrl` del cliente usados directo como redirect Stripe → open-redirect | ✅ **aplicado** (whitelist host) |
 | F3 | A1 | P1 | `index.html:2462` | `updateLivePricesInDOM` leía `q.changePercent` (campo real `changePct`) sin ×100 → celdas en "0.00%" | ✅ **aplicado** |
-| F11 | D4 | P1 | `public/sitemap.xml`, `robots.txt`, `llms.txt` (404 en prod) | Assets SEO/GEO en `public/`; con `outputDirectory:"."` no se sirven en `/` → crawlers e IAs no los encuentran | ⏳ |
-| F12 | D2 | P1 | 0 coincidencias de analytics/gtag/posthog en `index.html` | Cero instrumentación de eventos → conversión y churn no medibles | ⏳ |
+| F11 | D4 | P1 | `sitemap.xml`, `robots.txt`, `llms.txt` (eran 404 en prod) | Assets SEO/GEO en `public/`; con `outputDirectory:"."` no se servían en `/` | ✅ **aplicado** (copiados a raíz) |
+| F12 | D2 | P1 | 0 coincidencias de analytics/gtag/posthog en `index.html` | Cero instrumentación de eventos → conversión y churn no medibles | ⏳ decisión (proveedor) |
 | F5 | B1 | P2 | `index.html:3901,4625,4626,4657` + source | Datos de noticias (Yahoo) a `innerHTML` sin `esc()` → XSS | ✅ **aplicado** |
-| F4 | A2 | P2 | def única: `installPWA:7629`, `doUpgrade:5409`, `renderRegister:3686`, `renderHelp:7484`, `avgCostFromTrades:1759`, `sharesFromTrades:1767`, `fetchUsdClpLatam:7924`, `isLive:2147`, `renderSentimentCompact:6603`, `svgVol:2245` | 10 funciones muertas; `installPWA` muerta = PWA sin botón de instalar | ⏳ |
-| F6 | B3 | P2 | `index.html:2366-2368` (`Math.random`, `_synthetic:true`) | Velas aleatorias cuando falla histórico, sin aviso claro al usuario | ⏳ |
-| F13 | E4 | P2 | 16× `/* silent */` catch | Errores de API silenciados sin telemetría → sin observabilidad | ⏳ |
-| F14 | C3 | P3 | `.grid2`(1×), `.ifu`(13×), `.msub`(4×), `.cat-divider`(1×) sin definición CSS | Clases referenciadas pero no definidas (mismo patrón que `.modal-box`); degradan suave | ⏳ |
+| F4 | A2 | P2 | `installPWA:7629` (+ 9 muertas más) | `installPWA` muerta = PWA sin botón; resto de muertas son features a medio cablear | ✅ **parcial** (botón Instalar en Config.; resto pendiente decisión) |
+| F6 | B3 | P2 | `index.html:2366-2368` (`Math.random`, `_synthetic`) | Velas aleatorias cuando falla histórico, sin aviso | ✅ **aplicado** (banner "Histórico no disponible") |
+| F13 | E4 | P2 | 16× `/* silent */` catch | Errores de API silenciados sin telemetría | ⏳ (ligado a F12) |
+| F14 | C3 | P3 | `.msub`, `.ifu` sin definición CSS | Clases referenciadas pero no definidas | ✅ **aplicado** (definidas) |
 | F7 | A1 | P3 | 16× `console.*` | Logs en producción | ⏳ |
 | F8 | A5 | P3 | `var(--aborder)` 1× sin def | Token CSS muerto | ✅ **aplicado** (`--grn-lt`) |
 
