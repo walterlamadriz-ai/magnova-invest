@@ -1758,19 +1758,6 @@ function loadTrades(){
 }
 
 // ── COST BASIS — weighted average per ticker from trade log ──
-function avgCostFromTrades(ticker){
-  var buys=S.trades.filter(function(t){return t.ticker===ticker&&t.type==='buy';});
-  if(!buys.length) return null;
-  var ts=0,tc=0;
-  buys.forEach(function(t){ts+=t.qty;tc+=t.amount;});
-  S.trades.filter(function(t){return t.ticker===ticker&&t.type==='sell';}).forEach(function(t){ts-=t.qty;});
-  return ts>0?tc/ts:null;
-}
-function sharesFromTrades(ticker){
-  var s=0;
-  S.trades.forEach(function(t){if(t.ticker!==ticker)return;if(t.type==='buy')s+=t.qty;else if(t.type==='sell')s-=t.qty;});
-  return Math.max(0,s);
-}
 function realizedPnlFor(ticker){
   var avgCost=null,shares=0,realized=0,buyCosts=[];
   S.trades.filter(function(t){return t.ticker===ticker;}).sort(function(a,b){return a.id-b.id;}).forEach(function(t){
@@ -2146,8 +2133,6 @@ function getLivePrice(ticker){
   var sg=ALL_SIG.find(function(s){return s.t===ticker;});
   return sg&&sg.p?sg.p:100;
 }
-function isLive(ticker){return !!LIVE[ticker];}
-
 // ── TI ─────────────────────────────────────────────────────────
 var TI={
   sma:function(p,n){return p.map(function(_,i){return i<n-1?null:p.slice(i-n+1,i+1).reduce(function(a,b){return a+b;},0)/n;});},
@@ -2242,18 +2227,6 @@ function svgBars(data,key,W,H,zero,refLines){
     return "<line x1='0' y1='"+ry+"' x2='"+W+"' y2='"+ry+"' stroke='"+r.color+"' stroke-width='1' stroke-dasharray='4 3'/>";
   }).join("");
   return "<svg viewBox='0 0 "+W+" "+H+"' style='width:100%;height:"+H+"px'><line x1='0' y1='"+zy+"' x2='"+W+"' y2='"+zy+"' stroke='rgba(255,255,255,.1)' stroke-width='1'/>"+refSvg+bars+"</svg>";
-}
-
-function svgVol(data,W,H){
-  W=W||420;H=H||45;
-  var maxV=Math.max.apply(null,data.map(function(d){return d.vol||0;}));
-  if(!maxV)return "";
-  var bw=W/data.length;
-  var bars=data.map(function(d,i){
-    var h=((d.vol||0)/maxV*H).toFixed(1);
-    return "<rect x='"+(i*bw+1).toFixed(1)+"' y='"+(H-h).toFixed(1)+"' width='"+(bw-2).toFixed(1)+"' height='"+h+"' fill='var(--blue)' opacity='.5' rx='1'/>";
-  }).join("");
-  return "<svg viewBox='0 0 "+W+" "+H+"' style='width:100%;height:"+H+"px'>"+bars+"</svg>";
 }
 
 // ── LIGHTWEIGHT CHARTS (Candlestick) ───────────────────────────
@@ -7937,49 +7910,6 @@ async function compLoad(){
 }
 
 var LATAM={usdClp:958,loading:false,lastUpdate:null};
-
-async function fetchUsdClpLatam(){
-  // Try our Edge Function first on Vercel
-  var isVercelFx=window.location.hostname.includes('vercel.app')||
-                 window.location.hostname.includes('magnova.app')||
-               window.location.hostname.includes('financeospro.com')||
-                 window.location.hostname.includes('magnova-invest');
-  if(isVercelFx){
-    try{
-      var fxRes=await fetchWithTimeout('/api/fx',5000);
-      var fxData=await fxRes.json();
-      if(fxData&&fxData.usdClp){
-        LATAM.usdClp=fxData.usdClp;LATAM.lastUpdate=Date.now();
-        try{localStorage.setItem('mv_fx_cache',JSON.stringify({v:fxData.usdClp,ts:Date.now()}));}catch(e){}
-        return;
-      }
-    }catch(e){/* fall through */}
-  }
-  var urls=[
-    'https://api.allorigins.win/raw?url='+encodeURIComponent('https://mindicador.cl/api/dolar'),
-    'https://corsproxy.io/?url='+encodeURIComponent('https://mindicador.cl/api/dolar'),
-  ];
-  for(var i=0;i<urls.length;i++){
-    try{
-      var ctrl=new AbortController();
-      var timer=setTimeout(function(){ctrl.abort();},6000);
-      var res=await fetch(urls[i],{signal:ctrl.signal});
-      clearTimeout(timer);
-      if(!res.ok) throw new Error('HTTP '+res.status);
-      var data=await res.json();
-      if(data&&data.serie&&data.serie[0]&&data.serie[0].valor){
-        LATAM.usdClp=data.serie[0].valor;
-        LATAM.lastUpdate=Date.now();
-        try{localStorage.setItem('mv_fx_cache',JSON.stringify({v:LATAM.usdClp,ts:Date.now()}));}catch(e){}
-        return;
-      }
-    }catch(e){
-      if(i===urls.length-1){
-        try{var c=JSON.parse(localStorage.getItem('mv_fx_cache')||'null');if(c&&(Date.now()-c.ts)<86400000) LATAM.usdClp=c.v;}catch(e2){}
-      }
-    }
-  }
-}
 
 function renderDivs(){
   var port=S.portfolio;
