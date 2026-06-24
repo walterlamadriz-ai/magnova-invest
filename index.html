@@ -1646,7 +1646,8 @@ const PAGES=[
   {id:"rebal",    icon:"🔀",label:"Rebalanceo",hidden:true},
   {id:"alert",    icon:"🔔",label:"Alertas"},
   {id:"bitacora", icon:"📋",label:"Bitácora"},
-  {id:"settings", icon:"⚙️",label:"Configuración"}
+  {id:"settings", icon:"⚙️",label:"Configuración"},
+  {id:"help",     icon:"❓",label:"Ayuda"}
 ];
 const NEWS_DATA=[
   {id:1,cat:"Fed",impact:"critical",breaking:true,
@@ -3547,7 +3548,7 @@ function renderMain(){
   if(!S.user){renderWelcome();return;}
   var plan=planOf();
   if(plan.locked.indexOf(S.page)>=0){renderPaywall();return;}
-  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:function(){setPage('news');},radar:renderRadar,decision:renderDecisionEngine,ind:renderInd,risk:renderRisk,back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:renderScreener,settings:renderSettings};
+  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:function(){setPage('news');},radar:renderRadar,decision:renderDecisionEngine,ind:renderInd,risk:renderRisk,back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:renderScreener,settings:renderSettings,help:renderHelp};
   (pages[S.page]||renderDash)();
   var curPage=PAGES.find(function(p){return p.id===S.page;});
   var mLabel=document.getElementById('mobile-page-label');
@@ -3671,10 +3672,6 @@ function renderWelcome(){
   })();
 }
 
-function renderRegister(){
-  renderWelcome();
-  wv3Tab('reg');
-}
 
 function openTCModal(tab){
   var isTc=tab!=='pp';
@@ -3908,7 +3905,8 @@ function renderDash(){
     '<div class="dash-action-btn" onclick="setPage(\'ind\')"><div style="font-size:16px;margin-bottom:4px">📈</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Indicadores</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">RSI · MACD · BB</div></div>'+
     '<div class="dash-action-btn" onclick="setPage(\'risk\')"><div style="font-size:16px;margin-bottom:4px">🛡️</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Riesgo</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Sizing · R/R</div></div>'+
     '<div class="dash-action-btn" onclick="setPage(\'screener\')"><div style="font-size:16px;margin-bottom:4px">🔍</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Screener</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Filtrar activos</div></div>'+
-    '</div></div>';
+    '</div></div>'+
+    '<div style="margin-top:14px">'+renderSentimentCompact()+'</div>';
 
   document.getElementById('main').innerHTML=
     '<div class="dash-wrap">'+
