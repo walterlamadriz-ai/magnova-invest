@@ -692,12 +692,14 @@ tr:last-child td { border-bottom: none; }
   margin-bottom: 6px;
   letter-spacing: -.3px;
 }
-.modal .modal-sub {
+.modal .modal-sub, .modal .msub {
   font-size: 12px;
   color: var(--text2);
   margin-bottom: 22px;
   line-height: 1.5;
 }
+/* .ifu — modificador de input a ancho completo (siempre usado como "inp ifu") */
+.inp.ifu { width: 100%; box-sizing: border-box; }
 .modal-close {
   position: absolute;
   top: 16px; right: 16px;
@@ -3512,6 +3514,18 @@ function renderSettings(){
     '</div>'+
     '</div>'+
 
+    // App / PWA section
+    '<div class="cb" style="margin-bottom:14px">'+
+    '<div class="st"><div class="stbar"></div>Aplicación</div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;gap:12px">'+
+    '<div>'+
+    '<div style="font-size:13px;font-weight:500;color:var(--bright)">Instalar app</div>'+
+    '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">Acceso directo en tu pantalla de inicio · funciona offline</div>'+
+    '</div>'+
+    '<button class="btn" onclick="installPWA()" style="flex-shrink:0">⬇ Instalar</button>'+
+    '</div>'+
+    '</div>'+
+
     // Capital section
     '<div class="cb" style="margin-bottom:14px">'+
     '<div class="st"><div class="stbar"></div>Capital de referencia</div>'+
@@ -5940,6 +5954,7 @@ function renderDrawerBody(){
   if(!ticker)return;
   var sig=ALL_SIG.find(function(s){return s.t===ticker;})||{sig:"HOLD",sc:60};
   var hist=dHistCache[ticker+"_"+dRange]||[];
+  var isSynthetic=hist.length>0&&hist[0]._synthetic===true;
   var fund=dFundCache[ticker]||null;
   var lq=LIVE[ticker];
   var cur=lq?lq.price:(hist.length?hist[hist.length-1].close:100);
@@ -6146,6 +6161,7 @@ function renderDrawerBody(){
     '</div></div></div>'+
     '<div>'+tabBtns+'</div>'+
     '<div style="margin-bottom:10px">'+rangeBtns+'</div>'+
+    (isSynthetic?'<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--amber);display:flex;gap:8px;align-items:center"><span>⚠️</span><span>Histórico no disponible para este activo — gráfico ilustrativo referencial, no son precios reales.</span></div>':'')+
     content+
     '<div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">'+
     '<button class="btn" onclick="addWatch(\''+ticker+'\');closeDrawer()">+ Watchlist</button>'+
