@@ -2578,7 +2578,6 @@ function toggleMobileMenu(force){
 }
 function setPage(p){
   if(p==='sig'||p==='comp')p='screener';
-  if(p==='rebal'||p==='divs')p='port';
   if(p==='pb')p='risk';
   S.page=p;
   track('module_view',{module:p});
@@ -7936,6 +7935,33 @@ async function compLoad(){
 }
 
 var LATAM={usdClp:958,loading:false,lastUpdate:null};
+
+// ── DIVIDENDOS ─────────────────────────────────────────────────
+// DIVS.data[ticker] = {dividendYield, trailingAnnualDividendRate, dividendRate}
+var DIVS={data:{},loading:false};
+async function loadDivData(){
+  if(DIVS.loading) return;
+  var tickers=[];
+  S.portfolio.forEach(function(h){if(tickers.indexOf(h.t)<0)tickers.push(h.t);});
+  if(!tickers.length) return;
+  DIVS.loading=true;
+  if(S.page==='divs') renderMain();
+  await Promise.allSettled(tickers.map(function(t){
+    return fetchFundamentals(t).then(function(f){
+      if(!f) return;
+      var price=getLivePrice(t)||0;
+      var dy=f.dividendYield||0;                 // fracción (0.025 = 2.5%)
+      var annual=(dy&&price)?dy*price:0;         // $ anual por acción
+      DIVS.data[t]={
+        dividendYield:dy,
+        trailingAnnualDividendRate:annual,
+        dividendRate:annual?annual/4:0           // default trimestral (la mayoría US)
+      };
+    }).catch(function(){});
+  }));
+  DIVS.loading=false;
+  if(S.page==='divs') renderMain();
+}
 
 function renderDivs(){
   var port=S.portfolio;
