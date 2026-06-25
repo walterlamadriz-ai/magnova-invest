@@ -8013,9 +8013,9 @@ function renderDivs(){
   }).join('');
 
   document.getElementById('main').innerHTML=
-    '<div class="ph"><div><h1>Dividend Calendar</h1>'+
-    '<p class="sub-txt">// Proyección de ingresos · 12 meses</p></div>'+
-    '<button onclick="loadDivData()" class="btn-big" style="padding:8px 18px;font-size:12px">'+
+    '<div class="fos-module-header"><div><div class="fos-module-title">Dividendos</div>'+
+    '<div class="fos-module-sub">Proyección de ingresos · 12 meses</div></div>'+
+    '<button onclick="loadDivData()" class="btn-big" style="padding:8px 18px;font-size:12px;flex-shrink:0">'+
     (DIVS.loading?'<span style="display:inline-flex;align-items:center;gap:7px"><span class="spin-sm"></span>Cargando...</span>':'💰 Cargar dividendos')+'</button></div>'+
     '<div class="krow">'+
     kpi('Ingreso anual USD','$'+fmtD(totalAnnual),'Proyectado','g')+
@@ -8074,15 +8074,15 @@ function renderRebal(){
   var tradeRows=trades.map(function(tr){
     return '<tr style="background:'+(tr.buy?'rgba(34,197,94,.04)':'rgba(239,68,68,.04)')+'">'+
       '<td style="font-weight:700;color:var(--bright)">'+tr.t+'</td>'+
-      '<td><span class="badge '+(tr.buy?'buy':'sell')+'">'+(tr.buy?'COMPRAR':'VENDER')+'</span></td>'+
+      '<td><span class="badge '+(tr.buy?'buy':'sell')+'">'+(tr.buy?'Aumentar':'Reducir')+'</span></td>'+
       '<td style="font-weight:600;color:'+(tr.buy?'var(--grn)':'var(--red)')+'">'+Math.abs(tr.shares).toFixed(4)+' acc.</td>'+
       '<td style="font-weight:600;color:'+(tr.buy?'var(--grn)':'var(--red)')+'">'+(tr.buy?'+':'-')+'$'+fmt(Math.abs(tr.diff))+'</td>'+
       '</tr>';
   }).join('');
 
   document.getElementById('main').innerHTML=
-    '<div class="ph"><div><h1>Rebalanceo</h1>'+
-    '<p class="sub-txt">// Define pesos objetivo · Calcula trades exactos</p></div>'+
+    '<div class="fos-module-header"><div><div class="fos-module-title">Rebalanceo</div>'+
+    '<div class="fos-module-sub">Define pesos objetivo · Calcula ajustes exactos</div></div>'+
     '<div class="ph-right">'+liveBadge()+'</div></div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+
     '<div class="cb">'+
@@ -8102,12 +8102,13 @@ function renderRebal(){
     '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:3px">'+port.length+' posiciones · Suma pesos: '+sumTargets+'%</div>'+
     '</div>'+
     (trades.length>0?
-      '<div class="cb"><div class="st"><div class="stbar"></div>Trades para rebalancear</div>'+
-      '<div class="tw"><table><thead><tr><th>Ticker</th><th>Acción</th><th>Cantidad</th><th>Monto USD</th></tr></thead><tbody>'+tradeRows+'</tbody></table></div></div>'
+      '<div class="cb"><div class="st"><div class="stbar"></div>Ajustes de referencia para rebalancear</div>'+
+      '<div class="tw"><table><thead><tr><th>Ticker</th><th>Ajuste</th><th>Cantidad</th><th>Monto USD</th></tr></thead><tbody>'+tradeRows+'</tbody></table></div>'+
+      '<div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:8px;line-height:1.5">Ajustes referenciales para alinear pesos con tu objetivo. Análisis educativo — no constituye recomendación ni instrucción de inversión.</div></div>'
     :'<div class="cb"><div style="text-align:center;padding:24px;color:var(--text3)">'+
       '<div style="font-size:32px;margin-bottom:8px">✅</div>'+
       '<div style="font-size:12px;font-weight:600;color:var(--bright)">Portfolio balanceado</div>'+
-      '<div style="font-size:10px;font-family:\'JetBrains Mono\',monospace;margin-top:4px">Ajusta los sliders para ver los trades</div></div></div>'
+      '<div style="font-size:10px;font-family:\'JetBrains Mono\',monospace;margin-top:4px">Ajusta los sliders para ver los cambios de peso</div></div></div>'
     )+
     '</div></div>';
 }
@@ -8131,7 +8132,7 @@ function rebalUpdate(){
   var tradeRows=trades.map(function(tr){
     return '<tr style="background:'+(tr.buy?'rgba(34,197,94,.04)':'rgba(239,68,68,.04)')+'">'+
       '<td style="font-weight:700;color:var(--bright)">'+tr.t+'</td>'+
-      '<td><span class="badge '+(tr.buy?'buy':'sell')+'">'+(tr.buy?'COMPRAR':'VENDER')+'</span></td>'+
+      '<td><span class="badge '+(tr.buy?'buy':'sell')+'">'+(tr.buy?'Aumentar':'Reducir')+'</span></td>'+
       '<td style="color:'+(tr.buy?'var(--grn)':'var(--red)')+'">'+Math.abs(tr.shares).toFixed(4)+' acc.</td>'+
       '<td style="color:'+(tr.buy?'var(--grn)':'var(--red)')+'">'+(tr.buy?'+':'-')+'$'+fmt(Math.abs(tr.diff))+'</td>'+
       '</tr>';
