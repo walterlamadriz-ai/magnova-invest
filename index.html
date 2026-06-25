@@ -1167,7 +1167,12 @@ tr:last-child td { border-bottom: none; }
   .krow { grid-template-columns: repeat(2,1fr); }
   table { font-size: 11px; }
   td, th { padding: 7px 10px; }
-  .tw { overflow-x: auto; }
+  .tw { overflow-x: auto; min-width: 0; }
+  /* permite que los tracks grid 1fr encojan bajo contenido nowrap (evita overflow) */
+  .dash-body, .dash-body > div, .dash-wrap, .fos-card, .resp2, .resp2 > div { min-width: 0; }
+  .fos-card { overflow-x: auto; }
+  /* headers de módulo: que el botón/acción baje de línea en vez de desbordar */
+  .fos-module-header { flex-wrap: wrap; gap: 8px; }
   .hbg-btn { display:flex!important; }
   .sb-backdrop { display:block; }
   #mobile-header { display: flex!important; }
@@ -1384,7 +1389,13 @@ tr:last-child td { border-bottom: none; }
 .dash-action-btn { background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: pointer; text-align: left; transition: border-color .15s; }
 .dash-action-btn:hover { border-color: var(--grn-lt); }
 @media (max-width: 900px) { .dash-body { grid-template-columns: 1fr; } }
-@media (max-width: 768px) { .dash-kpi { grid-template-columns: 1fr 1fr; } .dash-wrap { padding: 14px 16px; } }
+@media (max-width: 768px) {
+  .dash-kpi { grid-template-columns: 1fr 1fr; }
+  .dash-wrap { padding: 14px 16px; }
+  /* KPI: número en una línea sin recortarse (override DESPUÉS de la base) */
+  .dash-kpi-card { min-width: 0; overflow: hidden; padding: 12px 10px; }
+  .dash-kpi-val { font-size: 15px; white-space: nowrap; letter-spacing: -0.4px; }
+}
 
 /* ── USER PILL ── */
 .ua-pill {
@@ -3882,8 +3893,8 @@ function renderDash(){
     '<div class="fos-section-label">Top Señales</div>'+
     '<button onclick="setPage(\'sig\')" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Ver todas →</button>'+
     '</div>'+
-    '<table class="fos-table"><thead><tr><th>Ticker</th><th>Score</th><th>Precio</th><th>Δ Hoy</th></tr></thead>'+
-    '<tbody>'+sigRows+'</tbody></table></div>';
+    '<div class="tw"><table class="fos-table"><thead><tr><th>Ticker</th><th>Score</th><th>Precio</th><th>Δ Hoy</th></tr></thead>'+
+    '<tbody>'+sigRows+'</tbody></table></div></div>';
 
   // ── Portfolio card ──
   var portCard=
@@ -8086,7 +8097,7 @@ function renderRebal(){
     '<div class="fos-module-header"><div><div class="fos-module-title">Rebalanceo</div>'+
     '<div class="fos-module-sub">Define pesos objetivo · Calcula ajustes exactos</div></div>'+
     '<div class="ph-right">'+liveBadge()+'</div></div>'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+
+    '<div class="resp2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+
     '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Pesos objetivo</div>'+
     sliders+
