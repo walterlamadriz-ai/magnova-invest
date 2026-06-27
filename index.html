@@ -4894,22 +4894,24 @@ function renderNews(){
       var buy=ALL_SIG.filter(function(s){return s.sig==='BUY';}).length;
       var sell=ALL_SIG.filter(function(s){return s.sig==='SELL';}).length;
       var t=ALL_SIG.length||1;
-      var sentColor=d.value<=30?'var(--red)':d.value<=55?'var(--amber)':'var(--grn)';
+      var sentColor=d.score<=30?'var(--red)':d.score<=55?'var(--amber)':'var(--grn)';
       var compRows=d.components.map(function(c){
-        var cw=Math.round(c.w*100);
-        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">'+
-          '<span style="font-size:11px;color:var(--text2);font-family:\'JetBrains Mono\',monospace">'+c.name+'</span>'+
-          '<div style="display:flex;align-items:center;gap:8px">'+
-          '<div style="width:80px;height:5px;background:var(--card3);border-radius:3px">'+
-          '<div style="height:100%;width:'+cw+'%;background:'+(cw>=60?'var(--grn)':cw>=40?'var(--amber)':'var(--red)')+';border-radius:3px"></div></div>'+
-          '<span style="font-size:11px;font-weight:700;color:'+(cw>=60?'var(--grn)':cw>=40?'var(--amber)':'var(--red)')+';font-family:\'JetBrains Mono\',monospace;width:30px;text-align:right">'+cw+'</span>'+
+        var cw=Math.max(0,Math.min(100,Math.round(c.score)));
+        var cc=cw>=60?'var(--grn)':cw>=40?'var(--amber)':'var(--red)';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">'+
+          '<span style="font-size:11px;color:var(--text2);font-family:\'JetBrains Mono\',monospace;white-space:nowrap">'+c.icon+' '+c.name+'</span>'+
+          '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'+
+          '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;width:60px;text-align:right;white-space:nowrap">'+c.value+'</span>'+
+          '<div style="width:60px;height:5px;background:var(--card3);border-radius:3px;flex-shrink:0">'+
+          '<div style="height:100%;width:'+cw+'%;background:'+cc+';border-radius:3px"></div></div>'+
+          '<span style="font-size:11px;font-weight:700;color:'+cc+';font-family:\'JetBrains Mono\',monospace;width:24px;text-align:right">'+cw+'</span>'+
           '</div></div>';
       }).join('');
       return '<div class="resp2" style="display:grid;grid-template-columns:200px 1fr;gap:14px">'+
         '<div class="fos-card" style="padding:20px 16px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center">'+
-          '<div style="width:88px;height:88px;border-radius:50%;background:conic-gradient('+sentColor+' '+d.value+'%, rgba(255,255,255,.06) '+d.value+'%);display:flex;align-items:center;justify-content:center;margin-bottom:12px">'+
+          '<div style="width:88px;height:88px;border-radius:50%;background:conic-gradient('+sentColor+' '+d.score+'%, rgba(255,255,255,.06) '+d.score+'%);display:flex;align-items:center;justify-content:center;margin-bottom:12px">'+
             '<div style="width:68px;height:68px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center">'+
-              '<span style="font-size:26px;font-weight:800;color:'+sentColor+';font-family:\'JetBrains Mono\',monospace">'+d.value+'</span>'+
+              '<span style="font-size:26px;font-weight:800;color:'+sentColor+';font-family:\'JetBrains Mono\',monospace">'+d.score+'</span>'+
             '</div>'+
           '</div>'+
           '<div style="font-size:14px;font-weight:700;color:'+sentColor+';margin-bottom:6px">'+d.label+'</div>'+
