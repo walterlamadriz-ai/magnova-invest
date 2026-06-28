@@ -1606,6 +1606,28 @@ function track(event, props){
 function trackIdentify(user){
   try{ if(window.posthog && user && user.id) window.posthog.identify(user.id, {email:user.email, plan:user.plan}); }catch(e){/* silent */}
 }
+// Observabilidad: registra fallos de API/red como evento (PostHog) + console.
+// Permite que el negocio detecte caídas de proveedores (Yahoo/FMP/Stripe) sin
+// montar infra extra. Throttled para no spamear si una API cae repetidamente.
+var _errSeen={};
+function trackError(context, err, extra){
+  try{
+    var key=context+'|'+((err&&err.message)||String(err)||'').slice(0,60);
+    var now=Date.now();
+    if(_errSeen[key]&&(now-_errSeen[key])<60000) return; // máx 1/min por error
+    _errSeen[key]=now;
+    var props=Object.assign({context:context, message:(err&&err.message)||String(err||'unknown'), online:navigator.onLine}, extra||{});
+    track('api_error', props);
+    if(window.console&&console.warn) console.warn('[trackError] '+context, err);
+  }catch(e){/* nunca romper el flujo por telemetría */}
+}
+// Captura global de errores JS no controlados → observabilidad app-wide
+window.addEventListener('error', function(ev){
+  trackError('uncaught', ev.error||new Error(ev.message), {file:(ev.filename||'').split('/').pop(), line:ev.lineno});
+});
+window.addEventListener('unhandledrejection', function(ev){
+  trackError('promise', ev.reason||new Error('unhandled_rejection'));
+});
 
 
 
@@ -2133,6 +2155,7 @@ async function refreshLive(tickers,manual){
       try{localStorage.setItem('mv_prices_cache',JSON.stringify({ts:Date.now(),live:LIVE}));}catch(e){/* silent */}
     } else {
       liveFailed=true;
+      trackError('quotes',new Error('no_prices_returned'),{tickers:tickers.length}); // Yahoo no devolvió precios
       // Load from cache on complete failure
       try{
         var c=JSON.parse(localStorage.getItem('mv_prices_cache')||'null');
@@ -2143,7 +2166,7 @@ async function refreshLive(tickers,manual){
         }
       }catch(e){/* silent */}
     }
-  }catch(e){liveFailed=true;}
+  }catch(e){liveFailed=true;trackError('quotes',e);}
   liveLoading=false;
   // Restore refresh buttons
   var updStr=liveUpdated?new Date(liveUpdated).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}):'—';
@@ -4448,7 +4471,7 @@ async function fetchMarketBar(){
       MARKET_BAR=data.items;
       localStorage.setItem('mv_market_bar',JSON.stringify({ts:Date.now(),items:MARKET_BAR}));
     }
-  }catch(e){console.warn('fetchMarketBar failed',e);}
+  }catch(e){trackError('marketbar',e);}
   _barFetched=true;
 }
 
@@ -4471,7 +4494,7 @@ async function fetchLiveNews(){
       LIVE_NEWS=data.items;
       localStorage.setItem('mv_live_news',JSON.stringify({ts:Date.now(),items:LIVE_NEWS}));
     }
-  }catch(e){console.warn('fetchLiveNews failed',e);}
+  }catch(e){trackError('news',e);}
   _newsFetched=true;
 }
 
@@ -5448,8 +5471,10 @@ async function doUpgrade(){
     throw new Error(data.error||'Error');
   }catch(e){
     if(e.message&&e.message.includes('not configured')){
+      track('checkout_unavailable'); // Stripe aún no configurado
       showToast('Pago con tarjeta disponible muy pronto. Usa el trial gratuito por ahora.','info');
     }else{
+      trackError('checkout',e,{critical:true}); // fallo de pago — alta prioridad
       showToast('Error al conectar con el servidor de pagos. Intenta de nuevo.','error');
     }
   }
