@@ -5463,16 +5463,17 @@ async function doUpgrade(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({product:'invest_pro',userId:u.id,email:u.email,
         interval:_billingPeriod,
-        successUrl:window.location.origin+'/?upgraded=1',
-        cancelUrl:window.location.href})
+        successUrl:window.location.origin+'/app?upgraded=1',
+        cancelUrl:window.location.origin+'/app?upgrade_cancelled=1'})
     });
     var data=await res.json();
     if(data.url){window.location.href=data.url;return;}
     throw new Error(data.error||'Error');
   }catch(e){
     if(e.message&&e.message.includes('not configured')){
-      track('checkout_unavailable'); // Stripe aún no configurado
-      showToast('Pago con tarjeta disponible muy pronto. Usa el trial gratuito por ahora.','info');
+      track('checkout_unavailable'); // Stripe aún no configurado → fallback a trial gratis
+      if(S.user&&S.user.plan==='free'){ startTrial(); showToast('Trial Pro activado — 14 días gratis. El pago con tarjeta estará disponible muy pronto.','info'); }
+      else { showToast('Pago con tarjeta disponible muy pronto.','info'); }
     }else{
       trackError('checkout',e,{critical:true}); // fallo de pago — alta prioridad
       showToast('Error al conectar con el servidor de pagos. Intenta de nuevo.','error');
@@ -7648,8 +7649,8 @@ function mUpgrade(mr){
 
     // CTA
     '<div style="padding:20px 28px 24px">'+
-    '<button onclick="startTrial()" class="btn-big" style="width:100%;padding:13px;font-size:14px;margin-bottom:10px">🚀 Activar acceso Pro</button>'+
-    '<p id="pro-cta-sub" style="font-size:10px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">Activa el plan Pro y explora todas las herramientas. $29.99/mes.</p>'+
+    '<button onclick="doUpgrade()" class="btn-big" style="width:100%;padding:13px;font-size:14px;margin-bottom:10px">🚀 Activar acceso Pro</button>'+
+    '<p id="pro-cta-sub" style="font-size:10px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">14 días gratis · luego $29.99/mes · cancela cuando quieras.</p>'+
     '<div style="margin-top:14px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);text-align:center;line-height:1.6">'+
     '¿Preguntas? <a href="mailto:invest@financeospro.com" style="color:var(--blue);text-decoration:none">invest@financeospro.com</a>'+
     '</div>'+
@@ -8681,6 +8682,21 @@ renderDisclaimer();
   }catch(e){ console.error("boot session check failed",e); }
   render();
   if(S.user) bootLiveData(); // arranca carga de precios live (portfolio/watchlist/señales)
+
+  // ── Retorno post-pago de Stripe ──
+  try{
+    var qp=new URLSearchParams(window.location.search);
+    if(qp.get('upgraded')==='1'){
+      track('upgrade_success');
+      if(typeof showToast==='function') showToast('¡Bienvenido a Pro! 🎉 Tu suscripción está activa.','success');
+      // El webhook actualiza el plan en Supabase; recargar datos por si hubo demora
+      try{ var s2=await sb.auth.getSession(); if(s2.data.session&&s2.data.session.user){ await sbLoadUserData(s2.data.session.user); render(); } }catch(e){}
+      history.replaceState({}, '', '/app'); // limpia el query param
+    } else if(qp.get('upgrade_cancelled')==='1'){
+      track('upgrade_cancelled');
+      history.replaceState({}, '', '/app');
+    }
+  }catch(e){}
 })();
 
 sb.auth.onAuthStateChange(function(event,session){
