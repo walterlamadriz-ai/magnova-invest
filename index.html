@@ -252,11 +252,11 @@
   --blue:      #60a5fa;
   --blue-bg:   #0f1f3d;
 
-  --bg:        #0f1117;
-  --bg2:       #161b24;
-  --card:      #1a2030;
-  --card2:     #1e2636;
-  --card3:     #232c3d;
+  --bg:        #0c0f16;
+  --bg2:       #111520;
+  --card:      #161b27;
+  --card2:     #1a2032;
+  --card3:     #1f263c;
   --card4:     #2a3347;
 
   --text:      #9ca8bc;
@@ -530,7 +530,7 @@ td {
   vertical-align: middle;
 }
 tr:last-child td { border-bottom: none; }
-.trow:hover td { background: var(--card2); }
+.trow:hover td { background: var(--card3); }
 
 /* ── BUTTONS ── */
 .btn {
@@ -1292,7 +1292,7 @@ tr:last-child td { border-bottom: none; }
   display: flex;
   align-items: center;
   gap: 9px;
-  height: 38px;
+  height: 40px;
   padding: 0 10px 0 8px;
   border-radius: 8px;
   border: none;
@@ -1368,9 +1368,13 @@ tr:last-child td { border-bottom: none; }
 .fos-section-label::before { content: ''; display: block; width: 3px; height: 12px; background: var(--grn); border-radius: 2px; }
 .fos-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .fos-table th { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
-.fos-table td { padding: 9px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text); vertical-align: middle; }
+.fos-table td { padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text); vertical-align: middle; }
 .fos-table tr:last-child td { border-bottom: none; }
-.fos-table tr:hover td { background: var(--card2); }
+.fos-table tr:hover td { background: var(--card3); }
+.fos-score { display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;flex-shrink:0; }
+.fos-score--g { background:rgba(61,190,122,.15);color:var(--grn);border:1px solid rgba(61,190,122,.3); }
+.fos-score--a { background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25); }
+.fos-score--r { background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25); }
 .fos-module-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; gap: 12px; }
 .fos-module-title { font-size: 16px; font-weight: 700; color: var(--bright); margin: 0; line-height: 1.2; }
 .fos-module-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); margin-top: 2px; }
