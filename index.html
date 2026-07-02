@@ -1808,7 +1808,8 @@ const S={
   screenerResults:[],
   // ── PLAN DE CAPITAL ──
   capitalPlan:{
-    monthly:1000
+    monthly:1000,
+    tickers:null
   },
   capitalResults:null, capitalLoading:false,
   screenerRunning:false,
@@ -8090,33 +8091,67 @@ var CAP_LADDER=[
 ];
 function _smaLast(closes,n){ if(closes.length<n) return null; var arr=TI.sma(closes,n); for(var i=arr.length-1;i>=0;i--){ if(arr[i]!=null) return arr[i]; } return null; }
 
+// ── Plan de Capital: gestión de tickers ─────────────────────────────
+function _capKey(){ return 'cap_tk_'+(S.user&&S.user.id||'demo'); }
+function _capSave(){ try{localStorage.setItem(_capKey(),JSON.stringify(S.capitalPlan.tickers));}catch(e){} }
+function _capLoad(){
+  try{
+    var raw=localStorage.getItem(_capKey());
+    if(raw){ S.capitalPlan.tickers=JSON.parse(raw); return; }
+  }catch(e){}
+  // sin datos guardados → importar desde portafolio si existe
+  capImportFromPortfolio(true);
+}
+function capImportFromPortfolio(silent){
+  if(!S.portfolio||!S.portfolio.length){ S.capitalPlan.tickers=[]; return; }
+  var eq=Math.round(100/S.portfolio.length);
+  S.capitalPlan.tickers=S.portfolio.map(function(h,i){
+    return {t:h.t, pct:(i===S.portfolio.length-1?100-eq*(S.portfolio.length-1):eq)};
+  });
+  _capSave();
+  if(!silent){ S.capitalResults=null; if(S.page==='capital') renderMain(); }
+}
+function capAddTicker(t,pct){
+  t=(t||'').toUpperCase().trim();
+  if(!t) return;
+  if(!S.capitalPlan.tickers) S.capitalPlan.tickers=[];
+  if(S.capitalPlan.tickers.find(function(x){return x.t===t;})) return;
+  S.capitalPlan.tickers.push({t:t, pct:parseFloat(pct)||0});
+  _capSave(); S.capitalResults=null; if(S.page==='capital') renderMain();
+}
+function capRemoveTicker(t){
+  if(!S.capitalPlan.tickers) return;
+  S.capitalPlan.tickers=S.capitalPlan.tickers.filter(function(x){return x.t!==t;});
+  _capSave(); S.capitalResults=null; if(S.page==='capital') renderMain();
+}
+function capUpdatePct(t,val){
+  if(!S.capitalPlan.tickers) return;
+  var item=S.capitalPlan.tickers.find(function(x){return x.t===t;});
+  if(item){ item.pct=parseFloat(val)||0; _capSave(); }
+}
+function capHandleAddKey(e){ if(e.key==='Enter') capAddTicker(document.getElementById('cap-add-t').value, document.getElementById('cap-add-p').value); }
+
 async function loadCapitalData(){
   if(S.capitalLoading) return;
   var inp=document.getElementById('cap-monthly');
   if(inp){ var v=parseFloat(inp.value); if(v>0) S.capitalPlan.monthly=v; }
-  if(!S.portfolio||!S.portfolio.length){ S.capitalResults=[]; if(S.page==='capital') renderMain(); return; }
-  // calcular valor total del portafolio para derivar pesos
-  var totalVal=0;
-  S.portfolio.forEach(function(h){
-    var price=LIVE[h.t]&&LIVE[h.t].price?LIVE[h.t].price:(h.cur||h.cost||0);
-    totalVal+=h.sh*price;
-  });
+  if(!S.capitalPlan.tickers) _capLoad();
+  var tickers=S.capitalPlan.tickers||[];
+  if(!tickers.length){ S.capitalResults=[]; if(S.page==='capital') renderMain(); return; }
   S.capitalLoading=true; if(S.page==='capital') renderMain();
   var results=[];
-  for(var i=0;i<S.portfolio.length;i++){
-    var h=S.portfolio[i];
-    var price=LIVE[h.t]&&LIVE[h.t].price?LIVE[h.t].price:(h.cur||h.cost||0);
-    var pct=totalVal>0?Math.round((h.sh*price/totalVal)*1000)/10:0; // 1 decimal
-    var sig=ALL_SIG.find(function(s){return s.t===h.t;});
-    var row={t:h.t, name:sig?sig.n:h.t, pct:pct};
+  for(var i=0;i<tickers.length;i++){
+    var tk=tickers[i];
+    var sig=ALL_SIG.find(function(s){return s.t===tk.t;});
+    var row={t:tk.t, name:sig?sig.n:tk.t, pct:tk.pct};
     try{
-      var hist=await fetchHistory(h.t,'1y');
+      var hist=await fetchHistory(tk.t,'1y');
       var closes=(hist||[]).map(function(d){return d.close;}).filter(function(c){return c>0;});
       if(closes.length<25){ results.push({row:row, error:true}); continue; }
-      var livePrice=closes[closes.length-1];
+      var price=closes[closes.length-1];
       var rsiArr=TI.rsi(closes,14); var rsi=rsiArr[rsiArr.length-1];
       var smas={20:_smaLast(closes,20),50:_smaLast(closes,50),100:_smaLast(closes,100),200:_smaLast(closes,200)};
-      results.push({row:row, price:livePrice, rsi:rsi, smas:smas});
+      results.push({row:row, price:price, rsi:rsi, smas:smas});
     }catch(e){ results.push({row:row, error:true}); }
   }
   S.capitalResults=results; S.capitalLoading=false;
@@ -8131,11 +8166,41 @@ function renderCapital(){
       lockedBanner('Plan de Capital','Reparte tu capital mensual en un portafolio de ETFs diversificado con una escalera de tramos según la distancia del precio a sus medias móviles (SMA20/50/100/200) y el RSI. Una guía lógica de distribución educativa.');
     return;
   }
+  if(!S.capitalPlan.tickers) _capLoad();
+  var tickers=S.capitalPlan.tickers||[];
   var monthly=S.capitalPlan.monthly||0;
   var results=S.capitalResults;
   var loading=S.capitalLoading;
+  var totalPct=tickers.reduce(function(s,x){return s+x.pct;},0);
+  var pctOk=Math.abs(totalPct-100)<0.5;
 
-  // Helper: fila de una posición del portafolio
+  // ── Editor de tickers ──
+  var tickerChips=tickers.map(function(tk){
+    return '<div style="display:inline-flex;align-items:center;gap:4px;background:var(--card3);border:1px solid var(--border);border-radius:8px;padding:5px 8px;margin:3px">'+
+      '<span style="font-weight:700;color:var(--bright);font-size:12px;font-family:\'JetBrains Mono\',monospace;min-width:36px">'+tk.t+'</span>'+
+      '<input type="number" value="'+tk.pct+'" min="0" max="100" step="1" onchange="capUpdatePct(\''+tk.t+'\',this.value)" '+
+        'style="width:42px;background:transparent;border:none;border-left:1px solid var(--border);color:var(--text2);font-family:\'JetBrains Mono\',monospace;font-size:11px;padding:0 4px;outline:none;text-align:right">'+
+      '<span style="font-size:10px;color:var(--text3)">%</span>'+
+      '<button onclick="capRemoveTicker(\''+tk.t+'\')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0 2px;line-height:1;margin-left:2px">×</button>'+
+      '</div>';
+  }).join('');
+
+  var addRow='<div style="display:inline-flex;align-items:center;gap:6px;margin:3px">'+
+    '<input type="text" id="cap-add-t" placeholder="Ticker" onkeydown="capHandleAddKey(event)" '+
+      'style="width:72px;background:var(--card3);border:1px solid var(--border);border-radius:8px;color:var(--bright);font-family:\'JetBrains Mono\',monospace;font-size:12px;padding:5px 8px;outline:none;text-transform:uppercase">'+
+    '<input type="number" id="cap-add-p" placeholder="%" min="0" max="100" step="1" onkeydown="capHandleAddKey(event)" '+
+      'style="width:48px;background:var(--card3);border:1px solid var(--border);border-radius:8px;color:var(--bright);font-family:\'JetBrains Mono\',monospace;font-size:12px;padding:5px 6px;outline:none">'+
+    '<button onclick="capAddTicker(document.getElementById(\'cap-add-t\').value,document.getElementById(\'cap-add-p\').value)" '+
+      'style="background:var(--card3);border:1px solid var(--border);border-radius:8px;color:var(--bright);font-size:11px;padding:5px 10px;cursor:pointer;white-space:nowrap">+ Agregar</button>'+
+    '</div>';
+
+  var pctWarning=tickers.length&&!pctOk?
+    '<span style="font-size:10px;color:var(--amber);font-family:\'JetBrains Mono\',monospace;margin-left:8px">⚠ suma '+totalPct.toFixed(1)+'% (debe ser 100%)</span>':'';
+
+  var importBtn=(S.portfolio&&S.portfolio.length)?
+    '<button onclick="capImportFromPortfolio(false)" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;margin-left:8px">↩ Importar desde portafolio</button>':'';
+
+  // ── Helper: fila de resultado ──
   function etfRow(r){
     var row=r.row;
     var etfMonthly=monthly*(row.pct/100);
@@ -8152,7 +8217,7 @@ function renderCapital(){
     var tramos=CAP_LADDER.map(function(t){
       var smaV=r.smas[t.sma];
       var amt=etfMonthly*t.pct;
-      var active=smaV!=null && r.price<=smaV;
+      var active=smaV!=null&&r.price<=smaV;
       if(active) reached+=amt;
       var cell=smaV!=null?('$'+fmt(amt)):'—';
       var titleTxt=t.label+(smaV!=null?(' = $'+fmtD(smaV)+(active?' · alcanzado':' · pendiente')):'');
@@ -8170,17 +8235,10 @@ function renderCapital(){
       '</tr>';
   }
 
-  // Estado: portafolio vacío
-  var emptyPort=!S.portfolio||!S.portfolio.length;
-
   var tableHtml='';
-  if(emptyPort){
-    tableHtml='<div class="fos-card" style="padding:28px;text-align:center;color:var(--text3);margin-top:8px">'+
-      '<div style="font-size:32px;margin-bottom:10px">📂</div>'+
-      '<div style="font-weight:600;color:var(--bright);margin-bottom:6px">Tu portafolio está vacío</div>'+
-      '<div style="font-size:12px;line-height:1.6">Agrega posiciones en <b>Portafolio</b> para calcular la distribución de capital basada en tus tenencias reales.</div>'+
-      '<div style="margin-top:14px"><button onclick="setPage(\'port\')" class="btn-big" style="padding:8px 18px;font-size:12px">Ir a Portafolio →</button></div>'+
-      '</div>';
+  if(!tickers.length){
+    tableHtml='<div style="text-align:center;padding:32px 20px;color:var(--text3)">'+
+      '<div style="font-size:11px">Agrega tickers arriba para comenzar.</div></div>';
   } else if(results&&results.length){
     var totalSuggested=results.reduce(function(s,r){
       if(r.error||!(r.rsi>=30&&r.rsi<=45)) return s;
@@ -8189,12 +8247,13 @@ function renderCapital(){
       return s+reached;
     },0);
     tableHtml='<div class="tw"><table class="fos-table"><thead><tr>'+
-      '<th>Ticker</th><th>Nombre</th><th>% port.</th><th>$/mes</th><th>RSI</th>'+
-      '<th style="text-align:right">SMA20 · 10%</th><th style="text-align:right">SMA50 · 15%</th><th style="text-align:right">SMA100 · 25%</th><th style="text-align:right">SMA200 · 50%</th>'+
+      '<th>Ticker</th><th>Nombre</th><th>%</th><th>$/mes</th><th>RSI</th>'+
+      '<th style="text-align:right">SMA20·10%</th><th style="text-align:right">SMA50·15%</th><th style="text-align:right">SMA100·25%</th><th style="text-align:right">SMA200·50%</th>'+
       '<th style="text-align:right">Sugerido hoy</th>'+
       '</tr></thead><tbody>'+
       results.map(etfRow).join('')+
-      '<tr style="border-top:2px solid var(--border)"><td colspan="9" style="font-weight:700;color:var(--bright)">Total portafolio — $'+fmt(monthly)+'/mes</td>'+
+      '<tr style="border-top:2px solid var(--border)">'+
+      '<td colspan="9" style="font-weight:700;color:var(--bright)">Total — $'+fmt(monthly)+'/mes</td>'+
       '<td style="font-family:\'JetBrains Mono\',monospace;text-align:right;font-weight:700;color:var(--grn)">$'+fmt(totalSuggested)+'</td></tr>'+
       '</tbody></table></div>';
   }
@@ -8203,31 +8262,37 @@ function renderCapital(){
     '<div class="fos-module-header"><div><div class="fos-module-title">💰 Plan de Capital</div>'+
     '<div class="fos-module-sub">Distribución referencial del capital mensual según condiciones de mercado (SMA + RSI)</div></div></div>'+
 
-    // Controles
     '<div class="fos-card" style="padding:16px;margin-bottom:16px">'+
-    '<div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap">'+
-    '<div><div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:5px">Capital mensual a invertir (USD)</div>'+
-    '<input type="number" id="cap-monthly" value="'+monthly+'" min="0" step="50" style="width:160px;background:var(--card3);border:1px solid var(--border);border-radius:8px;color:var(--bright);font-family:\'JetBrains Mono\',monospace;font-size:16px;font-weight:700;padding:8px 12px;outline:none"></div>'+
+    // Fila 1: capital mensual + calcular
+    '<div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px">'+
+    '<div><div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:5px">Capital mensual (USD)</div>'+
+    '<input type="number" id="cap-monthly" value="'+monthly+'" min="0" step="50" style="width:150px;background:var(--card3);border:1px solid var(--border);border-radius:8px;color:var(--bright);font-family:\'JetBrains Mono\',monospace;font-size:16px;font-weight:700;padding:8px 12px;outline:none"></div>'+
     '<button onclick="loadCapitalData()" class="btn-big" style="padding:9px 20px;font-size:13px'+(loading?';opacity:.6;pointer-events:none':'')+'">'+(loading?'<span class="spin-sm"></span> Calculando...':'📊 Calcular distribución')+'</button>'+
-    '<div style="flex:1;min-width:180px;font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.5">Trae precio, RSI y SMA20/50/100/200 de cada ETF y marca qué tramos están activos hoy.</div>'+
-    '</div></div>'+
+    '</div>'+
+    // Fila 2: editor de tickers
+    '<div style="border-top:1px solid var(--border);padding-top:12px">'+
+    '<div style="display:flex;align-items:center;margin-bottom:8px">'+
+    '<span style="font-size:9px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1px;text-transform:uppercase;color:var(--text3)">Tickers del plan</span>'+
+    pctWarning+importBtn+
+    '</div>'+
+    '<div style="display:flex;flex-wrap:wrap;align-items:center">'+
+    tickerChips+addRow+
+    '</div>'+
+    '</div>'+
+    '</div>'+
 
-    // Leyenda
-    (results?'<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:6px">'+
-      '<span><span style="color:var(--grn)">✓ verde</span> = precio alcanzó esa SMA (tramo activo)</span>'+
+    (results&&results.length?'<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:6px">'+
+      '<span><span style="color:var(--grn)">✓ verde</span> = precio ≤ SMA (tramo activo)</span>'+
       '<span><span style="color:var(--grn)">RSI 30-45</span> = zona de entrada favorable</span>'+
       '<span>"Sugerido hoy" = tramos activos con RSI favorable</span>'+
       '</div>':'')+
 
-    // Tabla o estado vacío
     (results?tableHtml:
-      '<div style="text-align:center;padding:40px 20px;color:var(--text3)">'+
-      '<div style="font-size:40px;margin-bottom:12px">💰</div>'+
-      '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:6px">Define tu capital mensual y presiona "Calcular distribución"</div>'+
-      '<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace">El portafolio modelo ya viene precargado (editable en una próxima versión).</div>'+
-      '</div>')+
+      (!tickers.length?tableHtml:
+      '<div style="text-align:center;padding:32px 20px;color:var(--text3)">'+
+      '<div style="font-size:12px">Presiona <b>Calcular distribución</b> para analizar los tickers.</div>'+
+      '</div>'))+
 
-    // Disclaimer
     '<div style="margin-top:20px;padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);line-height:1.8">'+
     '<b style="color:var(--text2)">⚠ Guía educativa de distribución de capital.</b> '+
     'Los tramos por SMA y la condición de RSI son referencias técnicas educativas, no instrucciones de compra ni recomendación de inversión. La decisión de asignar capital es exclusiva del usuario. Datos con posible retraso.'+
