@@ -1380,7 +1380,7 @@ tr:last-child td { border-bottom: none; }
 .fos-module-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); margin-top: 2px; }
 /* ── DASHBOARD v2 ── */
 .dash-wrap { padding: 20px 24px; }
-.dash-kpi { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.dash-kpi { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 20px; }
 .dash-body { display: grid; grid-template-columns: 1fr 272px; gap: 16px; align-items: start; }
 .dash-kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
 .dash-kpi-card.kpi-pos { border-top: 2px solid var(--grn); }
@@ -1395,6 +1395,7 @@ tr:last-child td { border-bottom: none; }
 .dash-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .dash-action-btn { background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; cursor: pointer; text-align: left; transition: border-color .15s; }
 .dash-action-btn:hover { border-color: var(--grn-lt); }
+@media (max-width: 1100px) { .dash-kpi { grid-template-columns: repeat(3,1fr); } }
 @media (max-width: 900px) { .dash-body { grid-template-columns: 1fr; } }
 @media (max-width: 768px) {
   .dash-kpi { grid-template-columns: 1fr 1fr; }
@@ -3916,18 +3917,27 @@ function renderDash(){
       '</tr>';
   }).join('');
 
+  // ── name lookup (best-effort) ──
+  var _TN={'AAPL':'Apple Inc.','NVDA':'NVIDIA Corp.','MSFT':'Microsoft','AMZN':'Amazon.com','GOOGL':'Alphabet','META':'Meta Platforms','TSLA':'Tesla','SPY':'SPDR S&P 500','QQQ':'Invesco QQQ','VTI':'Vanguard Total','BRK.B':'Berkshire B','V':'Visa Inc.','JPM':'JPMorgan','XLK':'Tech Select','XLF':'Financial Sel.','GLD':'Gold ETF','TLT':'20yr Treasury','BTC-USD':'Bitcoin','AMD':'AMD Inc.','NFLX':'Netflix'};
+  function _tname(t){ return _TN[t]||t; }
+
   // ── Portfolio rows ──
   var portRows=port.slice(0,8).map(function(h){
     var pnlH=h.sh*(h.cur-h.cost);
     var pnlPctH=h.cost>0?((h.cur-h.cost)/h.cost*100):0;
     var pc=pnlH>=0?'var(--grn)':'var(--red)';
+    var lqd=LIVE[h.t];
+    var chgV=lqd?(lqd.changePct||0)*100:null;
+    var chgColor=chgV===null?'var(--text3)':chgV>=0?'var(--grn)':'var(--red)';
+    var chgStr=chgV===null?'—':(chgV>=0?'+':'')+chgV.toFixed(2)+'%';
+    var wt=totM>0?Math.round(h.sh*h.cur/totM*100):0;
     return '<tr style="cursor:pointer" onclick="openDrawer(\''+h.t+'\','+h.cur+')" onmouseenter="this.style.background=\'rgba(255,255,255,.025)\'" onmouseleave="this.style.background=\'\'">'+
-      '<td style="font-weight:600;color:var(--bright);font-family:\'JetBrains Mono\',monospace">'+h.t+'</td>'+
-      '<td style="font-family:\'JetBrains Mono\',monospace;color:var(--text)">'+h.sh+'</td>'+
-      '<td style="font-family:\'JetBrains Mono\',monospace;color:var(--text2)">'+fmtMoney(h.cost)+'</td>'+
+      '<td style="font-weight:700;color:var(--bright);font-family:\'JetBrains Mono\',monospace">'+h.t+'</td>'+
+      '<td style="color:var(--text2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_tname(h.t)+'</td>'+
       '<td style="font-family:\'JetBrains Mono\',monospace;color:var(--text)">'+fmtMoney(h.cur)+'</td>'+
+      '<td style="font-family:\'JetBrains Mono\',monospace;color:'+chgColor+'">'+chgStr+'</td>'+
       '<td style="font-family:\'JetBrains Mono\',monospace;color:'+pc+'">'+(pnlH>=0?'+':'')+fmtMoney(Math.abs(pnlH))+'</td>'+
-      '<td style="font-family:\'JetBrains Mono\',monospace;color:'+pc+'">'+(pnlPctH>=0?'+':'')+pnlPctH.toFixed(1)+'%</td>'+
+      '<td style="font-family:\'JetBrains Mono\',monospace;color:var(--text3)">'+wt+'%</td>'+
       '</tr>';
   }).join('');
 
@@ -3955,11 +3965,27 @@ function renderDash(){
   // ── KPI cards ──
   var pnlColor=pnl>=0?'var(--grn)':'var(--red)';
   var _kc=pnl>=0?'kpi-pos':'kpi-neg';
+
+  // Mejor activo por P&L%
+  var bestPos=null;
+  port.forEach(function(h){
+    var pct=h.cost>0?(h.cur-h.cost)/h.cost*100:0;
+    if(!bestPos||pct>bestPos.pct) bestPos={t:h.t,pct:pct};
+  });
+
+  // Mejor activo hoy (LIVE changePct)
+  var bestDay=null;
+  port.forEach(function(h){
+    var lqd=LIVE[h.t]; var chg=lqd?(lqd.changePct||0)*100:null;
+    if(chg!==null&&(!bestDay||chg>bestDay.chg)) bestDay={t:h.t,chg:chg};
+  });
+
   var kpiCards=
-    '<div class="dash-kpi-card '+_kc+'"><div class="dash-kpi-label">Valor Total</div><div class="dash-kpi-val">'+fmtMoney(totM)+'</div><div class="dash-kpi-sub" style="color:'+pnlColor+'">'+(pnl>=0?'▲':'▼')+' '+(pnl>=0?'+':'')+fmtMoney(Math.abs(pnl))+' total</div></div>'+
-    '<div class="dash-kpi-card '+_kc+'"><div class="dash-kpi-label">P&amp;L Total</div><div class="dash-kpi-val" style="color:'+pnlColor+'">'+(pnl>=0?'+':'')+fmtMoney(pnl)+'</div><div class="dash-kpi-sub" style="color:'+pnlColor+'">'+(pnlPct>=0?'+':'')+pnlPct.toFixed(2)+'%</div></div>'+
-    '<div class="dash-kpi-card kpi-neu"><div class="dash-kpi-label">Activos</div><div class="dash-kpi-val">'+port.length+'</div><div class="dash-kpi-sub"><span style="color:var(--grn)">'+winners+' en verde</span> · <span style="color:var(--red)">'+losers+' neg.</span></div></div>'+
-    '<div class="dash-kpi-card '+(avgScore>=70?'kpi-pos':avgScore>=50?'kpi-neu':'kpi-neg')+'"><div class="dash-kpi-label">DE Score Prom.</div><div class="dash-kpi-val" style="color:'+(avgScore>=70?'var(--grn)':avgScore>=50?'var(--amber)':'var(--red)')+'">'+avgScore+'</div><div class="dash-kpi-sub" style="color:var(--text3)">Calidad técnica</div></div>';
+    '<div class="dash-kpi-card '+_kc+'"><div class="dash-kpi-label">Portfolio Total</div><div class="dash-kpi-val">'+fmtMoney(totM)+'</div><div class="dash-kpi-sub" style="color:'+pnlColor+'">'+(pnl>=0?'▲':'▼')+' '+(pnl>=0?'+':'')+pnlPct.toFixed(2)+'% total</div></div>'+
+    '<div class="dash-kpi-card '+_kc+'"><div class="dash-kpi-label">P&amp;L Total</div><div class="dash-kpi-val" style="color:'+pnlColor+'">'+(pnl>=0?'+':'')+fmtMoney(pnl)+'</div><div class="dash-kpi-sub" style="color:'+pnlColor+'">'+(pnlPct>=0?'+':'')+pnlPct.toFixed(2)+'% retorno</div></div>'+
+    '<div class="dash-kpi-card kpi-neu"><div class="dash-kpi-label">Posiciones</div><div class="dash-kpi-val">'+port.length+'</div><div class="dash-kpi-sub"><span style="color:var(--grn)">'+winners+' positivas</span> · <span style="color:var(--red)">'+losers+' neg.</span></div></div>'+
+    (bestPos?'<div class="dash-kpi-card kpi-pos"><div class="dash-kpi-label">Mejor Activo</div><div class="dash-kpi-val" style="color:var(--grn);font-size:18px">'+bestPos.t+'</div><div class="dash-kpi-sub" style="color:var(--grn)">'+(bestPos.pct>=0?'+':'')+bestPos.pct.toFixed(1)+'%</div></div>':'<div class="dash-kpi-card kpi-neu"><div class="dash-kpi-label">Mejor Activo</div><div class="dash-kpi-val">—</div></div>')+
+    (bestDay?'<div class="dash-kpi-card '+(bestDay.chg>=0?'kpi-pos':'kpi-neg')+'"><div class="dash-kpi-label">Mejor Hoy</div><div class="dash-kpi-val" style="color:'+(bestDay.chg>=0?'var(--grn)':'var(--red)')+';font-size:18px">'+bestDay.t+'</div><div class="dash-kpi-sub" style="color:'+(bestDay.chg>=0?'var(--grn)':'var(--red)')+'">'+(bestDay.chg>=0?'+':'')+bestDay.chg.toFixed(2)+'% hoy</div></div>':'<div class="dash-kpi-card kpi-neu"><div class="dash-kpi-label">Mejor Hoy</div><div class="dash-kpi-val">—</div></div>');
 
   // ── Top Señales card ──
   var sigCard=
@@ -3980,7 +4006,7 @@ function renderDash(){
     '</div>'+
     (S.user.plan==='free'&&S.portfolio.length>plan.maxT?
       '<div style="font-size:10px;color:var(--amber);font-family:\'JetBrains Mono\',monospace;margin-bottom:10px">⚠ Mostrando '+plan.maxT+' de '+S.portfolio.length+' · <span onclick="openModal(\'upgrade\')" style="cursor:pointer;text-decoration:underline">Upgrade Pro</span></div>':'')+
-    '<div class="tw"><table class="fos-table"><thead><tr><th>Ticker</th><th>Acc.</th><th>Entrada</th><th>Actual</th><th>P&amp;L $</th><th>P&amp;L %</th></tr></thead>'+
+    '<div class="tw"><table class="fos-table"><thead><tr><th>Ticker</th><th>Nombre</th><th>Precio</th><th>Cambio</th><th>P&amp;L</th><th>Peso%</th></tr></thead>'+
     '<tbody>'+portRows+'</tbody></table></div></div>';
 
   // ── Mini-news widget ──
@@ -4043,20 +4069,44 @@ function dashLoadContext(){
     var isFree=S.user&&S.user.plan==='free';
     var rClass=r?(r.regime==='risk_on'?'fos-pill--grn':r.regime==='risk_off'?'fos-pill--red':'fos-pill--amb'):'';
     var rLabel=r?r.label.toUpperCase():'—';
-    var html='<div class="fos-section-label" style="margin-bottom:10px">Contexto de Mercado</div>';
+    var html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div class="fos-section-label">Régimen de Mercado</div>'+(r&&r.spy&&r.sma200?'<span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:var(--text3)">SMA50 '+(r.spy>r.sma200?'>':'<')+' SMA200</span>':'')+'</div>';
     if(r){
-      html+='<div class="dash-regime-pill '+rClass+'"><span class="fos-dot"></span>'+rLabel+'</div>';
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;color:var(--text3)">SPY · Tendencia</span><div class="dash-regime-pill '+rClass+'" style="margin:0"><span class="fos-dot"></span>'+rLabel+'</div></div>';
       html+='<div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:10px">'+r.desc+'</div>';
       if(r.spy) html+='<div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-top:1px solid var(--border)"><span style="color:var(--text3);font-family:\'JetBrains Mono\',monospace">SPY</span><span style="color:var(--bright);font-family:\'JetBrains Mono\',monospace">$'+fmtD(r.spy)+'</span></div>';
       if(r.sma200) html+='<div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-top:1px solid var(--border)"><span style="color:var(--text3);font-family:\'JetBrains Mono\',monospace">SMA200</span><span style="color:var(--text2);font-family:\'JetBrains Mono\',monospace">$'+fmtD(r.sma200)+'</span></div>';
       if(r.pct200!=null){var p200=(r.pct200*100);html+='<div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-top:1px solid var(--border)"><span style="color:var(--text3);font-family:\'JetBrains Mono\',monospace">% vs SMA200</span><span style="color:'+(p200>=0?'var(--grn)':'var(--red)')+';font-family:\'JetBrains Mono\',monospace">'+(p200>=0?'+':'')+p200.toFixed(1)+'%</span></div>';}
     }
     if(v&&v.vix){
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:8px 0;border-top:1px solid var(--border);margin-top:4px"><span style="color:var(--text3);font-family:\'JetBrains Mono\',monospace">VIX</span><span class="fos-pill fos-pill--amb" style="font-size:10px;padding:2px 8px">'+v.vix.toFixed(1)+'</span></div>';
-      html+='<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-bottom:10px">'+v.label+'</div>';
+      var vixN=v.vix; var vixPct=Math.min(100,Math.round(vixN/50*100));
+      var vixC=vixN<20?'var(--grn)':vixN<30?'var(--amber)':'var(--red)';
+      html+='<div style="padding:8px 0;border-top:1px solid var(--border);margin-top:4px">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">VIX (volatilidad)</span><span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:'+vixC+'">'+vixN.toFixed(1)+' · '+v.label+'</span></div>';
+      html+='<div style="background:var(--border);border-radius:3px;height:5px;overflow:hidden"><div style="height:100%;width:'+vixPct+'%;background:'+vixC+';border-radius:3px;transition:width .4s"></div></div>';
+      html+='<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:3px"><span>0</span><span>50</span></div>';
+      html+='</div>';
+    }
+    // Señales activas chips
+    if(r){
+      var chips=[];
+      if(r.regime==='risk_on') chips.push({label:'Momentum alcista',color:'var(--grn)',bg:'rgba(61,190,122,.1)'});
+      else if(r.regime==='risk_off') chips.push({label:'Momentum bajista',color:'var(--red)',bg:'rgba(239,68,68,.1)'});
+      else chips.push({label:'Momentum neutral',color:'var(--amber)',bg:'rgba(245,158,11,.1)'});
+      if(v&&v.vix){
+        var vn=v.vix;
+        if(vn<20) chips.push({label:'VIX bajo — calma',color:'var(--grn)',bg:'rgba(61,190,122,.1)'});
+        else if(vn<30) chips.push({label:'VIX moderado',color:'var(--amber)',bg:'rgba(245,158,11,.1)'});
+        else chips.push({label:'VIX elevado',color:'var(--red)',bg:'rgba(239,68,68,.1)'});
+      }
+      if(r.spy&&r.sma200&&r.spy>r.sma200) chips.push({label:'Breadth positivo',color:'var(--grn)',bg:'rgba(61,190,122,.1)'});
+      if(chips.length){
+        html+='<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px"><div style="font-family:\'JetBrains Mono\',monospace;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Señales activas</div>';
+        html+=chips.map(function(c){return '<span style="display:inline-flex;align-items:center;gap:5px;background:'+c.bg+';color:'+c.color+';border:1px solid '+c.color+';border-radius:20px;padding:3px 10px;font-size:10px;font-weight:600;margin:2px 4px 2px 0"><span style="width:6px;height:6px;border-radius:50%;background:'+c.color+';flex-shrink:0"></span>'+c.label+'</span>';}).join('');
+        html+='</div>';
+      }
     }
     html+='<button onclick="setPage(\''+(isFree?'upgrade':'decision')+'\')" '+(isFree?'onclick="openModal(\'upgrade\')"':'')+
-      ' style="width:100%;margin-top:6px;background:var(--grn);border:none;border-radius:8px;padding:7px 12px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">→ Abrir Motor de Análisis</button>';
+      ' style="width:100%;margin-top:10px;background:var(--grn);border:none;border-radius:8px;padding:7px 12px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">→ Abrir Motor de Análisis</button>';
     el.innerHTML=html;
     // Also refresh topbar pills now that data is loaded
     renderTopbar();
