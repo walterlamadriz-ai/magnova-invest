@@ -1808,20 +1808,7 @@ const S={
   screenerResults:[],
   // ── PLAN DE CAPITAL ──
   capitalPlan:{
-    monthly:1000,
-    portfolio:[
-      {seg:'S&P 500',        etf:'SPYM', pct:40, bucket:'largo'},
-      {seg:'Nasdaq',         etf:'QQQM', pct:15, bucket:'largo'},
-      {seg:'Dow Jones US',   etf:'SCHG', pct:15, bucket:'largo'},
-      {seg:'Russell 2000',   etf:'IWM',  pct:5,  bucket:'largo'},
-      {seg:'S&P 500 Momentum',etf:'SPMO',pct:15, bucket:'largo'},
-      {seg:'Finanzas',       etf:'VFH',  pct:2,  bucket:'medio'},
-      {seg:'IA',             etf:'CHAT', pct:2,  bucket:'medio'},
-      {seg:'Metals & Mining',etf:'REMX', pct:2,  bucket:'medio'},
-      {seg:'Energía Nuclear',etf:'URA',  pct:2,  bucket:'medio'},
-      {seg:'Energía',        etf:'XLE',  pct:1,  bucket:'medio'},
-      {seg:'Cobre',          etf:'COPX', pct:1,  bucket:'medio'}
-    ]
+    monthly:1000
   },
   capitalResults:null, capitalLoading:false,
   screenerRunning:false,
@@ -8105,21 +8092,31 @@ function _smaLast(closes,n){ if(closes.length<n) return null; var arr=TI.sma(clo
 
 async function loadCapitalData(){
   if(S.capitalLoading) return;
-  // leer capital mensual del input si está en pantalla
   var inp=document.getElementById('cap-monthly');
   if(inp){ var v=parseFloat(inp.value); if(v>0) S.capitalPlan.monthly=v; }
+  if(!S.portfolio||!S.portfolio.length){ S.capitalResults=[]; if(S.page==='capital') renderMain(); return; }
+  // calcular valor total del portafolio para derivar pesos
+  var totalVal=0;
+  S.portfolio.forEach(function(h){
+    var price=LIVE[h.t]&&LIVE[h.t].price?LIVE[h.t].price:(h.cur||h.cost||0);
+    totalVal+=h.sh*price;
+  });
   S.capitalLoading=true; if(S.page==='capital') renderMain();
   var results=[];
-  for(var i=0;i<S.capitalPlan.portfolio.length;i++){
-    var row=S.capitalPlan.portfolio[i];
+  for(var i=0;i<S.portfolio.length;i++){
+    var h=S.portfolio[i];
+    var price=LIVE[h.t]&&LIVE[h.t].price?LIVE[h.t].price:(h.cur||h.cost||0);
+    var pct=totalVal>0?Math.round((h.sh*price/totalVal)*1000)/10:0; // 1 decimal
+    var sig=ALL_SIG.find(function(s){return s.t===h.t;});
+    var row={t:h.t, name:sig?sig.n:h.t, pct:pct};
     try{
-      var hist=await fetchHistory(row.etf,'1y');
+      var hist=await fetchHistory(h.t,'1y');
       var closes=(hist||[]).map(function(d){return d.close;}).filter(function(c){return c>0;});
       if(closes.length<25){ results.push({row:row, error:true}); continue; }
-      var price=closes[closes.length-1];
+      var livePrice=closes[closes.length-1];
       var rsiArr=TI.rsi(closes,14); var rsi=rsiArr[rsiArr.length-1];
       var smas={20:_smaLast(closes,20),50:_smaLast(closes,50),100:_smaLast(closes,100),200:_smaLast(closes,200)};
-      results.push({row:row, price:price, rsi:rsi, smas:smas});
+      results.push({row:row, price:livePrice, rsi:rsi, smas:smas});
     }catch(e){ results.push({row:row, error:true}); }
   }
   S.capitalResults=results; S.capitalLoading=false;
@@ -8138,35 +8135,33 @@ function renderCapital(){
   var results=S.capitalResults;
   var loading=S.capitalLoading;
 
-  // Helper: fila de un ETF con su escalera de tramos
+  // Helper: fila de una posición del portafolio
   function etfRow(r){
     var row=r.row;
     var etfMonthly=monthly*(row.pct/100);
     if(r.error){
-      return '<tr><td style="font-weight:600;color:var(--bright)">'+row.etf+'</td>'+
-        '<td style="color:var(--text3);font-size:10px">'+row.seg+'</td>'+
+      return '<tr><td style="font-weight:600;color:var(--bright)">'+row.t+'</td>'+
+        '<td style="color:var(--text3);font-size:10px">'+row.name+'</td>'+
         '<td style="font-family:\'JetBrains Mono\',monospace">'+row.pct+'%</td>'+
         '<td style="font-family:\'JetBrains Mono\',monospace">$'+fmt(etfMonthly)+'</td>'+
         '<td colspan="6" style="color:var(--text3);font-size:10px">Sin datos disponibles</td></tr>';
     }
     var rsi=r.rsi, rsiOk=rsi>=30&&rsi<=45;
     var rsiColor=rsiOk?'var(--grn)':(rsi<30?'var(--amber)':'var(--text3)');
-    // tramos: activo si precio <= SMA de ese nivel
     var reached=0;
     var tramos=CAP_LADDER.map(function(t){
       var smaV=r.smas[t.sma];
       var amt=etfMonthly*t.pct;
-      var active=smaV!=null && r.price<=smaV; // el precio tocó/bajó de esa SMA
+      var active=smaV!=null && r.price<=smaV;
       if(active) reached+=amt;
       var cell=smaV!=null?('$'+fmt(amt)):'—';
       var titleTxt=t.label+(smaV!=null?(' = $'+fmtD(smaV)+(active?' · alcanzado':' · pendiente')):'');
       return '<td style="font-family:\'JetBrains Mono\',monospace;text-align:right;color:'+(active?'var(--grn)':'var(--text3)')+';font-weight:'+(active?'700':'400')+';background:'+(active?'rgba(61,190,122,.08)':'transparent')+'" title="'+titleTxt+'">'+(active?'✓ ':'')+cell+'</td>';
     }).join('');
-    // sugerido este mes = suma de tramos alcanzados, condicionado a RSI favorable
     var suggested=rsiOk?reached:0;
     return '<tr class="trow">'+
-      '<td style="font-weight:700;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+row.etf+'\','+r.price+')">'+row.etf+' <span style="font-size:9px;color:var(--text3)">↗</span></td>'+
-      '<td style="color:var(--text3);font-size:10px">'+row.seg+'</td>'+
+      '<td style="font-weight:700;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+row.t+'\','+r.price+')">'+row.t+' <span style="font-size:9px;color:var(--text3)">↗</span></td>'+
+      '<td style="color:var(--text3);font-size:10px">'+row.name+'</td>'+
       '<td style="font-family:\'JetBrains Mono\',monospace">'+row.pct+'%</td>'+
       '<td style="font-family:\'JetBrains Mono\',monospace">$'+fmt(etfMonthly)+'</td>'+
       '<td style="font-family:\'JetBrains Mono\',monospace;color:'+rsiColor+'" title="'+(rsiOk?'En zona favorable 30-45':'Fuera de zona 30-45')+'">'+(rsi!=null?rsi.toFixed(0):'—')+'</td>'+
@@ -8175,25 +8170,33 @@ function renderCapital(){
       '</tr>';
   }
 
+  // Estado: portafolio vacío
+  var emptyPort=!S.portfolio||!S.portfolio.length;
+
   var tableHtml='';
-  if(results&&results.length){
-    ['largo','medio'].forEach(function(bucket){
-      var rows=results.filter(function(r){return r.row.bucket===bucket;});
-      if(!rows.length) return;
-      var bLabel=bucket==='largo'?'Largo Plazo (núcleo diversificado)':'Mediano Plazo (sectorial/temático)';
-      var bPct=rows.reduce(function(s,r){return s+r.row.pct;},0);
-      var bSuggested=rows.reduce(function(s,r){ if(r.error||!(r.rsi>=30&&r.rsi<=45)) return s; var em=monthly*(r.row.pct/100); var reached=0; CAP_LADDER.forEach(function(t){var sv=r.smas[t.sma]; if(sv!=null&&r.price<=sv) reached+=em*t.pct;}); return s+reached; },0);
-      tableHtml+='<div class="fos-section-label" style="margin:18px 0 8px">'+bLabel+' — '+bPct+'%</div>'+
-        '<div class="tw"><table class="fos-table"><thead><tr>'+
-        '<th>ETF</th><th>Segmento</th><th>% obj.</th><th>$/mes</th><th>RSI</th>'+
-        '<th style="text-align:right">SMA20 · 10%</th><th style="text-align:right">SMA50 · 15%</th><th style="text-align:right">SMA100 · 25%</th><th style="text-align:right">SMA200 · 50%</th>'+
-        '<th style="text-align:right">Sugerido hoy</th>'+
-        '</tr></thead><tbody>'+
-        rows.map(etfRow).join('')+
-        '<tr style="border-top:2px solid var(--border)"><td colspan="9" style="font-weight:700;color:var(--bright)">Subtotal '+(bucket==='largo'?'Largo':'Mediano')+' — $'+fmt(monthly*bPct/100)+'/mes</td>'+
-        '<td style="font-family:\'JetBrains Mono\',monospace;text-align:right;font-weight:700;color:var(--grn)">$'+fmt(bSuggested)+'</td></tr>'+
-        '</tbody></table></div>';
-    });
+  if(emptyPort){
+    tableHtml='<div class="fos-card" style="padding:28px;text-align:center;color:var(--text3);margin-top:8px">'+
+      '<div style="font-size:32px;margin-bottom:10px">📂</div>'+
+      '<div style="font-weight:600;color:var(--bright);margin-bottom:6px">Tu portafolio está vacío</div>'+
+      '<div style="font-size:12px;line-height:1.6">Agrega posiciones en <b>Portafolio</b> para calcular la distribución de capital basada en tus tenencias reales.</div>'+
+      '<div style="margin-top:14px"><button onclick="setPage(\'port\')" class="btn-big" style="padding:8px 18px;font-size:12px">Ir a Portafolio →</button></div>'+
+      '</div>';
+  } else if(results&&results.length){
+    var totalSuggested=results.reduce(function(s,r){
+      if(r.error||!(r.rsi>=30&&r.rsi<=45)) return s;
+      var em=monthly*(r.row.pct/100); var reached=0;
+      CAP_LADDER.forEach(function(t){var sv=r.smas[t.sma]; if(sv!=null&&r.price<=sv) reached+=em*t.pct;});
+      return s+reached;
+    },0);
+    tableHtml='<div class="tw"><table class="fos-table"><thead><tr>'+
+      '<th>Ticker</th><th>Nombre</th><th>% port.</th><th>$/mes</th><th>RSI</th>'+
+      '<th style="text-align:right">SMA20 · 10%</th><th style="text-align:right">SMA50 · 15%</th><th style="text-align:right">SMA100 · 25%</th><th style="text-align:right">SMA200 · 50%</th>'+
+      '<th style="text-align:right">Sugerido hoy</th>'+
+      '</tr></thead><tbody>'+
+      results.map(etfRow).join('')+
+      '<tr style="border-top:2px solid var(--border)"><td colspan="9" style="font-weight:700;color:var(--bright)">Total portafolio — $'+fmt(monthly)+'/mes</td>'+
+      '<td style="font-family:\'JetBrains Mono\',monospace;text-align:right;font-weight:700;color:var(--grn)">$'+fmt(totalSuggested)+'</td></tr>'+
+      '</tbody></table></div>';
   }
 
   document.getElementById('main').innerHTML=
