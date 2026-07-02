@@ -1643,7 +1643,7 @@ const CONSENT_GATE_ENABLED = true;
 // ── USERS & PLANS ──────────────────────────────────────────────
 // USERS[] migrado a Supabase Auth — ver migrate-test-users.md
 const PLANS={
-  free:{label:"Free",maxT:5,maxA:3,maxS:5,locked:["decision","ind","risk","back","screener"],
+  free:{label:"Free",maxT:5,maxA:3,maxS:5,locked:["decision","ind","risk","back","screener","capital"],
     price:0,desc:"Portafolio básico · 5 activos · Señales limitadas"},
   trial:{label:"Trial",maxT:999,maxA:999,maxS:999,locked:[],
     price:0,desc:"Acceso completo · Todo incluido",trialDays:14},
@@ -1700,6 +1700,7 @@ const PAGES=[
   {id:"risk",     icon:"🛡️",label:"Riesgo",pro:true},
   {id:"back",     icon:"📉",label:"Simulación Histórica",pro:true},
   {id:"screener", icon:"🔍",label:"Buscador",pro:true},
+  {id:"capital",  icon:"💰",label:"Plan de Capital",pro:true},
   {id:"divs",     icon:"💰",label:"Dividendos",hidden:true},
   {id:"rebal",    icon:"🔀",label:"Rebalanceo",hidden:true},
   {id:"alert",    icon:"🔔",label:"Alertas"},
@@ -1805,6 +1806,24 @@ const S={
   screenerTickers:'AAPL MSFT NVDA TSLA AMZN GOOGL META AMD INTC BRKB SPY QQQ GLD TLT XLK XLF XLV',
   screenerFilters:{scoreMin:0,rsiMin:0,rsiMax:100,action:'ALL'},
   screenerResults:[],
+  // ── PLAN DE CAPITAL ──
+  capitalPlan:{
+    monthly:1000,
+    portfolio:[
+      {seg:'S&P 500',        etf:'SPYM', pct:40, bucket:'largo'},
+      {seg:'Nasdaq',         etf:'QQQM', pct:15, bucket:'largo'},
+      {seg:'Dow Jones US',   etf:'SCHG', pct:15, bucket:'largo'},
+      {seg:'Russell 2000',   etf:'IWM',  pct:5,  bucket:'largo'},
+      {seg:'S&P 500 Momentum',etf:'SPMO',pct:15, bucket:'largo'},
+      {seg:'Finanzas',       etf:'VFH',  pct:2,  bucket:'medio'},
+      {seg:'IA',             etf:'CHAT', pct:2,  bucket:'medio'},
+      {seg:'Metals & Mining',etf:'REMX', pct:2,  bucket:'medio'},
+      {seg:'Energía Nuclear',etf:'URA',  pct:2,  bucket:'medio'},
+      {seg:'Energía',        etf:'XLE',  pct:1,  bucket:'medio'},
+      {seg:'Cobre',          etf:'COPX', pct:1,  bucket:'medio'}
+    ]
+  },
+  capitalResults:null, capitalLoading:false,
   screenerRunning:false,
 };
 
@@ -2672,7 +2691,7 @@ function renderSidebar(){
 
   // PRO
   html+='<div class="sb-section"><div class="sb-section-label">Pro</div>';
-  var proPgs=["decision","ind","risk","back","screener"];
+  var proPgs=["decision","ind","risk","back","screener","capital"];
   PAGES.filter(function(p){return proPgs.indexOf(p.id)>=0&&!p.hidden;}).forEach(function(p){
     var locked=u&&plan&&plan.locked.indexOf(p.id)>=0;
     var act=S.page===p.id?" act":"";
@@ -3607,7 +3626,7 @@ function renderMain(){
   if(!S.user){renderWelcome();return;}
   var plan=planOf();
   if(plan.locked.indexOf(S.page)>=0){renderPaywall();return;}
-  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:function(){setPage('news');},radar:renderRadar,decision:renderDecisionEngine,ind:renderInd,risk:renderRisk,back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:renderScreener,settings:renderSettings,help:renderHelp};
+  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:function(){setPage('news');},radar:renderRadar,decision:renderDecisionEngine,ind:renderInd,risk:renderRisk,back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:renderScreener,capital:renderCapital,settings:renderSettings,help:renderHelp};
   (pages[S.page]||renderDash)();
   var curPage=PAGES.find(function(p){return p.id===S.page;});
   var mLabel=document.getElementById('mobile-page-label');
@@ -8071,6 +8090,145 @@ function renderDivs(){
     :'<div style="text-align:center;padding:40px;color:var(--text3)"><div style="font-size:36px;margin-bottom:10px">💰</div>'+
       '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:6px">Sin datos de dividendos</div>'+
       '<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace">Presiona "Cargar dividendos" para obtener datos reales</div></div>');
+}
+
+// ── PLAN DE CAPITAL (Pro) ────────────────────────────────────────
+// Guía educativa de distribución de capital mensual por ETF, con escalera de
+// tramos según distancia a SMA20/50/100/200 y condición de RSI. Referencial.
+var CAP_LADDER=[
+  {sma:20,  pct:0.10, label:'SMA20'},
+  {sma:50,  pct:0.15, label:'SMA50'},
+  {sma:100, pct:0.25, label:'SMA100'},
+  {sma:200, pct:0.50, label:'SMA200'}
+];
+function _smaLast(closes,n){ if(closes.length<n) return null; var arr=TI.sma(closes,n); for(var i=arr.length-1;i>=0;i--){ if(arr[i]!=null) return arr[i]; } return null; }
+
+async function loadCapitalData(){
+  if(S.capitalLoading) return;
+  // leer capital mensual del input si está en pantalla
+  var inp=document.getElementById('cap-monthly');
+  if(inp){ var v=parseFloat(inp.value); if(v>0) S.capitalPlan.monthly=v; }
+  S.capitalLoading=true; if(S.page==='capital') renderMain();
+  var results=[];
+  for(var i=0;i<S.capitalPlan.portfolio.length;i++){
+    var row=S.capitalPlan.portfolio[i];
+    try{
+      var hist=await fetchHistory(row.etf,'1y');
+      var closes=(hist||[]).map(function(d){return d.close;}).filter(function(c){return c>0;});
+      if(closes.length<25){ results.push({row:row, error:true}); continue; }
+      var price=closes[closes.length-1];
+      var rsiArr=TI.rsi(closes,14); var rsi=rsiArr[rsiArr.length-1];
+      var smas={20:_smaLast(closes,20),50:_smaLast(closes,50),100:_smaLast(closes,100),200:_smaLast(closes,200)};
+      results.push({row:row, price:price, rsi:rsi, smas:smas});
+    }catch(e){ results.push({row:row, error:true}); }
+  }
+  S.capitalResults=results; S.capitalLoading=false;
+  if(S.page==='capital') renderMain();
+}
+
+function renderCapital(){
+  var plan=planOf();
+  if(plan.locked&&plan.locked.indexOf('capital')>=0){
+    document.getElementById('main').innerHTML=
+      '<div class="fos-module-header"><div><div class="fos-module-title">💰 Plan de Capital</div><div class="fos-module-sub">Guía de distribución de capital mensual por condiciones de mercado</div></div></div>'+
+      lockedBanner('Plan de Capital','Reparte tu capital mensual en un portafolio de ETFs diversificado con una escalera de tramos según la distancia del precio a sus medias móviles (SMA20/50/100/200) y el RSI. Una guía lógica de distribución educativa.');
+    return;
+  }
+  var monthly=S.capitalPlan.monthly||0;
+  var results=S.capitalResults;
+  var loading=S.capitalLoading;
+
+  // Helper: fila de un ETF con su escalera de tramos
+  function etfRow(r){
+    var row=r.row;
+    var etfMonthly=monthly*(row.pct/100);
+    if(r.error){
+      return '<tr><td style="font-weight:600;color:var(--bright)">'+row.etf+'</td>'+
+        '<td style="color:var(--text3);font-size:10px">'+row.seg+'</td>'+
+        '<td style="font-family:\'JetBrains Mono\',monospace">'+row.pct+'%</td>'+
+        '<td style="font-family:\'JetBrains Mono\',monospace">$'+fmt(etfMonthly)+'</td>'+
+        '<td colspan="6" style="color:var(--text3);font-size:10px">Sin datos disponibles</td></tr>';
+    }
+    var rsi=r.rsi, rsiOk=rsi>=30&&rsi<=45;
+    var rsiColor=rsiOk?'var(--grn)':(rsi<30?'var(--amber)':'var(--text3)');
+    // tramos: activo si precio <= SMA de ese nivel
+    var reached=0;
+    var tramos=CAP_LADDER.map(function(t){
+      var smaV=r.smas[t.sma];
+      var amt=etfMonthly*t.pct;
+      var active=smaV!=null && r.price<=smaV; // el precio tocó/bajó de esa SMA
+      if(active) reached+=amt;
+      var cell=smaV!=null?('$'+fmt(amt)):'—';
+      var titleTxt=t.label+(smaV!=null?(' = $'+fmtD(smaV)+(active?' · alcanzado':' · pendiente')):'');
+      return '<td style="font-family:\'JetBrains Mono\',monospace;text-align:right;color:'+(active?'var(--grn)':'var(--text3)')+';font-weight:'+(active?'700':'400')+';background:'+(active?'rgba(61,190,122,.08)':'transparent')+'" title="'+titleTxt+'">'+(active?'✓ ':'')+cell+'</td>';
+    }).join('');
+    // sugerido este mes = suma de tramos alcanzados, condicionado a RSI favorable
+    var suggested=rsiOk?reached:0;
+    return '<tr class="trow">'+
+      '<td style="font-weight:700;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+row.etf+'\','+r.price+')">'+row.etf+' <span style="font-size:9px;color:var(--text3)">↗</span></td>'+
+      '<td style="color:var(--text3);font-size:10px">'+row.seg+'</td>'+
+      '<td style="font-family:\'JetBrains Mono\',monospace">'+row.pct+'%</td>'+
+      '<td style="font-family:\'JetBrains Mono\',monospace">$'+fmt(etfMonthly)+'</td>'+
+      '<td style="font-family:\'JetBrains Mono\',monospace;color:'+rsiColor+'" title="'+(rsiOk?'En zona favorable 30-45':'Fuera de zona 30-45')+'">'+(rsi!=null?rsi.toFixed(0):'—')+'</td>'+
+      tramos+
+      '<td style="font-family:\'JetBrains Mono\',monospace;text-align:right;font-weight:700;color:'+(suggested>0?'var(--grn)':'var(--text3)')+'">$'+fmt(suggested)+'</td>'+
+      '</tr>';
+  }
+
+  var tableHtml='';
+  if(results&&results.length){
+    ['largo','medio'].forEach(function(bucket){
+      var rows=results.filter(function(r){return r.row.bucket===bucket;});
+      if(!rows.length) return;
+      var bLabel=bucket==='largo'?'Largo Plazo (núcleo diversificado)':'Mediano Plazo (sectorial/temático)';
+      var bPct=rows.reduce(function(s,r){return s+r.row.pct;},0);
+      var bSuggested=rows.reduce(function(s,r){ if(r.error||!(r.rsi>=30&&r.rsi<=45)) return s; var em=monthly*(r.row.pct/100); var reached=0; CAP_LADDER.forEach(function(t){var sv=r.smas[t.sma]; if(sv!=null&&r.price<=sv) reached+=em*t.pct;}); return s+reached; },0);
+      tableHtml+='<div class="fos-section-label" style="margin:18px 0 8px">'+bLabel+' — '+bPct+'%</div>'+
+        '<div class="tw"><table class="fos-table"><thead><tr>'+
+        '<th>ETF</th><th>Segmento</th><th>% obj.</th><th>$/mes</th><th>RSI</th>'+
+        '<th style="text-align:right">SMA20 · 10%</th><th style="text-align:right">SMA50 · 15%</th><th style="text-align:right">SMA100 · 25%</th><th style="text-align:right">SMA200 · 50%</th>'+
+        '<th style="text-align:right">Sugerido hoy</th>'+
+        '</tr></thead><tbody>'+
+        rows.map(etfRow).join('')+
+        '<tr style="border-top:2px solid var(--border)"><td colspan="9" style="font-weight:700;color:var(--bright)">Subtotal '+(bucket==='largo'?'Largo':'Mediano')+' — $'+fmt(monthly*bPct/100)+'/mes</td>'+
+        '<td style="font-family:\'JetBrains Mono\',monospace;text-align:right;font-weight:700;color:var(--grn)">$'+fmt(bSuggested)+'</td></tr>'+
+        '</tbody></table></div>';
+    });
+  }
+
+  document.getElementById('main').innerHTML=
+    '<div class="fos-module-header"><div><div class="fos-module-title">💰 Plan de Capital</div>'+
+    '<div class="fos-module-sub">Distribución referencial del capital mensual según condiciones de mercado (SMA + RSI)</div></div></div>'+
+
+    // Controles
+    '<div class="fos-card" style="padding:16px;margin-bottom:16px">'+
+    '<div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap">'+
+    '<div><div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:5px">Capital mensual a invertir (USD)</div>'+
+    '<input type="number" id="cap-monthly" value="'+monthly+'" min="0" step="50" style="width:160px;background:var(--card3);border:1px solid var(--border);border-radius:8px;color:var(--bright);font-family:\'JetBrains Mono\',monospace;font-size:16px;font-weight:700;padding:8px 12px;outline:none"></div>'+
+    '<button onclick="loadCapitalData()" class="btn-big" style="padding:9px 20px;font-size:13px'+(loading?';opacity:.6;pointer-events:none':'')+'">'+(loading?'<span class="spin-sm"></span> Calculando...':'📊 Calcular distribución')+'</button>'+
+    '<div style="flex:1;min-width:180px;font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.5">Trae precio, RSI y SMA20/50/100/200 de cada ETF y marca qué tramos están activos hoy.</div>'+
+    '</div></div>'+
+
+    // Leyenda
+    (results?'<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:6px">'+
+      '<span><span style="color:var(--grn)">✓ verde</span> = precio alcanzó esa SMA (tramo activo)</span>'+
+      '<span><span style="color:var(--grn)">RSI 30-45</span> = zona de entrada favorable</span>'+
+      '<span>"Sugerido hoy" = tramos activos con RSI favorable</span>'+
+      '</div>':'')+
+
+    // Tabla o estado vacío
+    (results?tableHtml:
+      '<div style="text-align:center;padding:40px 20px;color:var(--text3)">'+
+      '<div style="font-size:40px;margin-bottom:12px">💰</div>'+
+      '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:6px">Define tu capital mensual y presiona "Calcular distribución"</div>'+
+      '<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace">El portafolio modelo ya viene precargado (editable en una próxima versión).</div>'+
+      '</div>')+
+
+    // Disclaimer
+    '<div style="margin-top:20px;padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);line-height:1.8">'+
+    '<b style="color:var(--text2)">⚠ Guía educativa de distribución de capital.</b> '+
+    'Los tramos por SMA y la condición de RSI son referencias técnicas educativas, no instrucciones de compra ni recomendación de inversión. La decisión de asignar capital es exclusiva del usuario. Datos con posible retraso.'+
+    '</div>';
 }
 
 // ── REBALANCING TOOL ─────────────────────────────────────────────
