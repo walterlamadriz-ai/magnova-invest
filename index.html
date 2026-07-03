@@ -1367,6 +1367,14 @@ tr:last-child td { border-bottom: none; }
 .fos-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,.3); }
 .fos-section-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
 .fos-section-label::before { content: ''; display: block; width: 3px; height: 12px; background: var(--grn); border-radius: 2px; }
+/* Card section titles — bigger, bolder, white */
+.fos-card-title { font-size: 14px; font-weight: 700; color: var(--bright); display: flex; align-items: center; gap: 8px; }
+.fos-card-title::before { content: ''; display: block; width: 3px; height: 16px; background: var(--grn); border-radius: 2px; flex-shrink: 0; }
+/* Page module header */
+.dash-page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+.dash-page-breadcrumb { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+.dash-page-title { font-size: 26px; font-weight: 700; color: var(--bright); margin: 0; line-height: 1.1; }
+.dash-page-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; }
 .fos-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .fos-table th { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
 .fos-table td { padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text); vertical-align: middle; }
@@ -3990,10 +3998,10 @@ function renderDash(){
 
   // ── Top Señales card ──
   var sigCard=
-    '<div class="fos-card" style="margin-bottom:14px">'+
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
-    '<div class="fos-section-label">Top Señales</div>'+
-    '<button onclick="setPage(\'sig\')" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Ver todas →</button>'+
+    '<div class="fos-card" style="margin-bottom:16px">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px">'+
+    '<div class="fos-card-title">Top Señales</div>'+
+    '<button onclick="setPage(\'sig\')" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Ver todas →</button>'+
     '</div>'+
     '<div class="tw"><table class="fos-table"><thead><tr><th>Ticker</th><th>Score</th><th>Precio</th><th>Δ Hoy</th></tr></thead>'+
     '<tbody>'+sigRows+'</tbody></table></div></div>';
@@ -4001,12 +4009,12 @@ function renderDash(){
   // ── Portfolio card ──
   var portCard=
     '<div class="fos-card">'+
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
-    '<div class="fos-section-label">Mi Portfolio</div>'+
-    '<button onclick="setPage(\'port\')" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Editar →</button>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px">'+
+    '<div class="fos-card-title">Portafolio</div>'+
+    '<span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3)">'+port.length+' de '+(S.portfolio.length)+' posiciones</span>'+
     '</div>'+
     (S.user.plan==='free'&&S.portfolio.length>plan.maxT?
-      '<div style="font-size:10px;color:var(--amber);font-family:\'JetBrains Mono\',monospace;margin-bottom:10px">⚠ Mostrando '+plan.maxT+' de '+S.portfolio.length+' · <span onclick="openModal(\'upgrade\')" style="cursor:pointer;text-decoration:underline">Upgrade Pro</span></div>':'')+
+      '<div style="font-size:10px;color:var(--amber);font-family:\'JetBrains Mono\',monospace;padding:0 20px 10px">⚠ Mostrando '+plan.maxT+' de '+S.portfolio.length+' · <span onclick="openModal(\'upgrade\')" style="cursor:pointer;text-decoration:underline">Upgrade Pro</span></div>':'')+
     '<div class="tw"><table class="fos-table"><thead><tr><th>Ticker</th><th>Nombre</th><th>Precio</th><th>Cambio</th><th>P&amp;L</th><th>Peso%</th></tr></thead>'+
     '<tbody>'+portRows+'</tbody></table></div></div>';
 
@@ -4024,20 +4032,20 @@ function renderDash(){
         '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+n.cat+' · '+ago+'</div>'+
         '</div></div>';
     }).join('');
-    return '<div class="fos-card" style="margin-top:14px">'+
-      '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 0">'+
-      '<div class="fos-section-label">Noticias</div>'+
-      '<button onclick="setPage(\'news\')" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Ver todo →</button>'+
+    return '<div class="fos-card" style="margin-top:16px">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px">'+
+      '<div class="fos-card-title">Noticias</div>'+
+      '<button onclick="setPage(\'news\')" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Ver todo →</button>'+
       '</div>'+
-      '<div style="padding:0 16px 6px">'+items+'</div>'+
+      '<div style="padding:0 20px 10px">'+items+'</div>'+
       '</div>';
   })();
 
   // ── Right: Market context + Quick actions ──
   var rightCol=
-    '<div id="de-regime-banner" class="dash-ctx-card" style="margin-bottom:14px"><div class="dash-ctx-loading">// Cargando contexto…</div></div>'+
+    '<div id="de-regime-banner" class="dash-ctx-card" style="margin-bottom:16px"><div class="dash-ctx-loading">// Cargando contexto…</div></div>'+
     '<div class="dash-ctx-card">'+
-    '<div class="fos-section-label" style="margin-bottom:12px">Acciones Rápidas</div>'+
+    '<div class="fos-card-title" style="margin-bottom:14px">Acciones Rápidas</div>'+
     '<div class="dash-actions">'+
     '<div class="dash-action-btn" onclick="setPage(\'decision\')"><div style="font-size:16px;margin-bottom:4px">🎯</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Motor</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Régimen SPY</div></div>'+
     '<div class="dash-action-btn" onclick="setPage(\'ind\')"><div style="font-size:16px;margin-bottom:4px">📈</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Indicadores</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">RSI · MACD · BB</div></div>'+
@@ -4046,8 +4054,19 @@ function renderDash(){
     '</div></div>'+
     '<div style="margin-top:14px">'+renderSentimentCompact()+'</div>';
 
+  var now=new Date();
+  var pageHeader=
+    '<div class="dash-page-header">'+
+    '<div>'+
+    '<div class="dash-page-breadcrumb">Inicio · Dashboard</div>'+
+    '<h1 class="dash-page-title">Dashboard</h1>'+
+    '</div>'+
+    '<div class="dash-page-date">'+now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'</div>'+
+    '</div>';
+
   document.getElementById('main').innerHTML=
     '<div class="dash-wrap">'+
+    pageHeader+
     '<div class="dash-kpi">'+kpiCards+'</div>'+
     '<div class="dash-body">'+
     '<div>'+sigCard+portCard+miniNews+'</div>'+
