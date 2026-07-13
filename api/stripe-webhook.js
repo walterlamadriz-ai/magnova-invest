@@ -44,6 +44,9 @@ async function verifyStripeSignature(payload, sigHeader, secret) {
   const sig = parts.v1;
   if (!timestamp || !sig) return false;
 
+  // Reject replayed webhooks outside 5-minute window
+  if (Math.abs(Date.now() / 1000 - parseInt(timestamp, 10)) > 300) return false;
+
   const encoder = new TextEncoder();
   const data = encoder.encode(`${timestamp}.${payload}`);
   const key = await crypto.subtle.importKey(
@@ -51,7 +54,20 @@ async function verifyStripeSignature(payload, sigHeader, secret) {
   );
   const computed = await crypto.subtle.sign('HMAC', key, data);
   const computedHex = Array.from(new Uint8Array(computed)).map(b => b.toString(16).padStart(2, '0')).join('');
-  return computedHex === sig;
+
+  // Timing-safe comparison: compare HMACs of both values to avoid byte-by-byte leakage
+  const sigBytes = encoder.encode(sig);
+  const computedBytes = encoder.encode(computedHex);
+  if (sigBytes.length !== computedBytes.length) return false;
+  const macKey = await crypto.subtle.importKey(
+    'raw', encoder.encode(secret + '_cmp'), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const mac1 = await crypto.subtle.sign('HMAC', macKey, sigBytes);
+  const mac2 = await crypto.subtle.sign('HMAC', macKey, computedBytes);
+  const a = new Uint8Array(mac1), b = new Uint8Array(mac2);
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+  return diff === 0;
 }
 
 export default async function handler(req) {

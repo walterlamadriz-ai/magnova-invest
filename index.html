@@ -7784,11 +7784,14 @@ function mUpgrade(mr){
 
 function startTrial(){
   if(S.user){
+    // Guard: no re-activar trial si ya fue usado antes
+    if(S.user.trialUsed){showToast('El período de prueba ya fue utilizado en esta cuenta.','error');return;}
     S.user.plan='trial';
     S.user.trialStarted=Date.now();
     track('trial_start');
-    // Sync plan + trial start to Supabase so it survives re-login
-    sb.from("profiles").update({plan:'trial',trial_started_at:new Date().toISOString()}).eq("id",S.user.id).then(function(){},function(e){console.error("startTrial sync failed",e);});
+    // Sync solo trial_started_at — plan lo escribe únicamente el webhook de Stripe (service_role)
+    // IMPORTANTE: asegurarse de que RLS en Supabase bloquee escritura de columna "plan" por anon key
+    sb.from("profiles").update({trial_started_at:new Date().toISOString()}).eq("id",S.user.id).then(function(){},function(e){console.error("startTrial sync failed",e);});
     persist();
     closeModal();
     // Unlock message
@@ -8789,10 +8792,20 @@ async function sbLoadUserData(authUser){
     var wlRes=await sb.from("watchlist").select("ticker").eq("user_id",authUser.id);
     var watch=(wlRes.data||[]).map(function(r){return r.ticker;});
 
+    // Verify plan server-side to prevent client-side bypass (S.user.plan='pro' in console)
+    var verifiedPlan=(prof&&prof.plan)||"free";
+    try{
+      var sess=await sb.auth.getSession();
+      var tok=sess&&sess.data&&sess.data.session&&sess.data.session.access_token;
+      if(tok){
+        var cpRes=await fetch('/api/check-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tok})});
+        if(cpRes.ok){var cpData=await cpRes.json();if(cpData&&cpData.valid)verifiedPlan=cpData.plan;}
+      }
+    }catch(e){/* fallback to DB value already set above */}
     S.user={
       id:authUser.id, email:authUser.email,
       name:(prof&&prof.name)||authUser.email.split("@")[0],
-      plan:(prof&&prof.plan)||"free",
+      plan:verifiedPlan,
       trialStarted:(prof&&prof.trial_started_at)?new Date(prof.trial_started_at).getTime():null
     };
     S.capital=(prof&&prof.capital)?Number(prof.capital):100000;
@@ -8939,7 +8952,7 @@ async function doRegister(){
   }
   if(res.data.session){
     // Activate 14-day trial for new accounts
-    await sb.from("profiles").update({plan:"trial",trial_started_at:new Date().toISOString()}).eq("id",res.data.user.id);
+    await sb.from("profiles").update({trial_started_at:new Date().toISOString()}).eq("id",res.data.user.id);
     await sbLoadUserData(res.data.user);
     trackIdentify(S.user); track('signup');
     document.getElementById("mroot").innerHTML="";
