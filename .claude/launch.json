@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "invest-local",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", ".", "-p", "4322", "--no-clipboard"],
+      "port": 4322
+    }
+  ]
+}

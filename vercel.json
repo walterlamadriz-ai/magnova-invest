@@ -1,5 +1,8 @@
 {
   "outputDirectory": ".",
+  "crons": [
+    { "path": "/api/trial-emails-cron", "schedule": "0 14 * * *" }
+  ],
   "rewrites": [
     { "source": "/test",    "destination": "/test.html"    },
     { "source": "/app",     "destination": "/index.html"   },
