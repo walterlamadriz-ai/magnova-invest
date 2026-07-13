@@ -1867,6 +1867,7 @@ var LIVE={};
 var liveUpdated=null;
 var liveLoading=false;
 var liveFailed=false;
+var _liveAbortCtrl=null;
 var liveFromCache=false;
 
 // ── API LAYER ──────────────────────────────────────────────────
@@ -1942,7 +1943,18 @@ function _cacheGet(key){
   }catch(e){return null;}
 }
 function _cacheSet(key,data){
-  try{localStorage.setItem('_apic_'+key,JSON.stringify({ts:Date.now(),data:data}));}catch(e){}
+  try{
+    var full='_apic_'+key;
+    localStorage.setItem(full,JSON.stringify({ts:Date.now(),data:data}));
+    // LRU eviction: keep at most 30 _apic_ keys; remove oldest first
+    var keys=[];
+    for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.startsWith('_apic_'))keys.push(k);}
+    if(keys.length>30){
+      var sorted=keys.map(function(k){try{return{k:k,ts:JSON.parse(localStorage.getItem(k)).ts};}catch(e){return{k:k,ts:0};}});
+      sorted.sort(function(a,b){return a.ts-b.ts;});
+      sorted.slice(0,sorted.length-30).forEach(function(e){localStorage.removeItem(e.k);});
+    }
+  }catch(e){}
 }
 
 function fetchWithTimeout(url,ms){
@@ -2138,6 +2150,9 @@ async function fetchEarningsData(ticker){
 
 async function refreshLive(tickers,manual){
   if(liveLoading&&!manual) return;
+  if(_liveAbortCtrl) _liveAbortCtrl.abort();
+  _liveAbortCtrl=new AbortController();
+  var mySignal=_liveAbortCtrl.signal;
   liveLoading=true;
   liveFailed=false;
   // Spinner on all refresh buttons
@@ -2162,10 +2177,12 @@ async function refreshLive(tickers,manual){
             gotAny=true;
           }
         });
+        if(mySignal.aborted) return;
         if(gotAny) updateLivePricesInDOM();
-      }catch(e){/* fall through to individual fetches */}
+      }catch(e){if(mySignal.aborted) return;/* fall through to individual fetches */}
     }
 
+    if(mySignal.aborted) return;
     if(!gotAny){
       // Fallback: individual fetches with batching
       var BATCH_SIZE=6;
@@ -2620,7 +2637,10 @@ function showToast(msg,type){
   if(!c) return;
   var t=document.createElement('div');
   t.className='toast '+(type||'success');
-  t.innerHTML=(type==='error'?'✕':type==='warning'?'⚠':type==='info'?'ℹ':'✓')+' '+msg;
+  var icon=type==='error'?'✕':type==='warning'?'⚠':type==='info'?'ℹ':'✓';
+  var iconEl=document.createElement('span');iconEl.textContent=icon+' ';
+  var msgEl=document.createElement('span');msgEl.textContent=msg;
+  t.appendChild(iconEl);t.appendChild(msgEl);
   c.appendChild(t);
   requestAnimationFrame(function(){ t.classList.add('show'); });
   setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},300); },3000);
@@ -3426,7 +3446,7 @@ function renderDecisionEngine(){
     document.getElementById('de-body').innerHTML=tabNav+globalPane+assetsPane;
     drawSPYMiniChart(regime);
   }).catch(function(err){
-    document.getElementById('de-body').innerHTML='<div style="color:var(--red);font-size:12px;padding:20px">Error al cargar datos: '+err.message+'</div>';
+    document.getElementById('de-body').innerHTML='<div style="color:var(--red);font-size:12px;padding:20px">Error al cargar datos: '+esc(err.message)+'</div>';
   });
 }
 
@@ -4047,7 +4067,7 @@ function renderDash(){
   var sigCard=
     '<div class="fos-card" style="margin-bottom:16px">'+
     '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px">'+
-    '<div class="fos-card-title">Top Señales</div>'+
+    '<div class="fos-card-title">Top Señales <span style="font-size:9px;background:var(--amber);color:#000;padding:1px 5px;border-radius:3px;font-weight:700;vertical-align:middle">REF</span></div>'+
     '<button onclick="setPage(\'sig\')" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Ver todas →</button>'+
     '</div>'+
     '<div class="tw"><table class="fos-table"><thead><tr><th>Ticker</th><th>Score</th><th>Precio</th><th>Δ Hoy</th></tr></thead>'+
@@ -4592,7 +4612,8 @@ function renderSig(){
   }).join("");
 
   document.getElementById("main").innerHTML=
-    _ph('Análisis · Señales','Señales Técnicas','// Indicadores de referencia educativa · Score: Trend×30% + Vol×20% + RSI×25% + MACD×25%',liveBadge())+
+    _ph('Análisis · Señales','Señales Técnicas <span style="font-size:10px;background:var(--amber);color:#000;padding:2px 6px;border-radius:4px;font-weight:700;vertical-align:middle;margin-left:6px">REFERENCIAL</span>','// Datos estáticos de muestra · No conectados a análisis en tiempo real · Solo uso educativo',liveBadge())+
+    '<div style="padding:8px 12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:6px;margin-bottom:14px;font-size:11px;color:var(--amber);font-family:\'JetBrains Mono\',monospace">⚠ Los indicadores mostrados son datos de muestra estáticos con fines educativos. No reflejan análisis técnico en tiempo real ni constituyen recomendaciones de inversión.</div>'+
     freeBanner("Plan Free: "+plan.maxS+" indicadores de "+ALL_SIG.length+".")+
     '<div style="margin-bottom:14px">'+filterBtns+'</div>'+
     '<div class="krow">'+
