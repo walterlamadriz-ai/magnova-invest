@@ -34,10 +34,14 @@ function bestImage(thumbnail) {
   return best?.url || null;
 }
 
+const ALLOWED_ORIGINS = ['https://invest.financeospro.com', 'https://financeospro.com', 'https://app.financeospro.com'];
+
 export default async function handler(req) {
+  const origin = req.headers.get('origin') || '';
   const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Vary': 'Origin',
   };
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders });
 

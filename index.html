@@ -1717,10 +1717,10 @@ const PAGES=[
   {id:"dash",     icon:"◈", label:"Dashboard"},
   {id:"port",     icon:"💼",label:"Portfolio"},
   {id:"watch",    icon:"👁",label:"Watchlist"},
-  {id:"sig",      icon:"⚡",label:"Señales",hidden:true},
-  {id:"pb",       icon:"📐",label:"Position Builder",hidden:true},
-  {id:"comp",     icon:"⚖️",label:"Comparador",hidden:true},
-  {id:"sentiment",icon:"🌡",label:"Sentimiento",hidden:true},
+  {id:"sig",      icon:"⚡",label:"Señales"},
+  {id:"pb",       icon:"📐",label:"Position Builder",pro:true},
+  {id:"comp",     icon:"⚖️",label:"Comparador"},
+  {id:"sentiment",icon:"🌡",label:"Sentimiento"},
   {id:"radar",    icon:"📡",label:"Radar Financiero"},
   {id:"decision", icon:"🎯",label:"Motor de Análisis",pro:true},
   {id:"ind",      icon:"📈",label:"Indicadores",pro:true},
@@ -1728,8 +1728,8 @@ const PAGES=[
   {id:"back",     icon:"📉",label:"Simulación Histórica",pro:true},
   {id:"screener", icon:"🔍",label:"Buscador",pro:true},
   {id:"capital",  icon:"💰",label:"Plan de Capital",pro:true},
-  {id:"divs",     icon:"💰",label:"Dividendos",hidden:true},
-  {id:"rebal",    icon:"🔀",label:"Rebalanceo",hidden:true},
+  {id:"divs",     icon:"💰",label:"Dividendos"},
+  {id:"rebal",    icon:"🔀",label:"Rebalanceo"},
   {id:"alert",    icon:"🔔",label:"Alertas"},
   {id:"bitacora", icon:"📋",label:"Bitácora"},
   {id:"settings", icon:"⚙️",label:"Configuración"},
@@ -2514,14 +2514,20 @@ function liveBadge(){
   var lastT=liveUpdated?new Date(liveUpdated).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"}):"...";
   var state=liveFailed?"error":liveFromCache?"cache":liveLoading?"loading":hasLive?"live":"loading";
   var cfg={
-    live:   {cls:"live-badge",       txt:"Yahoo ~15m · "+lastT, dot:true},
+    live:   {cls:"live-badge",       txt:"Datos en tiempo diferido · "+lastT, dot:true},
     loading:{cls:"live-badge loading",txt:"Actualizando...",     dot:false},
-    cache:  {cls:"live-badge loading",txt:"Caché · "+lastT,     dot:false},
-    error:  {cls:"live-badge error",  txt:"Sin datos",           dot:false},
+    cache:  {cls:"live-badge loading",txt:"Precios al "+lastT+" — datos en caché", dot:false},
+    error:  {cls:"live-badge error",  txt:"Sin conexión a datos", dot:false},
   };
   var c=cfg[state]||cfg.loading;
+  // Show prominent stale warning if cache is older than 30 min
+  var staleWarn='';
+  if((liveFromCache||liveFailed)&&liveUpdated&&(Date.now()-liveUpdated)>30*60*1000){
+    var minAgo=Math.round((Date.now()-liveUpdated)/60000);
+    staleWarn='<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:10px;font-family:monospace;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);margin-left:6px">⚠ Precios hace '+minAgo+' min</div>';
+  }
   return "<div class=\""+c.cls+"\" style=\"display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10px;font-family:monospace\">"+
-    (c.dot?"<span class=\"live-dot\"></span>":"")+c.txt+"</div>";
+    (c.dot?"<span class=\"live-dot\"></span>":"")+c.txt+"</div>"+staleWarn;
 }
 function updateLiveBadge(){
   document.querySelectorAll('.live-badge-wrap').forEach(function(el){el.innerHTML=liveBadge();});
@@ -2754,12 +2760,12 @@ function renderSidebar(){
 
   // ANÁLISIS
   html+='<div class="sb-section"><div class="sb-section-label">Análisis</div>';
-  ["sig","comp","radar"].forEach(function(id){
-    var p=PAGES.find(function(x){return x.id===id&&!x.hidden;});
+  ["sig","comp","sentiment","radar"].forEach(function(id){
+    var p=PAGES.find(function(x){return x.id===id;});
     if(p) html+=_nb(p,false);
   });
   ["screener","ind","risk","back"].forEach(function(id){
-    var p=PAGES.find(function(x){return x.id===id&&!x.hidden;});
+    var p=PAGES.find(function(x){return x.id===id;});
     if(!p) return;
     var locked=plan&&plan.locked.indexOf(id)>=0;
     html+=_nb(p,locked);
@@ -2768,8 +2774,8 @@ function renderSidebar(){
 
   // PRO EXCLUSIVO
   html+='<div class="sb-section"><div class="sb-section-label">Pro</div>';
-  ["decision","capital"].forEach(function(id){
-    var p=PAGES.find(function(x){return x.id===id&&!x.hidden;});
+  ["decision","pb","capital"].forEach(function(id){
+    var p=PAGES.find(function(x){return x.id===id;});
     if(!p) return;
     var locked=plan&&plan.locked.indexOf(id)>=0;
     html+=_nb(p,locked);
@@ -2779,7 +2785,7 @@ function renderSidebar(){
   // SEGUIMIENTO
   html+='<div class="sb-section"><div class="sb-section-label">Seguimiento</div>';
   ["divs","rebal","bitacora"].forEach(function(id){
-    var p=PAGES.find(function(x){return x.id===id&&!x.hidden;});
+    var p=PAGES.find(function(x){return x.id===id;});
     if(p) html+=_nb(p,false);
   });
   html+='</div>';
@@ -3162,7 +3168,14 @@ function deSetTab(tab){
 
 function renderDecisionEngine(){
   var main=document.getElementById('main');
+  var isFreeUser=S.user&&planOf().locked.indexOf('decision')>=0;
+  // Free users get a teaser: full Régimen card + first ticker analysis with upgrade overlay
+  // Track daily teaser usage so free users get 1 full preview per day
+  var teaserKey='de_teaser_'+new Date().toISOString().slice(0,10);
+  var teaserUsed=isFreeUser&&localStorage.getItem(teaserKey)==='1';
+  if(isFreeUser&&!teaserUsed){ localStorage.setItem(teaserKey,'1'); }
   main.innerHTML=_ph('Pro · Motor de Análisis','Motor de Análisis','// Régimen SPY · Volatilidad VIX · Scoring técnico 0–100 por activo','<button class="btn" style="font-size:10px;border-color:var(--border);color:var(--text3)" onclick="openModal(\'score-info\')">¿Cómo se calcula? →</button>')+
+    (isFreeUser&&teaserUsed?'<div style="margin:0 20px 16px;padding:12px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;font-size:12px;color:var(--amber);display:flex;align-items:center;gap:10px">⚡ Vista previa utilizada hoy — <button onclick="openModal(\'upgrade\')" style="background:var(--amber);color:#000;border:none;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer">Activar Pro →</button></div>':'')+
     '<div id="de-body" style="padding:0 20px 40px">'+
     // Skeleton screens — show structure immediately, data fills in
     '<div class="de-skeleton">'+
@@ -3394,7 +3407,22 @@ function renderDecisionEngine(){
       '<button id="de-tab-assets" onclick="deSetTab(\'assets\')" style="padding:5px 16px;border:none;border-radius:6px;font-size:11px;font-family:\'JetBrains Mono\',monospace;font-weight:600;cursor:pointer;background:transparent;color:var(--text3);transition:.15s">📊 Por Activo ('+scores.length+')</button>'+
       '</div>';
     var globalPane='<div id="de-pane-global">'+regimeCard+vixCard+earningsCard+'</div>';
-    var assetsPane='<div id="de-pane-assets" style="display:none">'+scoresHtml+disclaimer+'</div>';
+    // Free teaser: show assets pane but blur rows after the first one + upgrade overlay
+    var assetsPaneContent=scoresHtml+disclaimer;
+    if(isFreeUser){
+      assetsPaneContent=
+        '<div style="position:relative">'+
+        scoresHtml+disclaimer+
+        // Blur overlay covering content below first row
+        '<div style="position:absolute;bottom:0;left:0;right:0;height:75%;background:linear-gradient(to bottom,transparent,var(--bg) 60%);pointer-events:none;border-radius:12px"></div>'+
+        '<div style="position:absolute;bottom:40px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:20px">'+
+          '<div style="font-size:13px;font-weight:700;color:var(--bright)">Análisis completo de '+scores.length+' activos disponible en Pro</div>'+
+          '<div style="font-size:11px;color:var(--text2)">Estás viendo el régimen de mercado. Activa Pro para el scoring de cada activo con Entry, Stop y Target.</div>'+
+          '<button onclick="openModal(\'upgrade\')" class="btn-big" style="padding:10px 28px">⚡ Activar Pro — desde $16.58/mes →</button>'+
+        '</div>'+
+        '</div>';
+    }
+    var assetsPane='<div id="de-pane-assets" style="display:none">'+assetsPaneContent+'</div>';
     document.getElementById('de-body').innerHTML=tabNav+globalPane+assetsPane;
     drawSPYMiniChart(regime);
   }).catch(function(err){

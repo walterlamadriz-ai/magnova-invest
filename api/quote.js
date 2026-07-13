@@ -7,21 +7,33 @@
 
 export const config = { runtime: 'edge' };
 
-const HEADERS = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-  'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
-};
+const ALLOWED_ORIGINS = ['https://invest.financeospro.com', 'https://financeospro.com', 'https://app.financeospro.com'];
+
+function getCors(req) {
+  const origin = req.headers.get('origin') || '';
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': allowed,
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+    'Vary': 'Origin',
+  };
+}
 
 export default async function handler(req) {
+  const HEADERS = getCors(req);
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: HEADERS });
   }
 
+  // Basic ticker validation — alphanumeric + allowed symbols only
   const { searchParams } = new URL(req.url);
-  const tickerParam = searchParams.get('ticker') || '';
-  const tickers = tickerParam.toUpperCase().split(',').filter(Boolean).slice(0, 10);
+  const raw = searchParams.get('ticker') || '';
+  const invalid = raw.split(',').some(t => !/^[\^A-Z0-9.\-=]{1,15}$/i.test(t.trim()));
+  if (invalid) return new Response(JSON.stringify({ error: 'invalid_ticker' }), { status: 400, headers: HEADERS });
 
+  const tickers = raw.toUpperCase().split(',').map(t => t.trim()).filter(Boolean).slice(0, 10);
   if (!tickers.length) {
     return new Response(JSON.stringify({ error: 'ticker required' }), { status: 400, headers: HEADERS });
   }
