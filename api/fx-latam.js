@@ -13,7 +13,7 @@ const PAIRS = {
   PEN: 'USDPEN=X',
 };
 
-const FALLBACKS = { CLP: 958, MXN: 17.1, COP: 4150, ARS: 890, PEN: 3.75 };
+const FALLBACKS = { CLP: 960, MXN: 17.3, COP: 4200, ARS: 1060, PEN: 3.75 }; // updated Jul 2026 — ARS es tipo oficial BCRA
 
 const HEADERS = {
   'Content-Type': 'application/json',

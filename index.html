@@ -1886,7 +1886,7 @@ var STOP_LOSS_DEFAULT=0.08;
 var DEFAULT_CAPITAL=100000;
 
 // Multi-currency FX support
-var FX_RATES={USD:1,CLP:958,MXN:17.1,COP:4150,ARS:890,PEN:3.75};
+var FX_RATES={USD:1,CLP:960,MXN:17.3,COP:4200,ARS:1060,PEN:3.75}; // fallback Jul 2026
 var FX_SYMBOLS={USD:'$',CLP:'$',MXN:'$',COP:'$',ARS:'$',PEN:'S/'};
 var FX_LABELS={USD:'USD',CLP:'CLP',MXN:'MXN',COP:'COP',ARS:'ARS',PEN:'PEN'};
 var USER_CURRENCY=(function(){try{return localStorage.getItem('mv_currency')||'USD';}catch(e){return 'USD';}}());
@@ -3856,7 +3856,7 @@ function openTCModal(tab){
     '<b style="color:var(--bright)">4. Terceros</b><br>'+
     'Usamos Stripe para procesar pagos (no almacenamos datos de tarjeta). '+
     'Datos de mercado provistos por Yahoo Finance y Financial Modeling Prep (FMP). '+
-    'Análisis AI provisto por Anthropic (Claude API) — los datos de portfolio enviados son anonimizados.<br><br>'+
+    'Motor de Análisis Técnico FinanceOS — los datos de tu portfolio se procesan de forma privada y no se comparten con terceros.<br><br>'+
     '<b style="color:var(--bright)">5. Tus derechos</b><br>'+
     'Puedes solicitar exportación o eliminación de tus datos escribiendo a support@financeospro.com. '+
     'La eliminación de cuenta borra permanentemente tu portfolio y datos asociados.<br><br>'+
@@ -5565,7 +5565,7 @@ function renderModal(){
 }
 
 
-var _billingPeriod='monthly';
+var _billingPeriod='annual';
 
 function setBillingPeriod(period){
   _billingPeriod=period;
@@ -6431,7 +6431,7 @@ function renderAIPanel(){
     '<div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--amber),var(--orange-d));display:flex;align-items:center;justify-content:center;font-size:14px">🤖</div>'+
     '<div>'+
     '<div style="font-size:13px;font-weight:700;color:var(--bright)">FinanceOS Analista</div>'+
-    '<div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Powered by Claude · Contexto de tu portfolio</div>'+
+    '<div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Motor de Análisis Técnico · Contexto de tu portfolio</div>'+
     '</div></div>'+
     '<button onclick="toggleAI()" style="background:transparent;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px;border-radius:5px;line-height:1">✕</button>'+
     '</div>'+
@@ -7173,7 +7173,7 @@ async function generateRadarReport(){
       summary:'Diagnóstico local del portfolio — Análisis IA disponible próximamente.',
       sections:[
         {id:'health',title:'Score de Salud',content:'Tu portfolio tiene un score de '+health.total+'/100. Diversificación: '+health.subs.div+' · Momentum: '+health.subs.mom+' · Riesgo: '+health.subs.risk+' · Correlación: '+health.subs.corr+' · Valoración: '+health.subs.val+'.'},
-        {id:'macro',title:'Análisis AI en Mantenimiento',content:'🔧 El análisis con inteligencia artificial está temporalmente en mantenimiento mientras migramos a infraestructura segura. Los sub-scores del Health Score son precisos y calculados localmente. El análisis narrativo completo con Claude estará disponible muy pronto.'},
+        {id:'macro',title:'Análisis Técnico Avanzado',content:'📊 Los sub-scores del Health Score son calculados localmente con datos en tiempo real. El análisis narrativo completo estará disponible muy pronto.'},
         {id:'action',title:'Mientras tanto',content:'1. Revisa tus posiciones en Portfolio. 2. Consulta Análisis Comparativo para ver indicadores históricos (Alto/Medio/Bajo). 3. Usa el Position Builder para calcular niveles de referencia.'},
       ],
     };
@@ -7189,7 +7189,7 @@ async function generateRadarReport(){
       subs:health.subs,
       profile:RADAR.profile,
       summary:'Error al generar el reporte. Verifica tu conexión.',
-      sections:[{id:'error',title:'Error',content:'No se pudo conectar con Claude API. Intenta nuevamente en unos minutos.'}],
+      sections:[{id:'error',title:'Error',content:'No se pudo cargar el análisis. Intenta nuevamente en unos minutos.'}],
     };
   }
   RADAR.loading=false;
@@ -7419,7 +7419,7 @@ function renderRadar(){
   if(RADAR.loading){
     mainContent='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:320px;gap:16px">'+
       '<div class="spin" style="width:28px;height:28px;border-width:3px"></div>'+
-      '<div style="font-size:13px;color:var(--text2);font-family:\'JetBrains Mono\',monospace">Analizando tu portfolio con Claude...</div>'+
+      '<div style="font-size:13px;color:var(--text2);font-family:\'JetBrains Mono\',monospace">Analizando tu portfolio...</div>'+
       '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Procesando 12 inputs de contexto · ~15 segundos</div>'+
       '</div>';
   } else if(RADAR.view!=='current'&&RADAR.history[RADAR.view]){
@@ -7739,8 +7739,8 @@ function mUpgrade(mr){
 
     // Billing toggle
     '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px">'+
-    '<button id="tog-mo" onclick="setBillingPeriod(\'monthly\')" style="padding:5px 16px;border-radius:20px;font-size:11px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;border:1px solid var(--orange-bd);background:var(--orange-bg);color:var(--amber);font-weight:700">Mensual</button>'+
-    '<button id="tog-yr" onclick="setBillingPeriod(\'annual\')" style="padding:5px 16px;border-radius:20px;font-size:11px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3)">Anual <span style="background:var(--grn);color:#fff;font-size:8px;padding:1px 5px;border-radius:3px;margin-left:2px">-45%</span></button>'+
+    '<button id="tog-mo" onclick="setBillingPeriod(\'monthly\')" style="padding:5px 16px;border-radius:20px;font-size:11px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3)">Mensual</button>'+
+    '<button id="tog-yr" onclick="setBillingPeriod(\'annual\')" style="padding:5px 16px;border-radius:20px;font-size:11px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;border:1px solid var(--orange-bd);background:var(--orange-bg);color:var(--amber);font-weight:700">Anual <span style="background:var(--grn);color:#fff;font-size:8px;padding:1px 5px;border-radius:3px;margin-left:2px">Ahorra 44%</span></button>'+
     '</div>'+
 
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
@@ -7762,8 +7762,8 @@ function mUpgrade(mr){
     '<div style="background:var(--orange-bg);border:2px solid var(--orange-bd);border-radius:var(--r-md);padding:16px;position:relative">'+
     '<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--amber);color:#fff;font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.5px;font-family:\'JetBrains Mono\',monospace">MÁS POPULAR</div>'+
     '<div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:4px">PRO</div>'+
-    '<div id="pro-price-display" style="font-size:24px;font-weight:700;color:var(--bright);font-family:\'JetBrains Mono\',monospace">$29.99</div>'+
-    '<div id="pro-price-sub" style="font-size:10px;color:var(--text3);margin-bottom:12px">USD / mes · Cancela cuando quieras</div>'+
+    '<div id="pro-price-display" style="font-size:24px;font-weight:700;color:var(--bright);font-family:\'JetBrains Mono\',monospace">$199<span style="font-size:13px;color:var(--text3)">/año</span></div>'+
+    '<div id="pro-price-sub" style="font-size:10px;color:var(--text3);margin-bottom:12px">$16.58/mes efectivo · ~45% ahorro vs mensual</div>'+
     proFeatures.slice(0,8).map(function(f){
       return '<div style="font-size:11px;color:var(--bright);padding:3px 0;border-bottom:1px solid var(--orange-bd);display:flex;gap:6px;align-items:center"><span style="color:var(--grn)">✓</span>'+f[0]+' '+f[1]+'</div>';
     }).join('')+
@@ -7773,7 +7773,7 @@ function mUpgrade(mr){
     // CTA
     '<div style="padding:20px 28px 24px">'+
     '<button onclick="doUpgrade()" class="btn-big" style="width:100%;padding:13px;font-size:14px;margin-bottom:10px">🚀 Activar acceso Pro</button>'+
-    '<p id="pro-cta-sub" style="font-size:10px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">14 días gratis · luego $29.99/mes · cancela cuando quieras.</p>'+
+    '<p id="pro-cta-sub" style="font-size:10px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">Prueba Pro gratis 14 días — sin tarjeta. Después del trial: $199/año · Cancela en 1 click.</p>'+
     '<div style="margin-top:14px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);text-align:center;line-height:1.6">'+
     '¿Preguntas? <a href="mailto:invest@financeospro.com" style="color:var(--blue);text-decoration:none">invest@financeospro.com</a>'+
     '</div>'+
