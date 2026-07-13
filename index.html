@@ -1670,7 +1670,7 @@ const CONSENT_GATE_ENABLED = true;
 // ── USERS & PLANS ──────────────────────────────────────────────
 // USERS[] migrado a Supabase Auth — ver migrate-test-users.md
 const PLANS={
-  free:{label:"Free",maxT:5,maxA:3,maxS:5,locked:["decision","ind","risk","back","screener","capital"],
+  free:{label:"Free",maxT:5,maxA:3,maxS:5,locked:["decision","ind","risk","back","screener","capital","comp","pb","divs","rebal","radar"],
     price:0,desc:"Portafolio básico · 5 activos · Señales limitadas"},
   trial:{label:"Trial",maxT:999,maxA:999,maxS:999,locked:[],
     price:0,desc:"Acceso completo · Todo incluido",trialDays:14},
@@ -2572,6 +2572,7 @@ function updateLivePricesInDOM(){
 }
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function safeLink(url){var s=String(url||'').trim().toLowerCase();return(!s||s.indexOf('javascript:')===0)?'#':url;}
 
 // ── MARKET STATUS ───────────────────────────────────────────────
 function isNYSEOpen(){
@@ -3260,7 +3261,7 @@ function renderDecisionEngine(){
               '<div style="display:flex;justify-content:space-between;font-family:\'JetBrains Mono\',monospace;font-size:11px"><span style="color:var(--text3)">Δ200</span><b style="color:'+(regime.pct200>=0?'var(--grn)':'var(--red)')+'">'+( regime.pct200>=0?'+':'')+( regime.pct200*100).toFixed(1)+'%</b></div>'+
             '</div>':'')  +
           '<div style="font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);background:rgba(0,0,0,.15);border-radius:8px;padding:8px 12px;line-height:1.5">'+
-            '<span style="color:var(--text2)">Contexto:</span> '+(regime.regime==='risk_on'?'Momentum alcista activo':'regime.regime'==='risk_off'?'Modo defensivo activo':'Selectividad alta requerida')+'</div>'+
+            '<span style="color:var(--text2)">Contexto:</span> '+(regime.regime==='risk_on'?'Momentum alcista activo':regime.regime==='risk_off'?'Modo defensivo activo':'Selectividad alta requerida')+'</div>'+
         '</div>'+
       '</div>'+
       '<canvas id="spy-mini-chart" style="width:100%;height:72px;display:block;margin-top:16px;border-radius:6px;opacity:.85"></canvas>'+
@@ -4791,7 +4792,7 @@ function renderNews(){
   if(breakingItems.length>0){
     var bItems=breakingItems.map(function(n){
       return '<span onclick="setNewsF(\''+n.cat+'\')" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:3px 0;border-right:1px solid rgba(255,255,255,.1);padding-right:16px;margin-right:12px;flex-shrink:0" onmouseover="this.style.opacity=\'.8\'" onmouseout="this.style.opacity=\'1\'">'+
-        '<span style="font-size:10px;font-weight:600;color:var(--bright);font-family:\'JetBrains Mono\',monospace">'+n.title.substring(0,55)+'...</span>'+
+        '<span style="font-size:10px;font-weight:600;color:var(--bright);font-family:\'JetBrains Mono\',monospace">'+esc(n.title.substring(0,55))+'...</span>'+
         '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+relTime(n.hoursAgo)+'</span>'+
         '</span>';
     }).join('');
@@ -4879,7 +4880,7 @@ function renderNews(){
         '<div style="font-size:28px;opacity:.8">'+( catEmoji[n.cat]||'📰')+'</div>'+
         (n.breaking?'<div style="position:absolute;top:3px;left:3px;background:var(--red);color:#fff;font-size:6px;font-weight:700;padding:1px 4px;border-radius:2px;letter-spacing:.5px;font-family:\'JetBrains Mono\',monospace">LIVE</div>':'')+
       '</div>';
-    return '<div style="background:var(--card);border:1px solid var(--border);border-bottom:'+(isLast?'1px solid var(--border)':'none')+';padding:11px 14px;cursor:pointer;transition:.15s;display:flex;gap:12px;align-items:flex-start;border-radius:'+radius+'" '+(n.link?'onclick="window.open(\''+n.link+'\',\'_blank\',\'noopener\')"':'')+' onmouseover="this.style.background=\'rgba(247,147,26,.04)\';this.style.borderColor=\'rgba(247,147,26,.2)\'" onmouseout="this.style.background=\'var(--card)\';this.style.borderColor=\'var(--border)\'">'+
+    return '<div style="background:var(--card);border:1px solid var(--border);border-bottom:'+(isLast?'1px solid var(--border)':'none')+';padding:11px 14px;cursor:pointer;transition:.15s;display:flex;gap:12px;align-items:flex-start;border-radius:'+radius+'" '+(n.link?'onclick="window.open(\''+esc(safeLink(n.link))+'\',\'_blank\',\'noopener\')"':'')+' onmouseover="this.style.background=\'rgba(247,147,26,.04)\';this.style.borderColor=\'rgba(247,147,26,.2)\'" onmouseout="this.style.background=\'var(--card)\';this.style.borderColor=\'var(--border)\'">'+
       thumb+
       // Content
       '<div style="flex:1;min-width:0">'+
@@ -5370,7 +5371,7 @@ function btRenderJournal(sells){
       '<td style="color:var(--text3)">'+r.trades+'</td>'+
       '<td style="color:var(--text3)">'+r.wins+'/'+r.losses+'</td>'+
       '<td style="color:'+(wr>=0.5?'var(--grn)':'var(--red)')+'">'+pct(wr)+'</td>'+
-      '<td style="font-weight:700;color:'+(r.pnl>=0?'var(--grn)':'var(--red)">'+(r.pnl>=0?'+':'')+'$'+fmt(Math.abs(r.pnl))+'</td></tr>');
+      '<td style="font-weight:700;color:'+(r.pnl>=0?'var(--grn)':'var(--red)')+'">'+( r.pnl>=0?'+':'')+'$'+fmt(Math.abs(r.pnl))+'</td></tr>';
   }).join('');
 
   // equity curve from sorted sells by id
@@ -5703,7 +5704,7 @@ async function savePos(id){
   if(id===-1){
     var h={id:S.nextId++,t:t,type:type,sh:sh,cost:cost,cur:cur};
     S.portfolio.push(h);
-    sbAddHolding(h).then(function(realId){h.id=realId;});
+    sbAddHolding(h).then(function(realId){if(realId){h.id=realId;persist();}}).catch(function(){});
   } else {
     var idx=S.portfolio.findIndex(function(p){return p.id===id;});
     if(idx>=0){
@@ -6586,6 +6587,7 @@ function exportCSV(){
 var PB={ticker:'',price:0,capital:0,risk:2,stop:0,rr:2,computed:null}; // capital set on first render
 
 function renderPB(){
+  var plan=planOf();if(plan.locked&&plan.locked.indexOf('pb')>=0){document.getElementById('main').innerHTML='';lockedBanner('Position Builder','Calcula el tamaño correcto de cada posición según tu capital y objetivos de riesgo/retorno.');return;}
   if(!PB.capital||PB.capital<=0) PB.capital=S.capital;
   var cap=PB.capital;
   var portPills=S.portfolio.slice(0,8).map(function(h){
@@ -7427,6 +7429,7 @@ function radarReportHTML(r,shared){
 
 // ── MAIN RENDER ───────────────────────────────────────────────────
 function renderRadar(){
+  var plan=planOf();if(plan.locked&&plan.locked.indexOf('radar')>=0){document.getElementById('main').innerHTML='';lockedBanner('Radar Financiero','Evalúa tu salud financiera integral y genera un plan de acción personalizado.');return;}
   radarInit();
 
   var hasReport=!!RADAR.report;
@@ -7821,8 +7824,9 @@ function mUpgrade(mr){
 
     // CTA
     '<div style="padding:20px 28px 24px">'+
-    '<button onclick="doUpgrade()" class="btn-big" style="width:100%;padding:13px;font-size:14px;margin-bottom:10px">🚀 Activar acceso Pro</button>'+
-    '<p id="pro-cta-sub" style="font-size:10px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">Prueba Pro gratis 14 días — sin tarjeta. Después del trial: $199/año · Cancela en 1 click.</p>'+
+    '<button onclick="doUpgrade()" class="btn-big" style="width:100%;padding:13px;font-size:14px;margin-bottom:10px">⚡ Activar Pro ahora — $199/año</button>'+
+    '<button onclick="startTrial()" class="btn" style="width:100%;padding:11px;font-size:13px;margin-bottom:10px;border:1px solid var(--border);background:transparent;color:var(--text2)">Iniciar prueba gratuita — 14 días sin tarjeta</button>'+
+    '<p id="pro-cta-sub" style="font-size:10px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">Cancela en 1 click · Sin compromisos</p>'+
     '<div style="margin-top:14px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);text-align:center;line-height:1.6">'+
     '¿Preguntas? <a href="mailto:invest@financeospro.com" style="color:var(--blue);text-decoration:none">invest@financeospro.com</a>'+
     '</div>'+
@@ -7840,7 +7844,8 @@ function startTrial(){
     track('trial_start');
     // Sync solo trial_started_at — plan lo escribe únicamente el webhook de Stripe (service_role)
     // IMPORTANTE: asegurarse de que RLS en Supabase bloquee escritura de columna "plan" por anon key
-    sb.from("profiles").update({trial_started_at:new Date().toISOString()}).eq("id",S.user.id).then(function(){},function(e){console.error("startTrial sync failed",e);});
+    sb.from("profiles").update({trial_started_at:new Date().toISOString(),trial_used:true}).eq("id",S.user.id).then(function(){},function(e){console.error("startTrial sync failed",e);});
+    S.user.trialUsed=true;
     persist();
     closeModal();
     // Unlock message
@@ -7900,6 +7905,7 @@ function compChangeTicker(i,val){
 }
 
 function renderComp(){
+  var plan=planOf();if(plan.locked&&plan.locked.indexOf('comp')>=0){document.getElementById('main').innerHTML='';lockedBanner('Comparador de Activos','Compara hasta 4 activos simultáneamente con métricas de precio, retorno y fundamentos.');return;}
   var colors=["var(--amber)","var(--blue)","var(--grn)","#a78bfa"];
 
   var tickerInputs=COMP.tickers.map(function(t,i){
@@ -8178,6 +8184,7 @@ async function loadDivData(){
 }
 
 function renderDivs(){
+  var plan=planOf();if(plan.locked&&plan.locked.indexOf('divs')>=0){document.getElementById('main').innerHTML='';lockedBanner('Dividendos','Proyecta ingresos por dividendos anuales y mensuales de todo tu portafolio.');return;}
   var port=S.portfolio;
   var fx=LATAM.usdClp;
   var divRows=port.map(function(h){
@@ -8469,6 +8476,7 @@ function renderCapital(){
 var REBAL={targets:{}};
 
 function renderRebal(){
+  var plan=planOf();if(plan.locked&&plan.locked.indexOf('rebal')>=0){document.getElementById('main').innerHTML='';lockedBanner('Rebalanceo','Mantén tu portafolio alineado con tus objetivos de asignación de activos.');return;}
   var port=S.portfolio;
   var totM=port.reduce(function(s,h){return s+h.sh*(getLivePrice(h.t)||h.cur||0);},0);
 
@@ -8684,7 +8692,7 @@ function renderDisclaimer(){
   var d=document.createElement('div');
   d.id='disclaimer-bar';
   d.className='disclaimer-bar';
-  d.innerHTML='⚠ <strong>FinanceOS Invest no es un bróker, no ejecuta órdenes ni custodia fondos.</strong> Análisis educativo basado en datos históricos — no constituye asesoría financiera ni garantía de rentabilidad. Precios: Yahoo Finance ~15 min de retraso · Fundamentos: Financial Modeling Prep. Consulta con un asesor certificado antes de invertir. · MAXNOVA & LUCI Global LLC · <span onclick="openTCModal(\'tc\')" style="cursor:pointer;text-decoration:underline;opacity:.7">Términos</span> · <span onclick="openTCModal(\'pp\')" style="cursor:pointer;text-decoration:underline;opacity:.7">Privacidad</span>';
+  d.innerHTML='⚠ <strong>FinanceOS Invest no es un bróker, no ejecuta órdenes ni custodia fondos.</strong> Análisis educativo basado en datos históricos — no constituye asesoría financiera ni garantía de rentabilidad. Precios: Yahoo Finance ~15 min de retraso · Fundamentos: Financial Modeling Prep. Consulta con un asesor certificado antes de invertir. · MAXNOVA & LUCI Global LLC · <a href="/terms.html" target="_blank" style="text-decoration:underline;opacity:.7;color:inherit">Términos</a> · <a href="/privacy.html" target="_blank" style="text-decoration:underline;opacity:.7;color:inherit">Privacidad</a>';
   document.body.appendChild(d);
 }
 
@@ -8848,15 +8856,17 @@ async function sbLoadUserData(authUser){
       var tok=sess&&sess.data&&sess.data.session&&sess.data.session.access_token;
       if(tok){
         var cpRes=await fetch('/api/check-plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tok})});
-        if(cpRes.ok){var cpData=await cpRes.json();if(cpData&&cpData.valid)verifiedPlan=cpData.plan;}
+        if(cpRes.ok){var cpData=await cpRes.json();if(cpData&&cpData.valid){verifiedPlan=cpData.plan;if(cpData.trialUsed!==undefined)S._trialUsedFromServer=cpData.trialUsed;}}
       }
     }catch(e){/* fallback to DB value already set above */}
     S.user={
       id:authUser.id, email:authUser.email,
       name:(prof&&prof.name)||authUser.email.split("@")[0],
       plan:verifiedPlan,
-      trialStarted:(prof&&prof.trial_started_at)?new Date(prof.trial_started_at).getTime():null
+      trialStarted:(prof&&prof.trial_started_at)?new Date(prof.trial_started_at).getTime():null,
+      trialUsed:S._trialUsedFromServer||false
     };
+    delete S._trialUsedFromServer;
     S.capital=(prof&&prof.capital)?Number(prof.capital):100000;
 
     if(holdings.length>0){
@@ -8866,7 +8876,7 @@ async function sbLoadUserData(authUser){
       // First login: seed Supabase with demo portfolio so the account isn't empty
       await sbSeedPortfolio(authUser.id);
       S.portfolio=JSON.parse(JSON.stringify(DEF_PORT));
-      S.nextId=10;
+      S.nextId=Math.max.apply(null,DEF_PORT.map(function(h){return h.id;}))+1;
     }
     S.watchlist=watch.length>0?watch:[...DEF_WATCH];
     loadTrades();

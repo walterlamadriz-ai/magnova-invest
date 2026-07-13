@@ -17,12 +17,20 @@ const SYMBOLS = [
   { sym: '^VIX',     label: 'VIX'         },
 ];
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-};
+const ALLOWED_ORIGINS = ['https://invest.financeospro.com', 'https://financeospro.com', 'https://app.financeospro.com'];
+
+function buildCors(req) {
+  const origin = req.headers.get('origin') || '';
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Vary': 'Origin',
+  };
+}
 
 export default async function handler(req) {
+  const CORS = buildCors(req);
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
 
   try {

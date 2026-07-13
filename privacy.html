@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Privacidad — FinanceOS Invest</title>
+<style>
+  :root {
+    --bg: #f7f8f9; --card: #ffffff; --bright: #111827;
+    --text2: #6b7280; --blue: #1d4ed8; --border: rgba(0,0,0,0.07);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0c0f16; --card: #161b27; --bright: #f1f5f9; --text2: #94a3b8; --blue: #60a5fa; --border: rgba(255,255,255,0.07); }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--bright); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.7; }
+  .wrap { max-width: 740px; margin: 0 auto; padding: 48px 24px 80px; }
+  .logo { font-size: 13px; font-weight: 700; color: var(--text2); letter-spacing: .08em; margin-bottom: 32px; }
+  h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+  .meta { font-size: 12px; color: var(--text2); margin-bottom: 40px; }
+  h2 { font-size: 15px; font-weight: 700; margin: 32px 0 10px; }
+  p { color: var(--text2); margin-bottom: 14px; }
+  ul { color: var(--text2); margin: 0 0 14px 20px; }
+  li { margin-bottom: 6px; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .back { display: inline-block; margin-top: 48px; padding: 10px 20px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--text2); }
+  .back:hover { color: var(--blue); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">FINANCEOSPRO · INVEST</div>
+  <h1>Política de Privacidad</h1>
+  <p class="meta">Última actualización: julio 2026 · Versión v1.0</p>
+
+  <h2>1. Responsable del tratamiento</h2>
+  <p>MAXNOVA &amp; LUCI Global LLC, operadora de FinanceOS Invest. Contacto: <a href="mailto:invest@financeospro.com">invest@financeospro.com</a></p>
+
+  <h2>2. Datos que recopilamos</h2>
+  <ul>
+    <li><strong>Datos de cuenta:</strong> dirección de correo electrónico, nombre (opcional), fecha de registro.</li>
+    <li><strong>Datos de portafolio:</strong> activos, cantidad de acciones, precio de entrada y precio actual que ingresas voluntariamente.</li>
+    <li><strong>Datos de uso:</strong> páginas visitadas, funcionalidades utilizadas, eventos de sesión (vía PostHog, con anonimización de IP).</li>
+    <li><strong>Datos de pago:</strong> procesados íntegramente por Stripe. FinanceOS Invest no almacena datos de tarjetas de crédito.</li>
+  </ul>
+
+  <h2>3. Finalidad del tratamiento</h2>
+  <ul>
+    <li>Proveer y mejorar las funcionalidades de la plataforma.</li>
+    <li>Gestionar suscripciones y períodos de prueba.</li>
+    <li>Enviar comunicaciones relevantes sobre el servicio (sin spam comercial).</li>
+    <li>Analizar el uso agregado para mejorar la experiencia de usuario.</li>
+  </ul>
+
+  <h2>4. Procesadores de datos</h2>
+  <p><strong>Supabase:</strong> base de datos y autenticación. Los datos se almacenan en servidores seguros con cifrado en reposo y en tránsito. Supabase cumple con SOC 2 Type II.</p>
+  <p><strong>PostHog:</strong> análisis de uso anonimizado. No se almacenan datos personales identificables en PostHog.</p>
+  <p><strong>Stripe:</strong> procesamiento de pagos. Certificado PCI DSS Level 1.</p>
+  <p><strong>Vercel:</strong> infraestructura de hosting y funciones edge.</p>
+
+  <h2>5. No venta de datos personales</h2>
+  <p>FinanceOS Invest no vende, arrienda ni comparte datos personales con terceros para fines publicitarios o comerciales.</p>
+
+  <h2>6. Retención de datos</h2>
+  <p>Los datos de cuenta y portafolio se conservan mientras la cuenta esté activa. Al eliminar tu cuenta, los datos son borrados dentro de los 30 días siguientes, salvo obligación legal de retención.</p>
+
+  <h2>7. Derechos del usuario</h2>
+  <p>Tienes derecho a acceder, corregir, exportar o eliminar tus datos personales. Para ejercer estos derechos, escríbenos a <a href="mailto:invest@financeospro.com">invest@financeospro.com</a> con el asunto "Privacidad - [tu solicitud]". Atendemos solicitudes en un plazo máximo de 30 días.</p>
+
+  <h2>8. Cookies y almacenamiento local</h2>
+  <p>FinanceOS Invest utiliza localStorage del navegador para almacenar preferencias de sesión y datos de portafolio de forma local. No utilizamos cookies de rastreo de terceros.</p>
+
+  <h2>9. Seguridad</h2>
+  <p>Implementamos medidas técnicas y organizativas para proteger tus datos: autenticación JWT, HTTPS en todas las comunicaciones, RLS (Row-Level Security) en la base de datos para que cada usuario acceda únicamente a sus propios datos.</p>
+
+  <h2>10. Menores de edad</h2>
+  <p>FinanceOS Invest no está dirigido a menores de 18 años. Si detectamos que se han recopilado datos de un menor, los eliminaremos de inmediato.</p>
+
+  <h2>11. Modificaciones</h2>
+  <p>Podemos actualizar esta política en cualquier momento. Los cambios significativos serán notificados por correo electrónico.</p>
+
+  <h2>12. Contacto</h2>
+  <p>Para consultas sobre privacidad: <a href="mailto:invest@financeospro.com">invest@financeospro.com</a></p>
+
+  <a href="/" class="back">← Volver a FinanceOS Invest</a>
+</div>
+</body>
+</html>

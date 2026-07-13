@@ -2,17 +2,26 @@
 // FMP earnings-surprises: últimos 8 trimestres + próxima fecha
 export const config = { runtime: 'edge' };
 
-const HEADERS = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-  'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
-};
+const ALLOWED_ORIGINS = ['https://invest.financeospro.com', 'https://financeospro.com', 'https://app.financeospro.com'];
+
+function buildHeaders(req, extra = {}) {
+  const origin = req.headers.get('origin') || '';
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Vary': 'Origin',
+    'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+    ...extra,
+  };
+}
 
 export default async function handler(req) {
-  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: HEADERS });
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: buildHeaders(req) });
 
   const { searchParams } = new URL(req.url);
   const ticker = (searchParams.get('ticker') || '').toUpperCase().trim();
+  const HEADERS = buildHeaders(req);
   if (!ticker) return new Response(JSON.stringify({ error: 'ticker_required' }), { status: 400, headers: HEADERS });
 
   const apiKey = process.env.FMP_API_KEY;

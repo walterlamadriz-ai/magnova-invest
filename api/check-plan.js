@@ -52,7 +52,7 @@ export default async function handler(req) {
   if (!userId) return json({ plan: 'free', valid: false }, 200, req);
 
   // Fetch the real plan from profiles using service_role (bypasses RLS)
-  const profRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=plan,trial_started_at,stripe_subscription_id`, {
+  const profRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=plan,trial_started_at,stripe_subscription_id,trial_used`, {
     headers: {
       apikey: SUPABASE_SERVICE_KEY,
       Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
@@ -71,5 +71,7 @@ export default async function handler(req) {
     if (elapsed > 14 * 24 * 60 * 60 * 1000) plan = 'free';
   }
 
-  return json({ plan, valid: true }, 200, req);
+  const trialUsed = profile.trial_used || false;
+
+  return json({ plan, valid: true, trialUsed }, 200, req);
 }

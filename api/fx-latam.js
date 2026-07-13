@@ -15,11 +15,18 @@ const PAIRS = {
 
 const FALLBACKS = { CLP: 960, MXN: 17.3, COP: 4200, ARS: 1060, PEN: 3.75 }; // updated Jul 2026 — ARS es tipo oficial BCRA
 
-const HEADERS = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-  'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
-};
+const ALLOWED_ORIGINS = ['https://invest.financeospro.com', 'https://financeospro.com', 'https://app.financeospro.com'];
+
+function buildHeaders(req) {
+  const origin = req.headers.get('origin') || '';
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Vary': 'Origin',
+    'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+  };
+}
 
 async function fetchRate(symbol) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
@@ -32,6 +39,7 @@ async function fetchRate(symbol) {
 }
 
 export default async function handler(req) {
+  const HEADERS = buildHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: HEADERS });
 
   const rates = {};
