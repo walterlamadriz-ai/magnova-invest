@@ -4,7 +4,6 @@
     { "path": "/api/trial-emails-cron", "schedule": "0 14 * * *" }
   ],
   "rewrites": [
-    { "source": "/test",    "destination": "/test.html"    },
     { "source": "/app",     "destination": "/index.html"   },
     { "source": "/landing", "destination": "/landing.html" },
     { "source": "/",        "destination": "/landing.html" }
