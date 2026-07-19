@@ -174,6 +174,10 @@
 :root {
   /* Colores — modo claro (idéntico a FinanceOS light) */
   --grn:       #1a6b4a;
+  /* Verde para superficies solidas que llevan texto blanco. En claro coincide
+     con --grn; en oscuro --grn es brillante (#22c55e) y el blanco encima solo
+     alcanza 2.28:1, asi que ahi diverge. */
+  --grn-solid: #1a6b4a;
   --grn-bg:    #e8f5ef;
   --grn-lt:    #d0eddf;
   --grn-d:     #145538;
@@ -232,6 +236,7 @@
 /* ── DARK MODE ── */
 [data-theme="dark"] {
   --grn:       #22c55e;
+  --grn-solid: #177a4a; /* blanco encima = 5.36:1 (sobre --grn seria 2.28:1) */
   --grn-bg:    #052e16;
   --grn-lt:    #14532d;
   --grn-d:     #4fd48a;
@@ -260,7 +265,7 @@
   --card4:     #2a3347;
 
   --text:      #9ca8bc;
-  --text2:     #6b7a8f;
+  --text2:     #8794a5; /* era #6b7a8f = 3.94:1 sobre card, fallaba AA */
   --text3:     #7b8798; /* era #475569 = 2.27:1 sobre card, fallaba AA */
   --bright:    #e2e8f0;
   --white:     #f1f5f9;
@@ -1064,7 +1069,7 @@ tr:last-child td { border-bottom: none; }
 .wv3-disc{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);line-height:1.7}
 .wv3-auth-card{background:var(--card);border:0.5px solid var(--border2);border-radius:20px;padding:28px 28px 24px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.35)}
 .wv3-auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:20px}
-.wv3-auth-icon{width:34px;height:34px;border-radius:8px;background:var(--grn);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.wv3-auth-icon{width:34px;height:34px;border-radius:8px;background:var(--grn-solid);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;font-family:'JetBrains Mono',monospace}
 .wv3-auth-name{font-size:15px;color:var(--text)}
 .wv3-auth-name b{color:var(--grn);font-weight:700}
 .wv3-tabs{display:grid;grid-template-columns:1fr 1fr;position:relative;background:var(--bg2);border-radius:10px;padding:4px;margin-bottom:20px}
@@ -1088,7 +1093,7 @@ tr:last-child td { border-bottom: none; }
 .wv3-forgot{text-align:right;margin-top:4px}
 .wv3-forgot a{font-size:11px;color:var(--grn);text-decoration:none}
 .wv3-forgot a:hover{text-decoration:underline}
-.wv3-submit{width:100%;border-radius:10px;padding:11px;font-size:13px;font-weight:600;color:#fff;background:var(--grn);border:none;cursor:pointer;transition:opacity .15s,transform .08s;box-shadow:0 6px 20px -8px var(--grn);font-family:inherit}
+.wv3-submit{width:100%;border-radius:10px;padding:11px;font-size:13px;font-weight:600;color:#fff;background:var(--grn-solid);border:none;cursor:pointer;transition:opacity .15s,transform .08s;box-shadow:0 6px 20px -8px var(--grn);font-family:inherit}
 .wv3-submit:hover{opacity:.9;transform:translateY(-1px)}
 .wv3-submit:active{transform:scale(.98)}
 .wv3-submit:disabled{opacity:.6;cursor:not-allowed;transform:none}
