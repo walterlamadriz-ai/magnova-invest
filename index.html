@@ -1203,6 +1203,11 @@ tr:last-child td { border-bottom: none; }
   table { font-size: 11px; }
   td, th { padding: 7px 10px; }
   .tw { overflow-x: auto; min-width: 0; }
+  /* La tabla de portfolio tiene 11 columnas: a 375px queda ilegible incluso con
+     scroll horizontal. En movil se ocultan las secundarias y quedan las 5 que
+     responden "¿cuanto tengo y como va?": Activo, Precio, Δ Hoy, P&L y acciones.
+     El detalle completo sigue disponible al abrir el activo. */
+  .col-sec { display: none; }
   /* permite que los tracks grid 1fr encojan bajo contenido nowrap (evita overflow) */
   .dash-body, .dash-body > div, .dash-wrap, .fos-card, .resp2, .resp2 > div { min-width: 0; }
   .fos-card { overflow-x: auto; }
@@ -4300,15 +4305,15 @@ function renderPort(){
     var hj=JSON.stringify(h).replace(/"/g,"&quot;");
     return '<tr class="trow" data-pnl="'+pnl.toFixed(2)+'" data-ret="'+ret.toFixed(4)+'" data-val="'+(h.sh*h.cur).toFixed(2)+'" data-chg="'+(lq?(lq.changePct||0):0)+'">'+
       '<td style="font-weight:600;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+h.t+'\','+h.cur+')">'+h.t+' <span style="font-size:9px;color:var(--text3)">↗</span></td>'+
-      '<td>'+typeTag(h.type)+'</td>'+
-      '<td>'+h.sh+'</td>'+
-      '<td>$'+fmtD(h.cost)+'</td>'+
+      '<td class="col-sec">'+typeTag(h.type)+'</td>'+
+      '<td class="col-sec">'+h.sh+'</td>'+
+      '<td class="col-sec">$'+fmtD(h.cost)+'</td>'+
       '<td style="font-weight:600;cursor:pointer" onclick="openDrawer(\''+h.t+'\','+h.cur+')">$'+fmtD(h.cur)+'</td>'+
       '<td>'+chgCell(lq)+'</td>'+
-      '<td>$'+fmt(h.sh*h.cur)+'</td>'+
+      '<td class="col-sec">$'+fmt(h.sh*h.cur)+'</td>'+
       '<td style="color:'+(pnl>=0?"var(--grn)":"var(--red)")+';font-weight:600">'+(pnl>=0?"+":"")+'$'+fmt(pnl)+'</td>'+
-      '<td style="color:'+(ret>=0?"var(--grn)":"var(--red)")+'">'+pct(ret)+'</td>'+
-      '<td>'+pct(w)+'</td>'+
+      '<td class="col-sec" style="color:'+(ret>=0?"var(--grn)":"var(--red)")+'">'+pct(ret)+'</td>'+
+      '<td class="col-sec">'+pct(w)+'</td>'+
       '<td style="white-space:nowrap">'+
       '<button class="btn" style="padding:2px 6px;font-size:10px;margin-right:3px" onclick="event.stopPropagation();openModal(\'editpos\','+hj+')">✏️</button>'+
       '<button class="btn btn-r" style="padding:2px 6px;font-size:10px" onclick="event.stopPropagation();openModal(\'delpos\','+hj+')">🗑</button>'+
@@ -4355,7 +4360,7 @@ function renderPort(){
     '<input class="inp" type="number" value="'+S.capital+'" onchange="updateCap(this.value)" style="width:130px"/>'+
     '</div>'+
     '<div class="tw"><table id="tbl-port" class="fos-table"><thead><tr>'+
-    '<th>Activo</th><th>Tipo</th><th>Unidades</th><th>Entrada</th>'+sortTh("port","price","Precio")+sortTh("port","chg","Δ Hoy")+sortTh("port","val","Valor")+sortTh("port","pnl","P&L")+sortTh("port","ret","Retorno")+'<th>Peso</th><th>Acc.</th>'+
+    '<th>Activo</th><th class="col-sec">Tipo</th><th class="col-sec">Unidades</th><th class="col-sec">Entrada</th>'+sortTh("port","price","Precio")+sortTh("port","chg","Δ Hoy")+'<th class="col-sec">Valor</th>'+sortTh("port","pnl","P&L")+'<th class="col-sec">Retorno</th><th class="col-sec">Peso</th><th>Acc.</th>'+
     '</tr></thead><tbody>'+rows+
     '<tr class="tot"><td colspan="5">TOTAL</td><td>$'+fmt(totM)+'</td>'+
     '<td style="color:'+(totP>=0?"var(--grn)":"var(--red)")+'">'+(totP>=0?"+":"")+'$'+fmt(totP)+'</td>'+
