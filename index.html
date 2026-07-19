@@ -4754,7 +4754,7 @@ function renderSig(){
   document.getElementById("main").innerHTML=
     _ph('Análisis · Señales','Señales Técnicas <span style="font-size:10px;background:var(--amber);color:#000;padding:2px 6px;border-radius:4px;font-weight:700;vertical-align:middle;margin-left:6px">REFERENCIAL</span>','// Datos estáticos de muestra · No conectados a análisis en tiempo real · Solo uso educativo',liveBadge())+
     '<div style="padding:8px 12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:6px;margin-bottom:14px;font-size:11px;color:var(--amber);font-family:\'JetBrains Mono\',monospace">⚠ Los indicadores mostrados son datos de muestra estáticos con fines educativos. No reflejan análisis técnico en tiempo real ni constituyen recomendaciones de inversión.</div>'+
-    freeBanner("Plan Free: "+plan.maxS+" indicadores de "+ALL_SIG.length+".")+
+    freeBanner("Estás viendo "+plan.maxS+" de "+ALL_SIG.length+" indicadores. Pro los muestra todos.")+
     '<div style="margin-bottom:14px">'+filterBtns+'</div>'+
     // "Total" era la suma exacta de los otros tres: dato redundante, fuera.
     // Aqui el color SI es semantico (alto/medio/bajo es un estado), se conserva.
@@ -6869,7 +6869,7 @@ function renderPB(){
     '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">Ticker · Precio · Capital · % Riesgo · Ref. Baja</div></div>';
 
   document.getElementById("main").innerHTML=
-    _ph('Pro · Position Builder','Position Builder','// Calculadora de entrada óptima · Regla del 2% · Simulación de escenarios')+
+    _ph('Análisis · Position Builder','Position Builder','// Calculadora de entrada óptima · Regla del 2% · Simulación de escenarios')+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+
     '<div><div class="cb">'+
     '<div class="st"><div class="stbar"></div>Configuración</div>'+
