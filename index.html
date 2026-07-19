@@ -1077,10 +1077,13 @@ tr:last-child td { border-bottom: none; }
 .wv3-panel.show{display:flex}
 .wv3-field-label{display:block;font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;font-family:'JetBrains Mono',monospace}
 .wv3-field-wrap{position:relative}
-.wv3-field-wrap input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--bright);outline:none;transition:border-color .15s;box-sizing:border-box;font-family:inherit}
-.wv3-field-wrap input:focus{border-color:var(--grn)}
+/* 16px es el minimo que evita que iOS haga zoom al enfocar el campo.
+   El padding sube a 12px para que la altura llegue al minimo tactil de 44px. */
+.wv3-field-wrap input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:16px;color:var(--bright);outline:none;transition:border-color .15s cubic-bezier(.23,1,.32,1),box-shadow .15s cubic-bezier(.23,1,.32,1);box-sizing:border-box;font-family:inherit}
+.wv3-field-wrap input:focus-visible{border-color:var(--grn);box-shadow:0 0 0 3px var(--grn-bg)}
 .wv3-field-wrap input::placeholder{color:var(--text3)}
-.wv3-eye-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);padding:3px 4px;line-height:1}
+/* padding ampliado para alcanzar el area tactil minima sin cambiar el tamano visual */
+.wv3-eye-btn{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);padding:14px 10px;line-height:1;min-height:44px;display:flex;align-items:center}
 .wv3-eye-btn:hover{color:var(--text)}
 .wv3-forgot{text-align:right;margin-top:4px}
 .wv3-forgot a{font-size:11px;color:var(--grn);text-decoration:none}
@@ -3841,19 +3844,19 @@ function renderWelcome(){
     '</div>'+
     // Panel login
     '<div id="wv3-panel-login" class="wv3-panel show">'+
-    '<div><label class="wv3-field-label">EMAIL</label><div class="wv3-field-wrap"><input id="le" type="email" placeholder="tu@email.com" autocomplete="email" onkeydown="if(event.keyCode===13)doLogin()"/></div></div>'+
-    '<div><label class="wv3-field-label">CONTRASEÑA</label><div class="wv3-field-wrap"><input id="lp" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.keyCode===13)doLogin()"/><button type="button" class="wv3-eye-btn" id="wv3-eye-lp" onclick="wv3TogglePwd(\'lp\',\'wv3-eye-lp\')">ver</button></div><div class="wv3-forgot"><a href="#" onclick="wv3ForgotPwd();return false;">¿Olvidaste tu contraseña?</a></div></div>'+
-    '<div id="lerr" class="wv3-err"></div>'+
+    '<div><label class="wv3-field-label" for="le">EMAIL</label><div class="wv3-field-wrap"><input id="le" type="email" inputmode="email" enterkeyhint="next" spellcheck="false" autocapitalize="off" placeholder="tu@email.com" autocomplete="email" onkeydown="if(event.keyCode===13)doLogin()"/></div></div>'+
+    '<div><label class="wv3-field-label" for="lp">CONTRASEÑA</label><div class="wv3-field-wrap"><input id="lp" type="password" enterkeyhint="go" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.keyCode===13)doLogin()"/><button type="button" class="wv3-eye-btn" id="wv3-eye-lp" aria-label="Mostrar contraseña" aria-pressed="false" onclick="wv3TogglePwd(\'lp\',\'wv3-eye-lp\')">ver</button></div><div class="wv3-forgot"><a href="#" onclick="wv3ForgotPwd();return false;">¿Olvidaste tu contraseña?</a></div></div>'+
+    '<div id="lerr" class="wv3-err" role="alert" aria-live="polite"></div>'+
     '<button id="lbtn" class="wv3-submit" onclick="doLogin()">Entrar →</button>'+
     '<div class="wv3-legal">Al acceder aceptas nuestros <a onclick="openTCModal(\'tc\');return false;" href="#">Términos de Uso</a> y <a onclick="openTCModal(\'pp\');return false;" href="#">Política de Privacidad</a>.</div>'+
     '</div>'+
     // Panel register
     '<div id="wv3-panel-reg" class="wv3-panel">'+
-    '<div><label class="wv3-field-label">NOMBRE</label><div class="wv3-field-wrap"><input id="rn" type="text" placeholder="Tu nombre" autocomplete="name"/></div></div>'+
-    '<div><label class="wv3-field-label">EMAIL</label><div class="wv3-field-wrap"><input id="re" type="email" placeholder="tu@email.com" autocomplete="email"/></div></div>'+
-    '<div><label class="wv3-field-label">CONTRASEÑA</label><div class="wv3-field-wrap"><input id="rp" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/><button type="button" class="wv3-eye-btn" id="wv3-eye-rp" onclick="wv3TogglePwd(\'rp\',\'wv3-eye-rp\')">ver</button></div></div>'+
+    '<div><label class="wv3-field-label" for="rn">NOMBRE</label><div class="wv3-field-wrap"><input id="rn" type="text" enterkeyhint="next" autocapitalize="words" placeholder="Tu nombre" autocomplete="name"/></div></div>'+
+    '<div><label class="wv3-field-label" for="re">EMAIL</label><div class="wv3-field-wrap"><input id="re" type="email" inputmode="email" enterkeyhint="next" spellcheck="false" autocapitalize="off" placeholder="tu@email.com" autocomplete="email"/></div></div>'+
+    '<div><label class="wv3-field-label" for="rp">CONTRASEÑA</label><div class="wv3-field-wrap"><input id="rp" type="password" enterkeyhint="go" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/><button type="button" class="wv3-eye-btn" id="wv3-eye-rp" aria-label="Mostrar contraseña" aria-pressed="false" onclick="wv3TogglePwd(\'rp\',\'wv3-eye-rp\')">ver</button></div></div>'+
     '<label class="wv3-check-row"><input id="rdisc" type="checkbox"/><span class="wv3-check-txt">He leído y acepto los <a onclick="openTCModal(\'tc\');return false;" href="#">Términos de Uso</a> y la <a onclick="openTCModal(\'pp\');return false;" href="#">Política de Privacidad</a>. Entiendo que los análisis son educativos y no constituyen asesoría financiera.</span></label>'+
-    '<div id="rerr" class="wv3-err"></div>'+
+    '<div id="rerr" class="wv3-err" role="alert" aria-live="polite"></div>'+
     '<button id="rbtn" class="wv3-submit" onclick="doRegister()">Crear cuenta gratis →</button>'+
     '</div>'+
     '</div>'+ // end wv3-auth-card
@@ -8987,8 +8990,15 @@ function wv3TogglePwd(inputId, btnId){
   var inp=document.getElementById(inputId);
   var btn=document.getElementById(btnId);
   if(!inp||!btn) return;
-  if(inp.type==='password'){inp.type='text';btn.textContent='ocultar';}
-  else{inp.type='password';btn.textContent='ver';}
+  if(inp.type==='password'){
+    inp.type='text'; btn.textContent='ocultar';
+    btn.setAttribute('aria-pressed','true');
+    btn.setAttribute('aria-label','Ocultar contraseña');
+  } else {
+    inp.type='password'; btn.textContent='ver';
+    btn.setAttribute('aria-pressed','false');
+    btn.setAttribute('aria-label','Mostrar contraseña');
+  }
 }
 function wv3CountUp(targetId, finalVal, delay){
   var el=document.getElementById(targetId);
