@@ -3823,16 +3823,7 @@ function renderMain(){
   if(!S.user){renderWelcome();return;}
   var plan=planOf();
   if(plan.locked.indexOf(S.page)>=0){renderPaywall();return;}
-  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:function(){
-      // El indice de sentimiento vive dentro de Noticias. Antes este item del
-      // sidebar redirigia en silencio y el usuario quedaba en Noticias sin saber
-      // por que. Ahora aterriza en la seccion concreta.
-      renderNews();
-      setTimeout(function(){
-        var s=document.getElementById('sec-sentimiento');
-        if(s) s.scrollIntoView({block:'start',behavior:'smooth'});
-      },60);
-    },radar:renderRadar,decision:renderDecisionEngine,ind:renderInd,risk:renderRisk,back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:renderScreener,capital:renderCapital,settings:renderSettings,help:renderHelp};
+  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:renderSentiment,radar:renderRadar,decision:renderDecisionEngine,ind:renderInd,risk:renderRisk,back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:renderScreener,capital:renderCapital,settings:renderSettings,help:renderHelp};
   (pages[S.page]||renderDash)();
   var curPage=PAGES.find(function(p){return p.id===S.page;});
   var mLabel=document.getElementById('mobile-page-label');
@@ -5212,7 +5203,14 @@ function renderNews(){
     // ── SENTIMIENTO ── (destino del item "Sentimiento" del sidebar)
     '<div id="sec-sentimiento" style="padding:20px;border-top:1px solid var(--border);scroll-margin-top:20px">'+
     '<h2 class="fos-section-label" style="margin-bottom:14px">Índice de Sentimiento del Mercado</h2>'+
-    (function(){
+    sentimentSection()+
+    newsUpdStr+
+    '</div>'; // cierre wrapper sentimiento
+}
+// El indice de sentimiento se muestra en dos sitios: como seccion de Contexto
+// y como pagina propia. Se extrae aqui para no duplicar 36 lineas de logica.
+function sentimentSection(){
+  return     (function(){
       var d=calcSentiment();
       var buy=ALL_SIG.filter(function(s){return s.sig==='BUY';}).length;
       var sell=ALL_SIG.filter(function(s){return s.sig==='SELL';}).length;
@@ -5247,10 +5245,21 @@ function renderNews(){
           compRows+
         '</div>'+
         '</div>';
-    })()+
-    newsUpdStr+
-    '</div>'; // cierre wrapper sentimiento
+    })();
 }
+
+// El sidebar ofrecia 'Sentimiento' y aterrizaba en Contexto: el usuario acababa
+// en una pagina con otro titulo sin explicacion. Si el menu promete una pagina,
+// entrega una pagina.
+function renderSentiment(){
+  document.getElementById('main').innerHTML=
+    _ph('Análisis · Sentimiento','Índice de Sentimiento del Mercado','// Fear &amp; Greed propio · compuesto por indicadores técnicos, volatilidad y amplitud')+
+    '<div style="padding:0 20px 20px">'+sentimentSection()+'</div>'+
+    '<div style="margin:0 20px;padding:10px 12px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">'+
+    'Indice calculado a partir de indicadores técnicos agregados. Es una lectura de contexto, no una recomendación de inversión.'+
+    '</div>';
+}
+
 function setNewsF(f){S.newsFilter=f;renderMain();}
 
 // ── INDICADORES (Pro) ──────────────────────────────────────────
