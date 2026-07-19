@@ -478,6 +478,21 @@ body.no-auth .main { margin-left: 0 !important; margin-top: 0 !important; }
 .kr { border-left: 2px solid var(--red); }
 .ka { border-left: 2px solid var(--amber); }
 .kb { border-left: 2px solid var(--blue); }
+/* Rail neutro: para datos sin estado semántico (una magnitud no es "positiva") */
+.kn { border-left: 2px solid var(--border2); }
+/* Jerarquía 1 respuesta -> 3 apoyos */
+.krow-hero {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.kpi.hero { padding: 18px 20px; }
+.kpi.hero .kl { font-size: 11px; }
+.kpi.hero .kv { font-size: 34px; line-height: 1.1; }
+.kpi.hero .ks { font-size: 12px; margin-top: 5px; }
+@media (max-width: 900px) { .krow-hero { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .krow-hero { grid-template-columns: 1fr; } }
 
 /* ── CARD BOX ── */
 .cb {
@@ -2459,10 +2474,10 @@ function genFallback(basePrice,days){
 }
 
 // ── RENDER HELPERS ─────────────────────────────────────────────
-function kpi(l,v,s,c){
+function kpi(l,v,s,c,extra){
   c=c||"g";
   var sc=s?(s.charAt(0)==="+")?"pos":(s.charAt(0)==="-")?"neg":"neu":"";
-  return '<div class="kpi k'+c+'"><div class="kl">'+l+'</div><div class="kv">'+v+'</div>'+(s?'<div class="ks '+sc+'">'+s+'</div>':'')+'</div>';
+  return '<div class="kpi k'+c+(extra?' '+extra:'')+'"><div class="kl">'+l+'</div><div class="kv">'+v+'</div>'+(s?'<div class="ks '+sc+'">'+s+'</div>':'')+'</div>';
 }
 function sigLabel(sig){
   if(sig==="BUY")  return "Alcista";
@@ -4202,6 +4217,10 @@ function dashLoadContext(){
 }
 
 // ── PORTFOLIO ──────────────────────────────────────────────────
+// Jerarquía de KPIs del Portfolio: 1 respuesta (P&L) + 3 apoyos.
+// Revertir al layout anterior: localStorage.setItem('fos_port_kpi_v1','1')
+var FOS_PORT_KPI_V2 = (function(){ try{ return localStorage.getItem('fos_port_kpi_v1')!=='1'; }catch(e){ return true; } })();
+
 function renderPort(){
   var plan=planOf();
   var port=S.portfolio.slice(0,plan.maxT);
@@ -4254,13 +4273,25 @@ function renderPort(){
       '<span>⚠️</span><span style="flex:1;color:var(--amber)">Estás viendo un <b>portfolio de ejemplo</b>. Elimina estas posiciones y agrega las tuyas reales.</span>'+
       '<button onclick="localStorage.setItem(\'mv_demo_dismissed\',\'1\');renderPort()" style="background:transparent;border:1px solid var(--amber);border-radius:5px;padding:3px 8px;color:var(--amber);font-size:10px;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Entendido</button></div>':'')+
     freeBanner("Plan Free: máximo "+plan.maxT+" posiciones.")+
-    '<div class="krow">'+
-    kpi("Capital",D(S.capital),(USER_CURRENCY!=='USD'?fxConvert(S.capital):''),"g")+
-    kpi("Valor Mercado",D(totM),(USER_CURRENCY!=='USD'?fxConvert(totM):''),"b")+
-    kpi("Cash",D(S.capital-totC),(USER_CURRENCY!=='USD'?fxConvert(S.capital-totC):'Disponible'),"a")+
-    kpi("P&L",(totP>=0?"+":"")+D(totP),(totP>=0?"+":"")+pct(totP/(totC||1)),totP>=0?"g":"r")+
-    kpi("Posiciones",port.length+(plan.maxT<999?"/"+plan.maxT:""),"","b")+
-    '</div>'+
+    (FOS_PORT_KPI_V2?
+      // 1 respuesta (¿voy bien?) + 3 apoyos. Color solo donde hay estado real.
+      // "Disponible" = capital tras compromisos, no el bruto. "Capital" se omite
+      // aquí porque ya es editable en el input de abajo (evita duplicar el dato).
+      '<div class="krow-hero">'+
+      kpi("P&L Total",(totP>=0?"▲ +":"▼ ")+D(totP),(totP>=0?"+":"")+pct(totP/(totC||1)),totP>=0?"g":"r","hero")+
+      kpi("Valor Mercado",D(totM),(USER_CURRENCY!=='USD'?fxConvert(totM):''),"n")+
+      kpi("Disponible",D(S.capital-totC),((S.capital-totC)<0?"sobregirado":(USER_CURRENCY!=='USD'?fxConvert(S.capital-totC):'tras compromisos')),((S.capital-totC)<0?"r":"n"))+
+      kpi("Posiciones",port.length+(plan.maxT<999?"/"+plan.maxT:""),"","n")+
+      '</div>'
+    :
+      '<div class="krow">'+
+      kpi("Capital",D(S.capital),(USER_CURRENCY!=='USD'?fxConvert(S.capital):''),"g")+
+      kpi("Valor Mercado",D(totM),(USER_CURRENCY!=='USD'?fxConvert(totM):''),"b")+
+      kpi("Cash",D(S.capital-totC),(USER_CURRENCY!=='USD'?fxConvert(S.capital-totC):'Disponible'),"a")+
+      kpi("P&L",(totP>=0?"+":"")+D(totP),(totP>=0?"+":"")+pct(totP/(totC||1)),totP>=0?"g":"r")+
+      kpi("Posiciones",port.length+(plan.maxT<999?"/"+plan.maxT:""),"","b")+
+      '</div>'
+    )+
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'+
     '<span style="font-size:12px;color:var(--text3)">Capital:</span>'+
     '<input class="inp" type="number" value="'+S.capital+'" onchange="updateCap(this.value)" style="width:130px"/>'+
