@@ -63,7 +63,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 max(24px,calc(50% 
 /* Fix contraste: `.nav-links a` (0,1,1) ganaba a `.nav-cta` (0,1,0) y pintaba el
    CTA gris sobre verde (1.34:1). Se sube especificidad en vez de usar !important. */
 .nav-links a.nav-cta,
-.nav-links a.nav-cta:hover{color:#fff}
+.nav-links a.nav-cta:hover{color:#fff;transition:background-color .15s cubic-bezier(.23,1,.32,1)}
 
 @media(max-width:860px){.nav-links a:not(.nav-cta){display:none}}
 
