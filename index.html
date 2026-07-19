@@ -1644,7 +1644,7 @@ div:has(>.dtab), div:has(>.rtab) {
     <a href="https://financeospro.com/#pricing" target="_blank" style="color:rgba(255,255,255,.65);text-decoration:none;font-size:10px">Planes →</a>
   </div>
 </div>
-<div class="sb-backdrop" id="sb-backdrop" onclick="toggleMobileMenu(false)"></div>
+<div role="button" tabindex="0" class="sb-backdrop" id="sb-backdrop" onclick="toggleMobileMenu(false)"></div>
 <div class="app">
   <nav class="sb" id="sb"></nav>
   <div id="topbar"></div>
@@ -2769,7 +2769,7 @@ function renderTopbar(){
     '<div style="display:flex;align-items:center;height:100%;overflow:hidden">'+chips+regChip+'</div>'+
     '<div style="flex:1"></div>'+
     '<span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:var(--text3);margin-right:14px;white-space:nowrap">~15min delay</span>'+
-    '<div title="'+u.email+'" style="width:28px;height:28px;border-radius:50%;background:var(--grn-bg);border:1px solid var(--grn-lt);display:flex;align-items:center;justify-content:center;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--grn);flex-shrink:0;cursor:pointer" onclick="setPage(\'settings\')">'+initials+'</div>';
+    '<div role="button" tabindex="0" title="'+u.email+'" style="width:28px;height:28px;border-radius:50%;background:var(--grn-bg);border:1px solid var(--grn-lt);display:flex;align-items:center;justify-content:center;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--grn);flex-shrink:0;cursor:pointer" onclick="setPage(\'settings\')">'+initials+'</div>';
 
   if(!r||!v){
     Promise.all([deGetRegime(),deGetVIX()]).then(function(){renderTopbar();}).catch(function(){});
@@ -2906,7 +2906,7 @@ function renderSidebar(){
   }
 
   // User row
-  html+='<div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;cursor:pointer" onclick="logout()" title="Cerrar sesión">'+
+  html+='<div role="button" tabindex="0" style="display:flex;align-items:center;gap:9px;margin-bottom:9px;cursor:pointer" onclick="logout()" title="Cerrar sesión">'+
     '<div style="width:28px;height:28px;border-radius:50%;background:var(--grn-bg);border:1px solid var(--grn-lt);display:flex;align-items:center;justify-content:center;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--grn);flex-shrink:0">'+initials+'</div>'+
     '<div style="flex:1;min-width:0">'+
     '<div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+email+'">'+email+'</div>'+
@@ -3432,7 +3432,7 @@ function renderDecisionEngine(){
             '<div style="background:linear-gradient(135deg,rgba(255,255,255,.03) 0%,transparent 100%);padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.05)">'+
               '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">'+
                 '<div>'+
-                  '<div style="font-size:18px;font-weight:800;color:var(--bright);font-family:\'JetBrains Mono\',monospace;cursor:pointer;line-height:1" onclick="openDrawer(\''+s.ticker+'\','+s.last+')">'+s.ticker+' <span style="font-size:10px;color:var(--text3)">↗</span></div>'+
+                  '<div role="button" tabindex="0" style="font-size:18px;font-weight:800;color:var(--bright);font-family:\'JetBrains Mono\',monospace;cursor:pointer;line-height:1" onclick="openDrawer(\''+s.ticker+'\','+s.last+')">'+s.ticker+' <span style="font-size:10px;color:var(--text3)">↗</span></div>'+
                   '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">$'+s.last.toFixed(2)+'</div>'+
                 '</div>'+
                 // Score circle
@@ -4112,8 +4112,8 @@ function renderDash(){
       '<button class="btn" onclick="setPage(\'watch\')" style="padding:9px 16px">Ver Watchlist</button>'+
       '</div>'+
       '<div class="dash-actions">'+
-      '<div class="dash-action-btn" onclick="setPage(\'decision\')"><div style="font-size:18px;margin-bottom:5px">🎯</div><div style="font-size:12px;font-weight:600;color:var(--bright)">Motor de Análisis</div><div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">Régimen + scores</div></div>'+
-      '<div class="dash-action-btn" onclick="setPage(\'screener\')"><div style="font-size:18px;margin-bottom:5px">🔍</div><div style="font-size:12px;font-weight:600;color:var(--bright)">Screener Pro</div><div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">Filtra oportunidades</div></div>'+
+      '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'decision\')"><div style="font-size:18px;margin-bottom:5px">🎯</div><div style="font-size:12px;font-weight:600;color:var(--bright)">Motor de Análisis</div><div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">Régimen + scores</div></div>'+
+      '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'screener\')"><div style="font-size:18px;margin-bottom:5px">🔍</div><div style="font-size:12px;font-weight:600;color:var(--bright)">Screener Pro</div><div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">Filtra oportunidades</div></div>'+
       '</div></div></div>';
     dashLoadContext();
     return;
@@ -4173,7 +4173,7 @@ function renderDash(){
     var items=news.map(function(n){
       var c=impColor[n.impact]||'var(--text3)';
       var ago=n.hoursAgo?n.hoursAgo+'h ago':'—';
-      return '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start;cursor:pointer" onclick="setPage(\'news\')">'+
+      return '<div role="button" tabindex="0" style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start;cursor:pointer" onclick="setPage(\'news\')">'+
         '<div style="width:4px;height:4px;border-radius:50%;background:'+c+';margin-top:6px;flex-shrink:0"></div>'+
         '<div style="flex:1;min-width:0">'+
         '<div style="font-size:11px;font-weight:600;color:var(--bright);line-height:1.4;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(n.title)+'</div>'+
@@ -4195,10 +4195,10 @@ function renderDash(){
     '<div class="dash-ctx-card">'+
     '<div class="fos-card-title" style="margin-bottom:14px">Acciones Rápidas</div>'+
     '<div class="dash-actions">'+
-    '<div class="dash-action-btn" onclick="setPage(\'decision\')"><div style="font-size:16px;margin-bottom:4px">🎯</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Motor</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Régimen SPY</div></div>'+
-    '<div class="dash-action-btn" onclick="setPage(\'ind\')"><div style="font-size:16px;margin-bottom:4px">📈</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Indicadores</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">RSI · MACD · BB</div></div>'+
-    '<div class="dash-action-btn" onclick="setPage(\'risk\')"><div style="font-size:16px;margin-bottom:4px">🛡️</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Riesgo</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Sizing · R/R</div></div>'+
-    '<div class="dash-action-btn" onclick="setPage(\'screener\')"><div style="font-size:16px;margin-bottom:4px">🔍</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Screener</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Filtrar activos</div></div>'+
+    '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'decision\')"><div style="font-size:16px;margin-bottom:4px">🎯</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Motor</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Régimen SPY</div></div>'+
+    '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'ind\')"><div style="font-size:16px;margin-bottom:4px">📈</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Indicadores</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">RSI · MACD · BB</div></div>'+
+    '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'risk\')"><div style="font-size:16px;margin-bottom:4px">🛡️</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Riesgo</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Sizing · R/R</div></div>'+
+    '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'screener\')"><div style="font-size:16px;margin-bottom:4px">🔍</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Screener</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Filtrar activos</div></div>'+
     '</div></div>'+
     '<div style="margin-top:14px">'+renderSentimentCompact()+'</div>';
 
@@ -4910,7 +4910,7 @@ function renderNews(){
     var sparkCol=impCol[featItem.impact]||'var(--amber)';
     var pts=sparkPts[featItem.impact]||sparkPts.neutral;
     featCard=
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;display:flex;min-height:145px;cursor:pointer;transition:.15s" '+(featItem.link?'onclick="window.open(\''+featItem.link+'\',\'_blank\',\'noopener\')"':'')+' onmouseover="this.style.borderColor=\'rgba(247,147,26,.3)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
+      '<div role="button" tabindex="0" style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;display:flex;min-height:145px;cursor:pointer;transition:.15s" '+(featItem.link?'onclick="window.open(\''+featItem.link+'\',\'_blank\',\'noopener\')"':'')+' onmouseover="this.style.borderColor=\'rgba(247,147,26,.3)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
       // Thumbnail: imagen real si existe, sino gradiente+emoji+favicon
       (function(){
         var grad=catGrad[featItem.cat]||'linear-gradient(160deg,#091428,#0e2244)';
@@ -4977,7 +4977,7 @@ function renderNews(){
         '<div style="font-size:28px;opacity:.8">'+( catEmoji[n.cat]||'📰')+'</div>'+
         (n.breaking?'<div style="position:absolute;top:3px;left:3px;background:var(--red);color:#fff;font-size:6px;font-weight:700;padding:1px 4px;border-radius:2px;letter-spacing:.5px;font-family:\'JetBrains Mono\',monospace">LIVE</div>':'')+
       '</div>';
-    return '<div style="background:var(--card);border:1px solid var(--border);border-bottom:'+(isLast?'1px solid var(--border)':'none')+';padding:11px 14px;cursor:pointer;transition:.15s;display:flex;gap:12px;align-items:flex-start;border-radius:'+radius+'" '+(n.link?'onclick="window.open(\''+esc(safeLink(n.link))+'\',\'_blank\',\'noopener\')"':'')+' onmouseover="this.style.background=\'rgba(247,147,26,.04)\';this.style.borderColor=\'rgba(247,147,26,.2)\'" onmouseout="this.style.background=\'var(--card)\';this.style.borderColor=\'var(--border)\'">'+
+    return '<div role="button" tabindex="0" style="background:var(--card);border:1px solid var(--border);border-bottom:'+(isLast?'1px solid var(--border)':'none')+';padding:11px 14px;cursor:pointer;transition:.15s;display:flex;gap:12px;align-items:flex-start;border-radius:'+radius+'" '+(n.link?'onclick="window.open(\''+esc(safeLink(n.link))+'\',\'_blank\',\'noopener\')"':'')+' onmouseover="this.style.background=\'rgba(247,147,26,.04)\';this.style.borderColor=\'rgba(247,147,26,.2)\'" onmouseout="this.style.background=\'var(--card)\';this.style.borderColor=\'var(--border)\'">'+
       thumb+
       // Content
       '<div style="flex:1;min-width:0">'+
@@ -5001,7 +5001,7 @@ function renderNews(){
   var lastUpdStr=liveUpdated?'Yahoo Finance · actualizado '+timeAgo(liveUpdated):'Cargando...';
   var moverRows=MOVERS.map(function(m){
     var pos=m.chg>=0;
-    return '<div style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s" onclick="openDrawer(\''+m.t+'\','+m.last+')" onmouseover="this.style.background=\'rgba(247,147,26,.04)\'" onmouseout="this.style.background=\'transparent\'">'+
+    return '<div role="button" tabindex="0" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s" onclick="openDrawer(\''+m.t+'\','+m.last+')" onmouseover="this.style.background=\'rgba(247,147,26,.04)\'" onmouseout="this.style.background=\'transparent\'">'+
       '<span style="font-size:12px;font-weight:700;color:var(--bright);flex:1;font-family:\'JetBrains Mono\',monospace">'+m.t+'</span>'+
       '<span style="font-size:11px;color:var(--text);font-family:\'JetBrains Mono\',monospace;width:54px;text-align:right">'+m.last.toFixed(2)+'</span>'+
       '<span style="font-size:10px;font-weight:700;font-family:\'JetBrains Mono\',monospace;width:50px;text-align:right;color:'+(pos?'var(--grn)':'var(--red)')+'">'+( pos?'+':'')+m.chg.toFixed(2)+'%</span>'+
@@ -5270,7 +5270,7 @@ function renderInd(){
     var s=ALL_SIG.find(function(x){return x.t===t;})||{sig:"HOLD",sc:60,p:100};
     var lp=getLivePrice(t);
     var col=s.sig==="BUY"?"var(--grn)":s.sig==="SELL"?"var(--red)":"var(--amber)";
-    return '<div onclick="openDrawer(\''+t+'\','+lp+')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;transition:.15s;text-align:center;min-width:76px;box-shadow:var(--shadow)" onmouseover="this.style.borderColor=\'var(--grn-lt)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
+    return '<div role="button" tabindex="0" onclick="openDrawer(\''+t+'\','+lp+')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;transition:.15s;text-align:center;min-width:76px;box-shadow:var(--shadow)" onmouseover="this.style.borderColor=\'var(--grn-lt)\'" onmouseout="this.style.borderColor=\'var(--border)\'">'+
       '<div style="font-size:12px;font-weight:700;color:var(--bright);font-family:\'JetBrains Mono\'">'+t+'</div>'+
       '<div style="font-size:10px;color:'+col+';font-family:\'JetBrains Mono\';margin-top:1px">'+sigLabel(s.sig)+'</div>'+
       '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\'">$'+fmtD(lp)+'</div></div>';
@@ -6924,7 +6924,7 @@ function buildDial(score,color,size){
 
 function renderSentimentCompact(){
   var d=calcSentiment();
-  return '<div class="cb" style="cursor:pointer;text-align:center" onclick="setPage(\'sentiment\')">'+
+  return '<div role="button" tabindex="0" class="cb" style="cursor:pointer;text-align:center" onclick="setPage(\'sentiment\')">'+
     '<div class="st"><div class="stbar"></div>Market Sentiment</div>'+
     buildDial(d.score,d.color,180)+
     '<div style="font-size:14px;font-weight:700;color:'+d.color+';margin-top:4px">'+d.emoji+' '+d.label+'</div>'+
@@ -7147,7 +7147,7 @@ function showRiskProfile(onDone){
       '<div style="display:flex;flex-direction:column;gap:8px">'+
       qd.opts.map(function(o){
         var sel=profile[qd.key]===o.v;
-        return '<div onclick="profileSelect(\''+qd.key+'\',\''+o.v+'\')" style="padding:12px 14px;border-radius:var(--r-md);border:1.5px solid '+(sel?'var(--orange-bd)':'var(--border)')+';background:'+(sel?'var(--orange-bg)':'var(--card2)')+';cursor:pointer;transition:.15s" onmouseover="this.style.borderColor=\'var(--orange-bd)\'" onmouseout="this.style.borderColor=\''+(sel?'var(--orange-bd)':'var(--border)')+'\'">'+
+        return '<div role="button" tabindex="0" onclick="profileSelect(\''+qd.key+'\',\''+o.v+'\')" style="padding:12px 14px;border-radius:var(--r-md);border:1.5px solid '+(sel?'var(--orange-bd)':'var(--border)')+';background:'+(sel?'var(--orange-bg)':'var(--card2)')+';cursor:pointer;transition:.15s" onmouseover="this.style.borderColor=\'var(--orange-bd)\'" onmouseout="this.style.borderColor=\''+(sel?'var(--orange-bd)':'var(--border)')+'\'">'+
           '<div style="font-size:13px;font-weight:600;color:var(--bright);margin-bottom:3px">'+o.label+'</div>'+
           '<div style="font-size:11px;color:var(--text2);font-family:\'JetBrains Mono\',monospace">'+o.desc+'</div>'+
           '</div>';
@@ -7520,7 +7520,7 @@ function renderRadar(){
     var isActive=RADAR.view===i||( RADAR.view==='current'&&i===0&&!RADAR.report);
     var score=r.score;
     var scoreColor=score>=70?'var(--grn)':score>=50?'var(--amber)':'var(--red)';
-    return '<div onclick="radarViewHistory('+i+')" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--r-sm);cursor:pointer;background:'+(RADAR.view===i?'var(--orange-bg)':'transparent')+';border:1px solid '+(RADAR.view===i?'var(--orange-bd)':'transparent')+';transition:.15s;margin-bottom:3px" onmouseover="this.style.background=\'var(--card2)\'" onmouseout="this.style.background=\''+(RADAR.view===i?'var(--orange-bg)':'transparent')+'\'">'+
+    return '<div role="button" tabindex="0" onclick="radarViewHistory('+i+')" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--r-sm);cursor:pointer;background:'+(RADAR.view===i?'var(--orange-bg)':'transparent')+';border:1px solid '+(RADAR.view===i?'var(--orange-bd)':'transparent')+';transition:.15s;margin-bottom:3px" onmouseover="this.style.background=\'var(--card2)\'" onmouseout="this.style.background=\''+(RADAR.view===i?'var(--orange-bg)':'transparent')+'\'">'+
       '<div style="font-size:15px;font-weight:700;color:'+scoreColor+';font-family:\'JetBrains Mono\',monospace;width:28px;text-align:center">'+score+'</div>'+
       '<div>'+
       '<div style="font-size:11px;font-weight:600;color:var(--bright)">'+new Date(r.date).toLocaleDateString('es-CL',{day:'numeric',month:'short'})+'</div>'+
@@ -7746,6 +7746,22 @@ function checkOnboarding(){
 }
 
 // ── KEYBOARD SHORTCUTS ─────────────────────────────────────────
+// Los controles construidos sobre <div role="button" tabindex="0"> no reciben
+// activacion por teclado nativa como un <button>. Un unico manejador delegado
+// los cubre a todos en lugar de repetir onkeydown en cada plantilla JS.
+// Va en su propio listener y ANTES del guard de sesion: activar un control no
+// es un atajo de la app, y varios de estos controles viven en la pantalla de
+// acceso, donde todavia no hay S.user.
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Enter'&&e.key!==' ') return;
+  var ctrl=document.activeElement;
+  if(!ctrl||!ctrl.getAttribute) return;
+  if(ctrl.getAttribute('role')==='button'&&ctrl.tagName!=='BUTTON'){
+    e.preventDefault();
+    ctrl.click();
+  }
+});
+
 document.addEventListener('keydown',function(e){
   if(!S.user) return;
   if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
@@ -8021,7 +8037,7 @@ function renderComp(){
     var label=s.slice(0,-1).join(" vs ");
     var desc=s[s.length-1];
     var args=s.slice(0,-1).map(function(t){return '"'+t+'"';}).join(",");
-    return '<div onclick="compSet('+args+')" style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;cursor:pointer;border-radius:6px;border:1px solid var(--border);margin-bottom:4px;transition:.15s" onmouseover="this.style.borderColor=\'var(--orange-bd)\';this.style.background=\'var(--orange-bg)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'transparent\'">'+
+    return '<div role="button" tabindex="0" onclick="compSet('+args+')" style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;cursor:pointer;border-radius:6px;border:1px solid var(--border);margin-bottom:4px;transition:.15s" onmouseover="this.style.borderColor=\'var(--orange-bd)\';this.style.background=\'var(--orange-bg)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'transparent\'">'+
       '<span style="font-size:11px;font-weight:600;color:var(--bright);font-family:\'JetBrains Mono\',monospace">'+label+'</span>'+
       '<span style="font-size:10px;color:var(--text3)">'+desc+'</span></div>';
   }).join('');
