@@ -60,6 +60,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 max(24px,calc(50% 
 .nav-links a:hover{color:var(--grn)}
 .nav-cta{background:var(--grn);color:#fff;border:none;padding:9px 20px;border-radius:var(--r-md);font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:.15s;text-decoration:none}
 .nav-cta:hover{background:var(--grn-d)}
+/* Fix contraste: `.nav-links a` (0,1,1) ganaba a `.nav-cta` (0,1,0) y pintaba el
+   CTA gris sobre verde (1.34:1). Se sube especificidad en vez de usar !important. */
+.nav-links a.nav-cta,
+.nav-links a.nav-cta:hover{color:#fff}
 
 @media(max-width:860px){.nav-links a:not(.nav-cta){display:none}}
 
