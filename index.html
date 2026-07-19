@@ -1604,6 +1604,17 @@ div:has(>.dtab), div:has(>.rtab) {
   .ph-right { width: 100%; justify-content: flex-start; }
 }
 
+/* ── AREA TACTIL ─────────────────────────────────────────────────
+   Los botones de accion de tabla usan padding:2px inline y quedan muy por
+   debajo del minimo tactil de 44px. Solo se agrandan en dispositivos de puntero
+   grueso: en escritorio con raton la densidad se conserva intacta.
+   No se usa la tecnica de area invisible ampliada porque estos botones van
+   adyacentes (editar junto a borrar) y las areas se solaparian: el usuario
+   pulsaria borrar apuntando a editar. */
+@media (pointer: coarse) {
+  .btn, .wv3-eye-btn { min-height: 44px; }
+}
+
 /* ── INDICADOR DE FOCO ───────────────────────────────────────────
    Varios controles declaran outline:none inline dentro de plantillas JS, lo que
    deja a quien navega con teclado sin saber donde esta. Una regla normal no los
@@ -5759,7 +5770,10 @@ function mPos(mr){
     '<label class="fl">Ticker</label>'+
     '<input id="pt" class="inp ifu" placeholder="AAPL" value="'+pos.t+'" style="text-transform:uppercase" '+(ed?"readonly":"")+' onchange="(function(){var t=this.value.toUpperCase().trim();if(!t)return;var el=document.getElementById(\'pcur\');if(LIVE[t]){if(el)el.value=LIVE[t].price.toFixed(2);}else{fetchQuote(t).then(function(q){if(q&&el){LIVE[t]=q;el.value=q.price.toFixed(2);}});}}).call(this)"/>'+
     '<label class="fl">Tipo</label>'+
-    '<select id="pty" class="inp ifu" style="cursor:pointer"><option '+(pos.type==="Stock"?"selected":"")+'>Stock</option><option '+(pos.type==="ETF"?"selected":"")+'>ETF</option><option '+(pos.type==="Crypto"?"selected":"")+'>Crypto</option></select>'+
+    // value explicito: .value ya devolvia el textContent, asi que el valor que se
+    // persiste es identico. Se hace explicito para que renombrar la etiqueta
+    // visible no altere en silencio lo que se guarda.
+    '<select id="pty" class="inp ifu" style="cursor:pointer"><option value="Stock" '+(pos.type==="Stock"?"selected":"")+'>Stock</option><option value="ETF" '+(pos.type==="ETF"?"selected":"")+'>ETF</option><option value="Crypto" '+(pos.type==="Crypto"?"selected":"")+'>Crypto</option></select>'+
     '<label class="fl">Unidades</label>'+
     '<input id="ps" class="inp ifu" type="number" placeholder="10" value="'+(pos.sh||"")+'" min="0.001" step="0.001"/>'+
     '<label class="fl">Precio de entrada</label>'+
