@@ -152,8 +152,10 @@ section{padding:64px 0}
 
 /* ── FAQ ── */
 .faq{display:flex;flex-direction:column;gap:1px;background:var(--border);border:0.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-top:24px}
-.faq-item{background:var(--card);cursor:pointer}
-.faq-q{padding:16px 20px;font-size:14px;font-weight:600;color:var(--bright);display:flex;justify-content:space-between;align-items:center}
+.faq-item{background:var(--card)}
+/* .faq-q es un <button> real (antes div[onclick]): reset de estilos nativos
+   para conservar el aspecto, ganando teclado y semantica de forma gratuita. */
+.faq-q{width:100%;padding:16px 20px;font-size:14px;font-weight:600;color:var(--bright);display:flex;justify-content:space-between;align-items:center;gap:12px;background:none;border:none;font-family:inherit;text-align:left;cursor:pointer}
 .faq-arrow{color:var(--text3);font-weight:400;transition:transform .2s cubic-bezier(.23,1,.32,1)}
 .faq-item.open .faq-arrow{transform:rotate(45deg)}
 .faq-a{padding:0 20px;font-size:13px;color:var(--text2);line-height:1.6;max-height:0;overflow:hidden;transition:max-height .2s cubic-bezier(.23,1,.32,1),padding .2s cubic-bezier(.23,1,.32,1)}
@@ -195,7 +197,7 @@ footer{border-top:0.5px solid var(--border);padding:40px 0;text-align:center}
 
 
 <!-- NAV -->
-<nav>
+<nav aria-label="Principal">
   <a href="#" class="nav-logo">
     <div class="nav-logo-icon">F</div>
     <span class="nav-logo-name">FinanceOS Invest</span>
@@ -236,61 +238,61 @@ footer{border-top:0.5px solid var(--border);padding:40px 0;text-align:center}
 <section class="features" id="features">
   <div style="text-align:center;margin-bottom:48px">
     <div class="section-label">Funcionalidades</div>
-    <div class="section-title">Todo lo que necesitas para invertir mejor</div>
+    <h2 class="section-title">Todo lo que necesitas para invertir mejor</h2>
     <p class="section-sub" style="margin:0 auto">Indicadores históricos, análisis comparativo y datos reales en tiempo real. Pensado para el inversor de LATAM.</p>
   </div>
 
   <div class="feat-grid">
     <div class="feat-card">
-      <div class="feat-icon">📐</div>
+      <div class="feat-icon" aria-hidden="true">📐</div>
       <div class="feat-title">Análisis Comparativo</div>
       <div class="feat-desc">Indicadores históricos de tendencia, volumen, RSI y MACD presentados como contexto educativo — alto, medio o bajo. Sin recomendaciones de compra o venta.</div>
       <span class="feat-tag tag-free">✓ FREE</span>
     </div>
     <div class="feat-card">
-      <div class="feat-icon">📡</div>
+      <div class="feat-icon" aria-hidden="true">📡</div>
       <div class="feat-title">Precios reales · Sin retraso</div>
       <div class="feat-desc">Yahoo Finance API. Precios en tiempo real con fallback inteligente. Badge LIVE/Caché/Error. Auto-refresh cada 5 minutos. Drawer con gráfico OHLCV real.</div>
       <span class="feat-tag tag-free">✓ FREE</span>
     </div>
     <div class="feat-card">
-      <div class="feat-icon">📐</div>
+      <div class="feat-icon" aria-hidden="true">📐</div>
       <div class="feat-title">Position Builder</div>
       <div class="feat-desc">La Regla del 2% aplicada automáticamente. Ingresa ticker, capital y stop loss → calcula el position size óptimo con 8 escenarios de precio.</div>
       <span class="feat-tag tag-free">✓ FREE</span>
     </div>
     <div class="feat-card">
-      <div class="feat-icon">🇨🇱</div>
+      <div class="feat-icon" aria-hidden="true">🇨🇱</div>
       <div class="feat-title">Chile/LATAM · Tipo de cambio · IPSA</div>
       <div class="feat-desc">Tipo de cambio USD/CLP en tiempo real desde Banco Central. Tickers del IPSA y mercados locales. Contexto regional para el inversor latinoamericano.</div>
       <span class="feat-tag tag-latam">🌎 LATAM EXCLUSIVO</span>
     </div>
     <div class="feat-card">
-      <div class="feat-icon">⚖️</div>
+      <div class="feat-icon" aria-hidden="true">⚖️</div>
       <div class="feat-title">Comparador head-to-head</div>
       <div class="feat-desc">Compara 2-4 activos con performance normalizado, correlación, Sharpe ratio y tabla de métricas. Responde: ¿AAPL o MSFT? ¿SPY o QQQ?</div>
       <span class="feat-tag tag-pro">Pro</span>
     </div>
     <div class="feat-card">
-      <div class="feat-icon">🌡️</div>
+      <div class="feat-icon" aria-hidden="true">🌡️</div>
       <div class="feat-title">Market Sentiment propio</div>
       <div class="feat-desc">Índice Fear & Greed calculado con TUS datos: % de indicadores altos, RSI del portfolio, momentum P&L y VIX. Historial de 14 días. No existe en ningún otro lugar.</div>
       <span class="feat-tag tag-unique">⭐ ÚNICO</span>
     </div>
     <div class="feat-card">
-      <div class="feat-icon">💰</div>
+      <div class="feat-icon" aria-hidden="true">💰</div>
       <div class="feat-title">Dividend Calendar</div>
       <div class="feat-desc">Proyección de ingresos por dividendos para los próximos 12 meses. Ex-dividend dates, yield por posición y proyección en USD y CLP.</div>
       <span class="feat-tag tag-pro">Pro</span>
     </div>
     <div class="feat-card">
-      <div class="feat-icon">🔀</div>
+      <div class="feat-icon" aria-hidden="true">🔀</div>
       <div class="feat-title">Rebalancing Tool</div>
       <div class="feat-desc">Define pesos objetivo con sliders. Calcula exactamente qué comprar y vender para rebalancear. Convierte análisis en decisiones concretas.</div>
       <span class="feat-tag tag-pro">Pro</span>
     </div>
     <div class="feat-card">
-      <div class="feat-icon">📰</div>
+      <div class="feat-icon" aria-hidden="true">📰</div>
       <div class="feat-title">Noticias con impacto</div>
       <div class="feat-desc">Diseño CNBC/Investing.com. Breaking news banner, quick links trending, análisis de impacto bursátil por noticia. Calendario económico semanal.</div>
       <span class="feat-tag tag-free">✓ FREE</span>
@@ -302,7 +304,7 @@ footer{border-top:0.5px solid var(--border);padding:40px 0;text-align:center}
 <section id="compare">
   <div style="text-align:center;margin-bottom:40px">
     <div class="section-label">Comparativa</div>
-    <div class="section-title">¿Por qué FinanceOS Invest?</div>
+    <h2 class="section-title">¿Por qué FinanceOS Invest?</h2>
   </div>
   <div style="overflow-x:auto">
   <table class="vs-table">
@@ -340,7 +342,7 @@ footer{border-top:0.5px solid var(--border);padding:40px 0;text-align:center}
 <section id="pricing">
   <div style="text-align:center;margin-bottom:0">
     <div class="section-label">Precios</div>
-    <div class="section-title">Elige tu plan</div>
+    <h2 class="section-title">Elige tu plan</h2>
     <p class="section-sub" style="margin:0 auto">Sin contratos. Sin sorpresas. Plan Free disponible desde el día 1.</p>
   </div>
   <div class="pricing-grid">
@@ -405,7 +407,7 @@ footer{border-top:0.5px solid var(--border);padding:40px 0;text-align:center}
 <section style="background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
   <div style="text-align:center;margin-bottom:0">
     <div class="section-label">Testimonios</div>
-    <div class="section-title">Qué dicen nuestros usuarios</div>
+    <h2 class="section-title">Qué dicen nuestros usuarios</h2>
   </div>
   <div class="test-grid">
     <div class="test-card">
@@ -427,28 +429,28 @@ footer{border-top:0.5px solid var(--border);padding:40px 0;text-align:center}
 <section id="faq">
   <div style="text-align:center;margin-bottom:40px">
     <div class="section-label">FAQ</div>
-    <div class="section-title">Preguntas frecuentes</div>
+    <h2 class="section-title">Preguntas frecuentes</h2>
   </div>
   <div class="faq">
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">¿Los precios son realmente en tiempo real? <span class="faq-arrow">+</span></div>
-      <div class="faq-a">Sí. FinanceOS Invest conecta con Yahoo Finance API para obtener precios de mercado en tiempo real. Verás un badge verde "LIVE · HH:MM" cuando los datos están actualizados. Si el proxy falla temporalmente, muestra datos cacheados (máx 2h) con badge naranja.</div>
+    <div class="faq-item">
+      <button type="button" class="faq-q" aria-expanded="false" aria-controls="faq-a-1" onclick="var i=this.closest('.faq-item'),o=i.classList.toggle('open');this.setAttribute('aria-expanded',o)">¿Los precios son realmente en tiempo real?<span class="faq-arrow" aria-hidden="true">+</span></button>
+      <div class="faq-a" id="faq-a-1" role="region">Sí. FinanceOS Invest conecta con Yahoo Finance API para obtener precios de mercado en tiempo real. Verás un badge verde "LIVE · HH:MM" cuando los datos están actualizados. Si el proxy falla temporalmente, muestra datos cacheados (máx 2h) con badge naranja.</div>
     </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">¿Necesito tarjeta de crédito para el trial? <span class="faq-arrow">+</span></div>
-      <div class="faq-a">No. El trial de 14 días es completamente gratuito, sin tarjeta de crédito. Al finalizar, puedes continuar con el plan Free (5 activos) o activar Pro con tu tarjeta.</div>
+    <div class="faq-item">
+      <button type="button" class="faq-q" aria-expanded="false" aria-controls="faq-a-2" onclick="var i=this.closest('.faq-item'),o=i.classList.toggle('open');this.setAttribute('aria-expanded',o)">¿Necesito tarjeta de crédito para el trial?<span class="faq-arrow" aria-hidden="true">+</span></button>
+      <div class="faq-a" id="faq-a-2" role="region">No. El trial de 14 días es completamente gratuito, sin tarjeta de crédito. Al finalizar, puedes continuar con el plan Free (5 activos) o activar Pro con tu tarjeta.</div>
     </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">¿Cómo funcionan los indicadores de Análisis Comparativo? <span class="faq-arrow">+</span></div>
-      <div class="faq-a">Combinan tendencia, volumen, RSI y MACD de cada activo en un score histórico (Alto/Medio/Bajo). Es contexto educativo sobre el comportamiento pasado del activo — no una señal de compra o venta ni una predicción.</div>
+    <div class="faq-item">
+      <button type="button" class="faq-q" aria-expanded="false" aria-controls="faq-a-3" onclick="var i=this.closest('.faq-item'),o=i.classList.toggle('open');this.setAttribute('aria-expanded',o)">¿Cómo funcionan los indicadores de Análisis Comparativo?<span class="faq-arrow" aria-hidden="true">+</span></button>
+      <div class="faq-a" id="faq-a-3" role="region">Combinan tendencia, volumen, RSI y MACD de cada activo en un score histórico (Alto/Medio/Bajo). Es contexto educativo sobre el comportamiento pasado del activo — no una señal de compra o venta ni una predicción.</div>
     </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">¿FinanceOS Invest conecta con mi broker? <span class="faq-arrow">+</span></div>
-      <div class="faq-a">Actualmente el portfolio se ingresa manualmente (ticker, shares, precio de entrada). La integración con brokers (IBKR, Fidelity, Charles Schwab) está en desarrollo para Q3 2026.</div>
+    <div class="faq-item">
+      <button type="button" class="faq-q" aria-expanded="false" aria-controls="faq-a-4" onclick="var i=this.closest('.faq-item'),o=i.classList.toggle('open');this.setAttribute('aria-expanded',o)">¿FinanceOS Invest conecta con mi broker?<span class="faq-arrow" aria-hidden="true">+</span></button>
+      <div class="faq-a" id="faq-a-4" role="region">Actualmente el portfolio se ingresa manualmente (ticker, shares, precio de entrada). La integración con brokers (IBKR, Fidelity, Charles Schwab) está en desarrollo para Q3 2026.</div>
     </div>
-    <div class="faq-item" onclick="this.classList.toggle('open')">
-      <div class="faq-q">¿Puedo cancelar en cualquier momento? <span class="faq-arrow">+</span></div>
-      <div class="faq-a">Sí. Cancela en 1 click desde tu perfil. Si cancelas, mantienes acceso Pro hasta el fin del período pagado y luego pasas automáticamente al plan Free sin perder tus datos.</div>
+    <div class="faq-item">
+      <button type="button" class="faq-q" aria-expanded="false" aria-controls="faq-a-5" onclick="var i=this.closest('.faq-item'),o=i.classList.toggle('open');this.setAttribute('aria-expanded',o)">¿Puedo cancelar en cualquier momento?<span class="faq-arrow" aria-hidden="true">+</span></button>
+      <div class="faq-a" id="faq-a-5" role="region">Sí. Cancela en 1 click desde tu perfil. Si cancelas, mantienes acceso Pro hasta el fin del período pagado y luego pasas automáticamente al plan Free sin perder tus datos.</div>
     </div>
   </div>
 </section>
