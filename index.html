@@ -1738,7 +1738,12 @@ const CONSENT_GATE_ENABLED = true;
 // ── USERS & PLANS ──────────────────────────────────────────────
 // USERS[] migrado a Supabase Auth — ver migrate-test-users.md
 const PLANS={
-  free:{label:"Free",maxT:5,maxA:3,maxS:5,locked:["decision","ind","risk","back","screener","capital","comp","pb","divs","rebal","radar"],
+  // Comparador, Position Builder, Dividendos, Rebalanceo y Radar estuvieron
+  // bloqueados brevemente porque el modal de upgrade los vendia como Pro. Se
+  // revierte: son herramientas basicas de seguimiento y bloquearlas dejaba 11
+  // de 20 paginas con candado. La incoherencia se corrige por el otro lado,
+  // quitandolas del listado Pro del modal.
+  free:{label:"Free",maxT:5,maxA:3,maxS:5,locked:["decision","ind","risk","back","screener","capital"],
     price:0,desc:"Portafolio básico · 5 activos · Señales limitadas"},
   trial:{label:"Trial",maxT:999,maxA:999,maxS:999,locked:[],
     price:0,desc:"Acceso completo · Todo incluido",trialDays:14},
@@ -6681,7 +6686,7 @@ function exportCSV(){
 var PB={ticker:'',price:0,capital:0,risk:2,stop:0,rr:2,computed:null}; // capital set on first render
 
 function renderPB(){
-  var plan=planOf();if(plan.locked&&plan.locked.indexOf('pb')>=0){document.getElementById('main').innerHTML='';lockedBanner('Position Builder','Calcula el tamaño correcto de cada posición según tu capital y objetivos de riesgo/retorno.');return;}
+  var plan=planOf();if(plan.locked&&plan.locked.indexOf('pb')>=0){document.getElementById('main').innerHTML=lockedBanner('Position Builder','Calcula el tamaño correcto de cada posición según tu capital y objetivos de riesgo/retorno.');return;}
   if(!PB.capital||PB.capital<=0) PB.capital=S.capital;
   var cap=PB.capital;
   var portPills=S.portfolio.slice(0,8).map(function(h){
@@ -7523,7 +7528,7 @@ function radarReportHTML(r,shared){
 
 // ── MAIN RENDER ───────────────────────────────────────────────────
 function renderRadar(){
-  var plan=planOf();if(plan.locked&&plan.locked.indexOf('radar')>=0){document.getElementById('main').innerHTML='';lockedBanner('Radar Financiero','Evalúa tu salud financiera integral y genera un plan de acción personalizado.');return;}
+  var plan=planOf();if(plan.locked&&plan.locked.indexOf('radar')>=0){document.getElementById('main').innerHTML=lockedBanner('Radar Financiero','Evalúa tu salud financiera integral y genera un plan de acción personalizado.');return;}
   radarInit();
 
   var hasReport=!!RADAR.report;
@@ -7870,18 +7875,20 @@ function renderHelp(){
 function mUpgrade(mr){
   var plan=S.user?PLANS[S.user.plan]:PLANS.free;
 
+  // Solo se listan funciones que de verdad estan en PLANS.free.locked o que son
+  // un limite cuantitativo real. Antes se vendian como Pro: Position Builder,
+  // Comparador, Sentiment, Dividendos y Rebalanceo (accesibles en Free) y dos
+  // entradas de IA que hoy devuelven un aviso de mantenimiento. Anunciar como
+  // Pro algo gratuito o inexistente es motivo de disputa de cobro.
   var proFeatures=[
-    ['📐','Position Builder Pro','Cálculo R/R + 8 escenarios'],
-    ['⚖️','Comparador head-to-head','Correlación + Sharpe ratio real'],
-    ['🌡️','Market Sentiment Gauge','Fear & Greed propio + historial'],
-    ['🤖','Análisis IA ilimitado','Síntesis educativa con contexto real'],
-    ['🤖','AI Coach semanal','Reporte personalizado automático'],
-    ['📈','Indicadores Pro','RSI, MACD, BB sobre datos reales'],
-    ['🛡️','Gestión de Riesgo','Position sizing + escenarios macro'],
-    ['📉','Simulación Histórica','Prueba estrategias históricas'],
-    ['💰','Dividend Calendar','Proyección 12 meses de ingresos'],
-    ['🔀','Rebalancing Tool','Calcula trades exactos'],
-    
+    ['🎯','Motor de Análisis','Régimen SPY + scoring técnico por activo'],
+    ['📈','Indicadores Pro','RSI, MACD y Bandas Bollinger sobre datos reales'],
+    ['🛡️','Gestión de Riesgo','Position sizing + escenarios de mercado'],
+    ['📉','Simulación Histórica','Prueba estrategias sobre datos históricos'],
+    ['🔎','Screener sin límite','Filtra 50+ activos por criterio técnico'],
+    ['🏦','Plan de Capital','Proyección de aportes y objetivos'],
+    ['📁','Activos ilimitados','En Free el portfolio admite 5 posiciones'],
+    ['📊','Indicadores ilimitados','En Free se muestran 5 de 20'],
     ['⬇️','Export CSV','Datos para tu contador'],
   ];
 
@@ -7893,7 +7900,7 @@ function mUpgrade(mr){
     '<button class="mx" onclick="closeModal()" style="color:rgba(255,255,255,.5)">✕</button>'+
     '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--amber);font-family:\'JetBrains Mono\',monospace;margin-bottom:8px">FINANCEOS INVEST PRO</div>'+
     '<h2 style="font-size:22px;color:#fff;margin-bottom:8px">Invierte como un profesional</h2>'+
-    '<p style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6">Análisis IA · Precios reales · Herramientas que InvestingPro cobra $40/mes</p>'+
+    '<p style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6">Motor de Análisis · Precios de mercado · Gestión de riesgo y backtesting</p>'+
     '</div>'+
 
     // Pricing section
@@ -8015,7 +8022,7 @@ function compChangeTicker(i,val){
 }
 
 function renderComp(){
-  var plan=planOf();if(plan.locked&&plan.locked.indexOf('comp')>=0){document.getElementById('main').innerHTML='';lockedBanner('Comparador de Activos','Compara hasta 4 activos simultáneamente con métricas de precio, retorno y fundamentos.');return;}
+  var plan=planOf();if(plan.locked&&plan.locked.indexOf('comp')>=0){document.getElementById('main').innerHTML=lockedBanner('Comparador de Activos','Compara hasta 4 activos simultáneamente con métricas de precio, retorno y fundamentos.');return;}
   var colors=["var(--amber)","var(--blue)","var(--grn)","#a78bfa"];
 
   var tickerInputs=COMP.tickers.map(function(t,i){
@@ -8294,7 +8301,7 @@ async function loadDivData(){
 }
 
 function renderDivs(){
-  var plan=planOf();if(plan.locked&&plan.locked.indexOf('divs')>=0){document.getElementById('main').innerHTML='';lockedBanner('Dividendos','Proyecta ingresos por dividendos anuales y mensuales de todo tu portafolio.');return;}
+  var plan=planOf();if(plan.locked&&plan.locked.indexOf('divs')>=0){document.getElementById('main').innerHTML=lockedBanner('Dividendos','Proyecta ingresos por dividendos anuales y mensuales de todo tu portafolio.');return;}
   var port=S.portfolio;
   var fx=LATAM.usdClp;
   var divRows=port.map(function(h){
@@ -8586,7 +8593,7 @@ function renderCapital(){
 var REBAL={targets:{}};
 
 function renderRebal(){
-  var plan=planOf();if(plan.locked&&plan.locked.indexOf('rebal')>=0){document.getElementById('main').innerHTML='';lockedBanner('Rebalanceo','Mantén tu portafolio alineado con tus objetivos de asignación de activos.');return;}
+  var plan=planOf();if(plan.locked&&plan.locked.indexOf('rebal')>=0){document.getElementById('main').innerHTML=lockedBanner('Rebalanceo','Mantén tu portafolio alineado con tus objetivos de asignación de activos.');return;}
   var port=S.portfolio;
   var totM=port.reduce(function(s,h){return s+h.sh*(getLivePrice(h.t)||h.cur||0);},0);
 
