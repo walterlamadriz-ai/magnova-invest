@@ -569,7 +569,9 @@ tr:last-child td { border-bottom: none; }
   font-weight: 500;
   font-family: 'Inter', sans-serif;
   cursor: pointer;
-  transition: all .12s;
+  transition: border-color .12s cubic-bezier(.23,1,.32,1),
+              color .12s cubic-bezier(.23,1,.32,1),
+              background-color .12s cubic-bezier(.23,1,.32,1);
   white-space: nowrap;
 }
 .btn:hover {
@@ -1587,6 +1589,22 @@ div:has(>.dtab), div:has(>.rtab) {
   /* ph wraps instead of overflowing */
   .ph { flex-wrap: wrap; gap: 8px; }
   .ph-right { width: 100%; justify-content: flex-start; }
+}
+
+/* ── MOVIMIENTO REDUCIDO ─────────────────────────────────────────
+   Se usa !important a proposito: es lo unico que tambien neutraliza las
+   transiciones declaradas inline (style="...transition:.15s") dentro de las
+   plantillas JS, que no se pueden alcanzar desde una hoja de estilos normal.
+   No se anula la animacion por completo: se conservan los cambios de opacidad
+   (ayudan a comprender el cambio de estado) y solo se elimina el movimiento. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .spin, .spin-sm { animation: none !important; }
 }
 </style>
 </head>
