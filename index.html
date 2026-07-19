@@ -1365,6 +1365,22 @@ tr:last-child td { border-bottom: none; }
 }
 .nb-label { flex: 1; }
 
+/* Iconos de linea. stroke:currentColor hace que hereden el color del estado
+   (normal / hover / activo) y del tema sin necesidad de variantes. */
+.ico {
+  width: 16px; height: 16px;
+  flex-shrink: 0;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.nb-icon .ico { margin: 0 auto; }
+.ico-lg { width: 22px; height: 22px; }
+
 /* ── FOS PRIMITIVES ── */
 .fos-pro-badge {
   display: inline-flex;
@@ -1644,6 +1660,33 @@ div:has(>.dtab), div:has(>.rtab) {
 </style>
 </head>
 <body>
+<!-- Sprite de iconos. Linea de 1.5px sobre viewBox 24 y stroke=currentColor:
+     heredan color de activo/hover y de tema sin variantes por tema. Inline
+     porque el CSP bloquea CDNs externos y el proyecto no usa dependencias. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<g id="i-news"><rect x="3" y="5" width="14" height="14" rx="1.5"/><path d="M17 8h4v9a2 2 0 0 1-4 0z"/><path d="M6 9h8M6 12h8M6 15h5"/></g>
+<g id="i-dash"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></g>
+<g id="i-port"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></g>
+<g id="i-watch"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.5"/></g>
+<g id="i-sig"><path d="M3 12h4l3-7 4 14 3-7h4"/></g>
+<g id="i-pb"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="9" cy="7" r="2.2"/><circle cx="15" cy="12" r="2.2"/><circle cx="7.5" cy="17" r="2.2"/></g>
+<g id="i-comp"><path d="M12 3v17M8 20h8M5 7h14"/><path d="M5 7l-2.5 5.5a3 3 0 0 0 5 0z"/><path d="M19 7l-2.5 5.5a3 3 0 0 0 5 0z"/></g>
+<g id="i-sentiment"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-5"/><circle cx="12" cy="17" r="1"/></g>
+<g id="i-radar"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="M12 12l6-6"/></g>
+<g id="i-decision"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></g>
+<g id="i-ind"><path d="M3 20h18"/><path d="M4 15l5-6 4 4 7-8"/><path d="M20 5h-4M20 5v4"/></g>
+<g id="i-risk"><path d="M12 3l8 3v6c0 5-3.4 8.4-8 9-4.6-.6-8-4-8-9V6z"/></g>
+<g id="i-back"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></g>
+<g id="i-screener"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></g>
+<g id="i-capital"><path d="M3 20h18"/><path d="M5 20V10M9.5 20V6M14.5 20v-8M19 20v-5"/></g>
+<g id="i-divs"><circle cx="12" cy="12" r="9"/><path d="M12 7v10"/><path d="M14.3 9.6c0-1-1-1.7-2.3-1.7s-2.3.7-2.3 1.6c0 2.4 4.6 1.3 4.6 3.7 0 1-1 1.7-2.3 1.7s-2.3-.7-2.3-1.7"/></g>
+<g id="i-rebal"><path d="M4 8h13l-3-3M20 16H7l3 3"/></g>
+<g id="i-alert"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7z"/><path d="M10.5 20a2 2 0 0 0 3 0"/></g>
+<g id="i-bitacora"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M9 10h6M9 14h6M9 18h3"/></g>
+<g id="i-settings"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7.5 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 14.6a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 8.5l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.6V4a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></g>
+<g id="i-help"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 1 1 3.4 2.5c-.6.2-.9.8-.9 1.4v.6"/><circle cx="12" cy="17.2" r=".9"/></g>
+</defs></svg>
+
 <!-- Suite nav -->
 <div style="background:#0f1f17;border-bottom:0.5px solid rgba(255,255,255,.07);padding:7px 20px;display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:11px;position:sticky;top:0;z-index:9999">
   <div style="display:flex;align-items:center;gap:16px">
@@ -2582,6 +2625,19 @@ function demoBanner(volverA){
     '<span aria-hidden="true">⚠️</span><span style="flex:1;color:var(--amber)">Estás viendo un <b>portfolio de ejemplo</b>. Los importes no son tuyos — elimina estas posiciones y agrega las reales.</span>'+
     '<button onclick="localStorage.setItem(\'mv_demo_dismissed\',\'1\');'+volverA+'()" style="background:transparent;border:1px solid var(--amber);border-radius:5px;padding:3px 8px;color:var(--amber);font-size:10px;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Entendido</button></div>';
 }
+// Iconos de navegacion. Sustituyen a los emoji: estos se renderizan distinto en
+// cada sistema operativo, no heredan el color del estado y dos paginas
+// (Dividendos y Plan de Capital) compartian el mismo glifo.
+// aria-hidden porque la etiqueta de texto que acompana ya nombra el destino.
+function icon(id,cls){
+  return '<svg class="ico'+(cls?' '+cls:'')+'" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-'+id+'"/></svg>';
+}
+function pageIcon(pid,cls){
+  var conocidos={news:1,dash:1,port:1,watch:1,sig:1,pb:1,comp:1,sentiment:1,radar:1,
+    decision:1,ind:1,risk:1,back:1,screener:1,capital:1,divs:1,rebal:1,alert:1,
+    bitacora:1,settings:1,help:1};
+  return conocidos[pid] ? icon(pid,cls) : '';
+}
 function kpi(l,v,s,c,extra){
   c=c||"g";
   var sc=s?(s.charAt(0)==="+")?"pos":(s.charAt(0)==="-")?"neg":"neu":"";
@@ -2888,7 +2944,7 @@ function renderSidebar(){
     var lk=locked?' lk':'';
     var action=locked?"openModal('upgrade')":'setPage(\''+p.id+'\')';
     return '<button class="nb'+act+lk+'" onclick="'+action+'">'+
-      '<span class="nb-icon">'+p.icon+'</span>'+
+      '<span class="nb-icon">'+(pageIcon(p.id)||p.icon)+'</span>'+
       '<span class="nb-label">'+p.label+'</span>'+
       (locked?'<span class="fos-pro-badge">PRO</span>':'')+
       '</button>';
@@ -2938,7 +2994,7 @@ function renderSidebar(){
   var setAct=S.page==='settings'?' act':'';
   html+='<div style="margin-top:4px">'+
     '<button class="nb'+setAct+'" onclick="setPage(\'settings\')">'+
-    '<span class="nb-icon">⚙️</span><span class="nb-label">Configuración</span></button></div>';
+    '<span class="nb-icon">'+icon('settings')+'</span><span class="nb-label">Configuración</span></button></div>';
   html+='<div style="margin-top:8px"><button onclick="toggleAI()" style="width:100%;display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;border:1px solid var(--orange-bd);background:var(--orange-bg);color:var(--amber);cursor:pointer;font-size:12px;font-weight:600">&#129302; <span class="nb-label">Análisis IA</span><span style="margin-left:auto;font-size:8px;background:var(--amber);color:#fff;padding:1px 5px;border-radius:4px">Beta</span></button></div>';
 
   html+='</div>'; // end nav wrapper
