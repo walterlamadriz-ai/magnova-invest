@@ -2456,11 +2456,15 @@ var TI={
       if(i===0)return h-lows[i];
       return Math.max(h-lows[i],Math.abs(h-closes[i-1]),Math.abs(lows[i]-closes[i-1]));
     });
-    var result=[null];
+    // El array debe tener un elemento por vela para que atr[i] corresponda a
+    // closes[i]. Antes arrancaba con un solo null y quedaba de longitud
+    // tr.length-n+2: indexar en closes.length-1 devolvia undefined y el NaN se
+    // propagaba al R:R del motor y a los health scores.
+    var result=new Array(n-1).fill(null);          // indices 0..n-2 sin ATR aun
     var atr0=tr.slice(0,n).reduce(function(a,b){return a+b;},0)/n;
-    result.push(atr0);
+    result.push(atr0);                              // indice n-1
     for(var i=n;i<tr.length;i++){atr0=(atr0*(n-1)+tr[i])/n;result.push(atr0);}
-    return result;
+    return result;                                  // longitud == tr.length
   }
 };
 
@@ -2474,7 +2478,10 @@ function svgLine(data,keys,colors,W,H){
   var minV=Math.min.apply(null,allVals)-5;
   var maxV=Math.max.apply(null,allVals)+5;
   var rng=maxV-minV||1;
-  var xS=function(i){return (i/(data.length-1))*W;};
+  // Con un solo dato (primer tick del dia) data.length-1 era 0 y las
+  // coordenadas salian NaN: el chart se pintaba vacio.
+  var _den=Math.max(1,data.length-1);
+  var xS=function(i){return (i/_den)*W;};
   var yS=function(v){return H-((v-minV)/(rng||1))*H;};
   var paths="";
   keys.forEach(function(k,ki){
@@ -3160,7 +3167,12 @@ function drawSPYMiniChart(regime){
     var ctx=canvas.getContext('2d');
     var rawHist=regime&&regime.hist;
     // Work on a copy sorted oldest→newest — do not mutate regime.hist
-    var hist=rawHist?rawHist.slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}):[];
+    // Se ordenaba por la fecha ya formateada ("jun. 5"), que es alfabetica:
+    // "dic." caia antes que "ene.". Se ordena por el timestamp original.
+    var hist=rawHist?rawHist.slice().sort(function(a,b){
+      var ta=a.t||a.ts||Date.parse(a.date)||0, tb=b.t||b.ts||Date.parse(b.date)||0;
+      return ta-tb;
+    }):[];
     var closes=hist.map(function(d){return d.close;});
     var hasSMA200=closes.length>=200;
     // Status label
@@ -4420,7 +4432,7 @@ function renderPort(){
 
   var rows=port.map(function(h){
     var pnl=h.sh*(h.cur-h.cost);
-    var ret=(h.cur-h.cost)/h.cost;
+    var ret=h.cost>0?(h.cur-h.cost)/h.cost:0;   // coste 0 daba Infinity%
     var w=h.sh*h.cur/(totM||1);
     var lq=LIVE[h.t];
     var hj=JSON.stringify(h).replace(/"/g,"&quot;");
@@ -5443,7 +5455,11 @@ function renderRisk(){
   var rA=cap*.02;
   var ev=SCENARIOS.reduce(function(s,sc){return s+sc.prob*sc.ret*cap;},0);
   var rows=S.portfolio.map(function(h){
-    var stop=h.stop||h.cur*.92;var ps=rA/(h.cur-stop)*h.cur;var rr=(h.cur*.15)/(h.cur-stop);
+    // El stop debe quedar SIEMPRE por debajo del precio: si no, (cur-stop) es
+    // negativo y el R:R se mostraba en negativo en activos volatiles.
+    var stop=Math.min(h.stop||h.cur*.92, h.cur*0.995);
+    var _r=Math.max(h.cur-stop, h.cur*0.005);
+    var ps=rA/_r*h.cur;var rr=(h.cur*.15)/_r;
     return {t:h.t,cur:h.cur,stop:stop,ps:ps,rr:rr};
   });
 
@@ -6166,11 +6182,22 @@ function saveTrade(){
   // Calculate P&L for sells
   var pnl=null;
   if(type==='sell'&&ticker&&price>0){
-    var buys=S.trades.filter(function(t){return t.ticker===ticker&&t.type==='buy';});
-    if(buys.length){
-      var totalB=buys.reduce(function(s,t){return s+t.qty;},0);
-      var totalC=buys.reduce(function(s,t){return s+t.amount;},0);
-      var avgC=totalC/totalB;
+    // Coste medio movil: hay que descontar lo ya vendido. Antes se promediaba
+    // sobre TODAS las compras historicas aunque parte ya se hubiera vendido, lo
+    // que inflaba el coste base y falseaba el P&L de quien recorta posiciones.
+    var previos=S.trades.filter(function(t){return t.ticker===ticker;})
+                        .sort(function(a,b){return (a.date||'')<(b.date||'')?-1:1;});
+    var uds=0, coste=0;
+    previos.forEach(function(t){
+      if(t.type==='buy'){ uds+=t.qty; coste+=t.amount; }
+      else if(t.type==='sell'&&uds>0){
+        var medio=coste/uds;
+        var vendidas=Math.min(t.qty,uds);
+        uds-=vendidas; coste-=medio*vendidas;   // sale al coste medio del momento
+      }
+    });
+    if(uds>0){
+      var avgC=coste/uds;
       pnl=(price-avgC)*(qty||0);
     }
   }
@@ -6397,7 +6424,7 @@ function renderDrawerHead(ticker,price){
 }
 
 async function loadDrawerHistory(ticker,price){
-  var rangeMap={30:"1mo",60:"2mo",90:"3mo",130:"6mo",365:"1y",1095:"3y"};
+  var rangeMap={30:"1mo",60:"3mo",90:"3mo",130:"6mo",365:"1y",1095:"5y"}; // 2mo y 3y no existen en Yahoo: devolvian 400
   var rng=rangeMap[dRange]||"3mo";
   var k=ticker+"_"+dRange;
   if(!dHistCache[k]){
@@ -6853,7 +6880,7 @@ function exportCSV(){
   var date=new Date().toLocaleDateString('es-CL');
   port.forEach(function(h){
     var pnl=h.sh*(h.cur-h.cost);
-    var ret=(h.cur-h.cost)/h.cost*100;
+    var ret=h.cost>0?(h.cur-h.cost)/h.cost*100:0;   // coste 0 daba Infinity%
     var w=(h.sh*h.cur)/(totM||1)*100;
     rows.push([h.t,h.type,h.sh,h.cost.toFixed(2),h.cur.toFixed(2),(h.sh*h.cur).toFixed(2),pnl.toFixed(2),ret.toFixed(2),w.toFixed(2),date]);
   });
@@ -8443,7 +8470,7 @@ async function compLoad(){
   COMP.tickers=COMP.tickers.filter(function(t){return t&&t.trim().length>0;});
   if(COMP.tickers.length<2){alert('Selecciona al menos 2 tickers');return;}
   COMP.loading=true;COMP.data={};COMP.spy=null;COMP.synthetic=[];renderComp();
-  var rangeMap={30:'1mo',60:'2mo',90:'3mo',130:'6mo',365:'1y',1095:'3y'};
+  var rangeMap={30:'1mo',60:'3mo',90:'3mo',130:'6mo',365:'1y',1095:'5y'}; // 2mo y 3y no existen en Yahoo: devolvian 400
   var rng=rangeMap[COMP.range]||'3mo';
   try{
     var promises=COMP.tickers.map(function(t){
