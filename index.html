@@ -8993,14 +8993,34 @@ function wv3TogglePwd(inputId, btnId){
 function wv3CountUp(targetId, finalVal, delay){
   var el=document.getElementById(targetId);
   if(!el) return;
-  var dur=700, startTime=null;
+
+  // requestAnimationFrame no dispara en pestañas ocultas: si la pagina se abre
+  // en segundo plano (cmd+click, sesion restaurada) el contador queda congelado
+  // a mitad y muestra un numero falso (ej. 13 en lugar de 78). El valor mostrado
+  // debe ser siempre el real, asi que sin animacion se escribe el final directo.
+  var sinAnimacion = document.hidden ||
+    (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if(sinAnimacion){ el.textContent = finalVal; return; }
+
+  var dur=700, startTime=null, terminado=false;
+  function finalizar(){
+    if(terminado) return;
+    terminado = true;
+    el.textContent = finalVal;
+    document.removeEventListener('visibilitychange', alOcultar);
+  }
+  function alOcultar(){ if(document.hidden) finalizar(); }
+  document.addEventListener('visibilitychange', alOcultar);
+
   setTimeout(function(){
+    if(terminado) return;
     requestAnimationFrame(function tick(ts){
+      if(terminado) return;
       if(!startTime) startTime=ts;
       var p=Math.min(1,(ts-startTime)/dur);
       var eased=1-Math.pow(1-p,3);
       el.textContent=Math.round(finalVal*eased);
-      if(p<1) requestAnimationFrame(tick);
+      if(p<1) requestAnimationFrame(tick); else finalizar();
     });
   }, delay);
 }
