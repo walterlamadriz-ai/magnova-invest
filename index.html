@@ -4438,12 +4438,14 @@ function renderBitacora(){
     _ph('Seguimiento · Bitácora','Bitácora','// Historial completo de operaciones · P&L realizado','<button class="btn" onclick="openModal(\'addtrade\')">+ Registrar operación</button><button class="btn" style="margin-left:6px" onclick="exportTradesCSV()">⬇ CSV</button>')+
 
     // KPI summary
-    '<div class="krow">'+
-    kpi("Total Invertido","$"+fmt(totalInvested),"acumulado","b")+
-    kpi("P&L Realizado",(totalRealized>=0?"+":"")+"$"+fmt(totalRealized),"ventas cerradas",totalRealized>=0?"g":"r")+
-    kpi("Dividendos Recib.","$"+fmt(totalDivs),"cobrados","g")+
-    kpi("Cash Disponible","$"+fmt(Math.max(0,totalCash)),"estimado","a")+
-    kpi("Operaciones",S.trades.length,"registradas","b")+
+    // 1 respuesta (¿gano con lo que ya cerre?) + 3 apoyos. El conteo de
+    // operaciones pasa al subtitulo del heroe: es contexto del P&L, no un KPI.
+    '<div class="krow-hero">'+
+    kpi("P&L Realizado",(totalRealized>=0?"▲ +":"▼ ")+"$"+fmt(Math.abs(totalRealized)),
+        S.trades.length+" operaciones cerradas",totalRealized>=0?"g":"r","hero")+
+    kpi("Total Invertido","$"+fmt(totalInvested),"acumulado","n")+
+    kpi("Dividendos Recib.","$"+fmt(totalDivs),"cobrados","n")+
+    kpi("Cash Disponible","$"+fmt(Math.max(0,totalCash)),"estimado","n")+
     '</div>'+
     // Trading performance stats
     (sells.length>=2?
@@ -4706,11 +4708,12 @@ function renderSig(){
     '<div style="padding:8px 12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:6px;margin-bottom:14px;font-size:11px;color:var(--amber);font-family:\'JetBrains Mono\',monospace">⚠ Los indicadores mostrados son datos de muestra estáticos con fines educativos. No reflejan análisis técnico en tiempo real ni constituyen recomendaciones de inversión.</div>'+
     freeBanner("Plan Free: "+plan.maxS+" indicadores de "+ALL_SIG.length+".")+
     '<div style="margin-bottom:14px">'+filterBtns+'</div>'+
+    // "Total" era la suma exacta de los otros tres: dato redundante, fuera.
+    // Aqui el color SI es semantico (alto/medio/bajo es un estado), se conserva.
     '<div class="krow">'+
-    kpi("Total",sigs.length,"","b")+
-    kpi("Indicador Alto",sigs.filter(function(s){return s.sig==="BUY";}).length,"","g")+
-    kpi("Indicador Medio",sigs.filter(function(s){return s.sig==="HOLD";}).length,"","a")+
-    kpi("Indicador Bajo",sigs.filter(function(s){return s.sig==="SELL";}).length,"","r")+
+    kpi("Indicador Alto",sigs.filter(function(s){return s.sig==="BUY";}).length,"de "+sigs.length,"g")+
+    kpi("Indicador Medio",sigs.filter(function(s){return s.sig==="HOLD";}).length,"de "+sigs.length,"a")+
+    kpi("Indicador Bajo",sigs.filter(function(s){return s.sig==="SELL";}).length,"de "+sigs.length,"r")+
     '</div>'+
     '<div class="tw"><table id="tbl-sig"><thead><tr><th>Ticker</th><th>Indicador</th>'+sortTh("sig","sc","Score")+'<th>Fuerza</th>'+sortTh("sig","price","Precio")+sortTh("sig","chg","Δ Hoy")+'<th>Ref. –8%</th><th>Watch</th></tr></thead>'+
     '<tbody>'+rows+'</tbody></table></div>'+
@@ -5378,7 +5381,7 @@ function renderRisk(){
     '<div class="krow">'+
     kpi("Capital",D(cap),"","g")+
     kpi("Riesgo/Op",D(rA),"2% del capital","r")+
-    kpi("Ref. Baja","8%","Histórico","a")+
+    kpi("Ref. Baja","8%","Histórico","n")+
     kpi("Ref. Alta","15%","Histórico","g")+
     kpi("Valor Esp.",D(ev),ev>=0?"+Positivo":"Negativo",ev>=0?"g":"r")+
     '</div>'+
@@ -5479,7 +5482,7 @@ function btRenderJournal(sells){
   eqData.forEach(function(v){if(v>peak)peak=v;var dd=peak-v;if(dd>maxDD)maxDD=dd;});
 
   return '<div class="krow">'+
-    kpi("Operaciones",sells.length,wins.length+" ganadoras","b")+
+    kpi("Operaciones",sells.length,wins.length+" ganadoras","n")+
     kpi("Win Rate",pct(winRate),wins.length+"/"+sells.length,winRate>=0.5?"g":"r")+
     kpi("P&L Total",D(totalPnl),totalPnl>=0?"Positivo":"Negativo",totalPnl>=0?"g":"r")+
     kpi("Expectativa",D(expectancy),"por trade",expectancy>=0?"g":"r")+
