@@ -1902,6 +1902,9 @@ const S={
   trades:[],          // {id,ticker,type,date,price,qty,amount,rsi,note,pnl}
   tradeFilter:{ticker:"ALL",type:"ALL"},
   tradeNextId:1,
+  // ── ALERTAS ──
+  alerts:[],          // {id,asset,type:'Max'|'Min',trigger,createdAt}
+  alertNextId:1,
   // ── SCREENER ──
   screenerTickers:'AAPL MSFT NVDA TSLA AMZN GOOGL META AMD INTC BRKB SPY QQQ GLD TLT XLK XLF XLV',
   screenerFilters:{scoreMin:0,rsiMin:0,rsiMax:100,action:'ALL'},
@@ -1921,6 +1924,39 @@ function persistTrades(){
 }
 function loadTrades(){
   try{var k='it_'+(S.user&&S.user.id||'demo');S.trades=JSON.parse(localStorage.getItem(k)||'[]');S.tradeNextId=parseInt(localStorage.getItem(k+'_nid')||'1');}catch(e){S.trades=[];S.tradeNextId=1;}
+}
+
+// ── ALERTAS (mismo patron de persistencia local que los trades) ──
+function persistAlerts(){
+  try{var k='ia_'+(S.user&&S.user.id||'demo');localStorage.setItem(k,JSON.stringify(S.alerts));localStorage.setItem(k+'_nid',S.alertNextId);}catch(e){}
+}
+function loadAlerts(){
+  try{var k='ia_'+(S.user&&S.user.id||'demo');S.alerts=JSON.parse(localStorage.getItem(k)||'[]');S.alertNextId=parseInt(localStorage.getItem(k+'_nid')||'1');}catch(e){S.alerts=[];S.alertNextId=1;}
+}
+function addAlert(ticker,tipo,trigger){
+  ticker=(ticker||'').toUpperCase().trim();
+  if(!/^[A-Z0-9.\-^=]{1,15}$/.test(ticker)){ showToast('Ticker inválido','error'); return false; }
+  var t=parseFloat(trigger);
+  if(!isFinite(t)||t<=0){ showToast('El precio objetivo debe ser mayor que 0','error'); return false; }
+  if(tipo!=='Max'&&tipo!=='Min'){ showToast('Tipo de alerta inválido','error'); return false; }
+  var plan=planOf();
+  if(plan.maxA<999 && S.alerts.length>=plan.maxA){
+    showToast('Plan Free: máximo '+plan.maxA+' alertas. Elimina una o mejora a Pro.','warning');
+    return false;
+  }
+  if(S.alerts.some(function(a){return a.asset===ticker&&a.type===tipo&&a.trigger===t;})){
+    showToast('Ya tienes esa misma alerta','warning'); return false;
+  }
+  S.alerts.push({id:S.alertNextId++,asset:ticker,type:tipo,trigger:t,createdAt:Date.now()});
+  persistAlerts();
+  showToast('Alerta creada para '+ticker);
+  return true;
+}
+function delAlert(id){
+  S.alerts=S.alerts.filter(function(a){return a.id!==id;});
+  persistAlerts();
+  showToast('Alerta eliminada','warning');
+  renderAlert();
 }
 
 // ── COST BASIS — weighted average per ticker from trade log ──
@@ -3188,7 +3224,7 @@ async function deScoreTicker(ticker){
   var pqTip=pqScore>=75?'Condiciones técnicas favorables — indicadores alineados.':pqScore>=55?'Condiciones técnicas moderadamente favorables.':pqScore>=35?'Condiciones técnicas mixtas — señales divergentes.':'Condiciones técnicas desfavorables — indicadores débiles.';
 
   // Expected Value (EV) from Bitácora trade history
-  loadTrades();
+  loadTrades();loadAlerts();
   var sells=S.trades.filter(function(t){return t.type==='sell'&&t.pnl!=null;});
   var ev=null;
   if(sells.length>=3){
@@ -4394,7 +4430,7 @@ function resetPort(){
 
 // ── BITÁCORA (Transaction Log) ─────────────────────────────────
 function renderBitacora(){
-  loadTrades();
+  loadTrades();loadAlerts();
   var trades=S.trades.slice().sort(function(a,b){return b.id-a.id;});
 
   // Apply filters
@@ -5661,51 +5697,61 @@ async function btRunSim(){
 
 // ── ALERTAS ────────────────────────────────────────────────────
 function renderAlert(){
-  // Modulo en vista previa: los niveles son de ejemplo. No se recortan por plan
-  // porque aplicar un limite real sobre datos ficticios confunde al usuario.
-  var allA=[
-    {asset:"AAPL",type:"Max",trigger:210},{asset:"AAPL",type:"Min",trigger:180},
-    {asset:"SPY", type:"Max",trigger:570},{asset:"SPY", type:"Min",trigger:520},
-    {asset:"NVDA",type:"Max",trigger:950},{asset:"NVDA",type:"Min",trigger:800},
-    {asset:"QQQ", type:"Max",trigger:490},{asset:"MSFT",type:"Min",trigger:380}
-  ];
-  var alerts=allA;
-  var rows=alerts.map(function(a){
+  var plan=planOf();
+  // Alertas reales del usuario (persistidas en localStorage, ver persistAlerts).
+  // Se evaluan contra el precio de mercado en cada render.
+  var rows=S.alerts.map(function(a){
     var cur=getLivePrice(a.asset);
-    var triggered=a.type==="Max"?cur>=a.trigger:cur<=a.trigger;
-    var dist=a.type==="Max"?(a.trigger-cur)/cur:(cur-a.trigger)/cur;
-    var action=triggered?(a.type==="Max"?"Verificar indicadores":"Revisar niveles"):"En seguimiento";
-    return {asset:a.asset,type:a.type,trigger:a.trigger,cur:cur,triggered:triggered,dist:dist,action:action};
+    var tieneprecio=isFinite(cur)&&cur>0;
+    var disparada=tieneprecio&&(a.type==="Max"?cur>=a.trigger:cur<=a.trigger);
+    var dist=tieneprecio?(a.type==="Max"?(a.trigger-cur)/cur:(cur-a.trigger)/cur):null;
+    return {id:a.id,asset:a.asset,type:a.type,trigger:a.trigger,cur:cur,
+            tieneprecio:tieneprecio,triggered:disparada,dist:dist};
   });
-  var triggered=rows.filter(function(r){return r.triggered;});
+  var disparadas=rows.filter(function(r){return r.triggered;});
+  var puedeCrear=plan.maxA>=999||S.alerts.length<plan.maxA;
 
   var tableRows=rows.map(function(r){
     return '<tr style="'+(r.triggered?"background:var(--rbg)":"")+'">'+
-      '<td style="font-weight:600;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+r.asset+'\','+r.cur+')">'+r.asset+' <span style="font-size:9px">↗</span></td>'+
-      '<td style="color:'+(r.type==="Max"?"var(--red)":"var(--grn)")+'">'+(r.type==="Max"?"⬆ Máx":"⬇ Mín")+'</td>'+
+      '<td style="font-weight:600;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+esc(r.asset)+'\','+(r.cur||0)+')">'+esc(r.asset)+' <span style="font-size:9px">↗</span></td>'+
+      '<td style="color:'+(r.type==="Max"?"var(--grn)":"var(--red)")+'">'+(r.type==="Max"?"⬆ Máx":"⬇ Mín")+'</td>'+
       '<td style="font-weight:600">$'+fmtD(r.trigger)+'</td>'+
-      '<td style="font-weight:600;color:var(--bright)">$'+fmtD(r.cur)+'</td>'+
-      '<td style="color:'+(r.triggered?"var(--red)":r.dist<.03?"var(--amber)":"var(--text3)")+'">'+(r.dist*100).toFixed(1)+'%</td>'+
-      '<td><span style="font-size:10px;color:'+(r.triggered?"var(--red)":"var(--grn)")+'">'+(r.triggered?"🔴 ALERTA":"🟢 Normal")+'</span></td>'+
-      '<td style="font-size:11px;color:'+(r.triggered?"var(--red)":"var(--text3)")+'">'+r.action+'</td></tr>';
+      '<td style="font-weight:600;color:var(--bright)">'+(r.tieneprecio?'$'+fmtD(r.cur):'<span style="color:var(--text3)">sin precio</span>')+'</td>'+
+      '<td style="color:'+(r.triggered?"var(--red)":(r.dist!==null&&r.dist<.03)?"var(--amber)":"var(--text3)")+'">'+(r.dist!==null?(r.dist*100).toFixed(1)+'%':'—')+'</td>'+
+      '<td><span style="font-size:10px;font-weight:700;color:'+(r.triggered?"var(--red)":"var(--grn)")+'">'+(r.triggered?"ALCANZADA":"En seguimiento")+'</span></td>'+
+      '<td><button class="btn btn-r" style="padding:2px 8px;font-size:10px" onclick="delAlert('+r.id+')" aria-label="Eliminar alerta de '+esc(r.asset)+'">Eliminar</button></td></tr>';
   }).join("");
 
+  var vacio=
+    '<div style="padding:40px 20px;text-align:center;border:1px dashed var(--border2);border-radius:12px;margin:0 20px">'+
+    '<div style="font-size:14px;font-weight:600;color:var(--bright);margin-bottom:6px">Todavía no tienes alertas</div>'+
+    '<div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6">Crea una para vigilar cuándo un activo cruza el precio que te interesa.</div>'+
+    '<button class="btn-big" onclick="openModal(\'addalert\')">+ Crear mi primera alerta</button>'+
+    '</div>';
+
   document.getElementById("main").innerHTML=
-    _ph('Principal · Alertas','Alertas de Precio <span style="font-size:10px;background:var(--amber);color:#000;padding:2px 6px;border-radius:4px;font-weight:700;vertical-align:middle;margin-left:6px">PRÓXIMAMENTE</span>','// Vista previa del formato · todavía no puedes crear alertas propias')+
+    _ph('Principal · Alertas','Alertas de Precio','// Vigila cuándo un activo cruza el nivel que definas')+
     '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start">'+
     '<span style="font-size:16px;flex-shrink:0" aria-hidden="true">⚠️</span>'+
     '<div style="font-size:11px;color:var(--amber);line-height:1.6">'+
-    '<b>Módulo en construcción.</b> Los niveles de abajo son de ejemplo para mostrarte el formato: no se guardan, no se disparan y aún no puedes crear los tuyos. '+
-    'Los precios de la columna «Precio Real» sí son de mercado. Para alertas que funcionen hoy, configura niveles en tu bróker.'+
+    '<b>Las alertas se evalúan mientras esta pestaña esté abierta.</b> '+
+    'No envían notificaciones ni funcionan con la app cerrada. Para avisos permanentes, configura niveles en tu bróker.'+
     '</div></div>'+
-    (triggered.length>0?'<div style="background:var(--rbg);border:1px solid var(--rborder);border-radius:8px;padding:12px;margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px;font-family:\'JetBrains Mono\'">⚠️ '+triggered.length+' ALERTA(S) ACTIVADA(S)</div>'+triggered.map(function(r){return '<div style="font-size:11px;color:var(--text);font-family:\'JetBrains Mono\';margin-top:3px">'+r.asset+' · '+(r.type==="Max"?"↑":"↓")+' $'+fmtD(r.trigger)+' · Actual: $'+fmtD(r.cur)+' · '+r.action+'</div>';}).join("")+'</div>':'')+
-    '<div class="krow">'+
-    kpi("En rango",rows.filter(function(r){return !r.triggered;}).length,"","n")+
-    kpi("Fuera de rango",triggered.length,"",triggered.length>0?"r":"n")+
-    kpi("Activos",[...new Set(rows.map(function(r){return r.asset;}))].length,"","n")+
-    '</div>'+
-    '<div class="tw"><table><thead><tr><th>Activo</th><th>Tipo</th><th>Condición</th><th>Precio Real</th><th>Dist.</th><th>Estado</th><th>Acción</th></tr></thead>'+
-    '<tbody>'+tableRows+'</tbody></table></div>';
+    (S.alerts.length===0? vacio :
+      (disparadas.length>0?'<div style="background:var(--rbg);border:1px solid var(--rborder);border-radius:8px;padding:12px;margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px;font-family:\'JetBrains Mono\'">'+disparadas.length+' alerta(s) alcanzada(s)</div>'+disparadas.map(function(r){return '<div style="font-size:11px;color:var(--text);font-family:\'JetBrains Mono\';margin-top:3px">'+esc(r.asset)+' · '+(r.type==="Max"?"↑":"↓")+' $'+fmtD(r.trigger)+' · Actual: $'+fmtD(r.cur)+'</div>';}).join("")+'</div>':'')+
+      '<div class="krow">'+
+      kpi("En seguimiento",rows.filter(function(r){return !r.triggered;}).length,"","n")+
+      kpi("Alcanzadas",disparadas.length,"",disparadas.length>0?"r":"n")+
+      kpi("Activos",[...new Set(rows.map(function(r){return r.asset;}))].length,"","n")+
+      '</div>'+
+      '<div style="display:flex;justify-content:flex-end;margin-bottom:10px">'+
+      (puedeCrear
+        ? '<button class="btn" onclick="openModal(\'addalert\')">+ Nueva alerta</button>'
+        : '<span style="font-size:10px;color:var(--amber);font-family:\'JetBrains Mono\'">Límite Free ('+plan.maxA+') · elimina una o mejora a Pro</span>')+
+      '</div>'+
+      '<div class="tw"><table><thead><tr><th>Activo</th><th>Tipo</th><th>Objetivo</th><th>Precio actual</th><th>Distancia</th><th>Estado</th><th>Acción</th></tr></thead>'+
+      '<tbody>'+tableRows+'</tbody></table></div>'
+    );
 }
 
 // ── MODALS ─────────────────────────────────────────────────────
@@ -5717,6 +5763,64 @@ function renderModal(){
   else if(S.modal==="delpos") mDel(mr);
   else if(S.modal==="addtrade") mTrade(mr);
   else if(S.modal==="score-info") mScoreInfo(mr);
+  else if(S.modal==="addalert") mAlert(mr);
+}
+
+// Modal de creacion de alerta. Sustituye a la lista de ejemplos hardcodeada:
+// ahora el usuario define ticker, direccion y precio objetivo, y se persiste.
+function mAlert(mr){
+  var sug=[];
+  try{
+    S.portfolio.forEach(function(h){ if(sug.indexOf(h.t)<0) sug.push(h.t); });
+    S.watchlist.forEach(function(t){ if(sug.indexOf(t)<0) sug.push(t); });
+  }catch(e){}
+  sug=sug.slice(0,8);
+
+  mr.innerHTML='<div class="overlay" onclick="closeModal()"><div class="modal" style="max-width:400px" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="al-tit">'+
+    '<div class="mh"><div id="al-tit" class="mt">Nueva alerta de precio</div>'+
+    '<button class="mx" onclick="closeModal()" aria-label="Cerrar">✕</button></div>'+
+    '<div class="mb">'+
+      '<label class="lb" for="al-tk">Activo</label>'+
+      '<input id="al-tk" class="inp" placeholder="Ej: AAPL" maxlength="15" autocomplete="off" spellcheck="false" autocapitalize="characters" enterkeyhint="next" style="text-transform:uppercase"/>'+
+      (sug.length?'<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">'+sug.map(function(t){
+        return '<button type="button" class="btn" style="padding:3px 9px;font-size:10px" onclick="document.getElementById(\'al-tk\').value=\''+esc(t)+'\';alSync()">'+esc(t)+'</button>';
+      }).join('')+'</div>':'')+
+
+      '<label class="lb" for="al-ty" style="margin-top:14px">Avisarme cuando el precio</label>'+
+      '<select id="al-ty" class="inp" onchange="alSync()">'+
+        '<option value="Max">suba hasta o por encima de…</option>'+
+        '<option value="Min">baje hasta o por debajo de…</option>'+
+      '</select>'+
+
+      '<label class="lb" for="al-pr" style="margin-top:14px">Precio objetivo (USD)</label>'+
+      '<input id="al-pr" class="inp" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" enterkeyhint="done" onkeydown="if(event.key===\'Enter\')alSave()"/>'+
+      '<div id="al-hint" style="font-size:11px;color:var(--text3);margin-top:7px;font-family:\'JetBrains Mono\',monospace;line-height:1.5">Escribe un activo para ver su precio actual.</div>'+
+      '<div id="al-err" class="wv3-err" role="alert" aria-live="polite" style="margin-top:8px"></div>'+
+    '</div>'+
+    '<div class="mf"><button class="btn" onclick="closeModal()">Cancelar</button>'+
+    '<button class="btn-big" onclick="alSave()">Crear alerta</button></div>'+
+    '</div></div>';
+  setTimeout(function(){var i=document.getElementById('al-tk'); if(i) i.focus();},40);
+}
+// Muestra el precio actual del activo escrito para que el objetivo no se fije a ciegas
+function alSync(){
+  var tk=(document.getElementById('al-tk')||{}).value||'';
+  var ty=(document.getElementById('al-ty')||{}).value||'Max';
+  var h=document.getElementById('al-hint'); if(!h) return;
+  tk=tk.toUpperCase().trim();
+  if(!tk){ h.textContent='Escribe un activo para ver su precio actual.'; return; }
+  var cur=getLivePrice(tk);
+  if(!isFinite(cur)||cur<=0){ h.textContent='Sin precio de mercado para '+tk+'. Puedes crear la alerta igual.'; return; }
+  h.textContent=tk+' cotiza ahora a $'+fmtD(cur)+'. Se avisará cuando '+(ty==='Max'?'suba a':'baje a')+' tu objetivo.';
+}
+function alSave(){
+  var tk=(document.getElementById('al-tk')||{}).value||'';
+  var ty=(document.getElementById('al-ty')||{}).value||'Max';
+  var pr=(document.getElementById('al-pr')||{}).value||'';
+  var err=document.getElementById('al-err');
+  if(err) err.textContent='';
+  if(addAlert(tk,ty,pr)){ closeModal(); renderAlert(); }
+  else if(err) err.textContent='Revisa el activo y el precio objetivo.';
 }
 
 
@@ -5993,7 +6097,7 @@ function saveTrade(){
     }
   }
 
-  loadTrades();
+  loadTrades();loadAlerts();
   S.trades.push({
     id:S.tradeNextId++,
     ticker:needsTicker?ticker:null,
@@ -9005,7 +9109,7 @@ async function sbLoadUserData(authUser){
       S.nextId=Math.max.apply(null,DEF_PORT.map(function(h){return h.id;}))+1;
     }
     S.watchlist=watch.length>0?watch:[...DEF_WATCH];
-    loadTrades();
+    loadTrades();loadAlerts();
     fetchFXLatam();
     // F1-07: consent gate — only active when CONSENT_GATE_ENABLED is true.
     // When false, no query to public.consents is made and no modal is shown.
@@ -9025,7 +9129,7 @@ async function sbLoadUserData(authUser){
     S.user={id:authUser.id,email:authUser.email,name:authUser.email.split("@")[0],plan:"free"};
     S.portfolio=JSON.parse(JSON.stringify(DEF_PORT));
     S.watchlist=[...DEF_WATCH];
-    loadTrades();
+    loadTrades();loadAlerts();
   }
 }
 
