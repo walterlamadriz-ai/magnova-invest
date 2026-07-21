@@ -1085,7 +1085,8 @@ tr:last-child td { border-bottom: none; }
 .wv3-scores-note{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);margin-top:6px}
 .wv3-feats{display:flex;flex-direction:column;gap:12px}
 .wv3-feat{display:flex;align-items:flex-start;gap:10px}
-.wv3-feat-icon{font-size:17px;flex-shrink:0;margin-top:1px}
+.wv3-feat-icon{flex-shrink:0;margin-top:2px;color:var(--grn);display:flex}
+.wv3-feat-icon .ico{width:18px;height:18px}
 .wv3-feat-title{font-size:13px;font-weight:600;color:var(--bright);margin-bottom:2px}
 .wv3-feat-desc{font-size:12px;color:var(--text2);line-height:1.5}
 .wv3-disc{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);line-height:1.7}
@@ -3024,7 +3025,7 @@ function renderSidebar(){
   html+='<div style="margin-top:4px">'+
     '<button class="nb'+setAct+'" onclick="setPage(\'settings\')">'+
     '<span class="nb-icon">'+icon('settings')+'</span><span class="nb-label">Configuración</span></button></div>';
-  html+='<div style="margin-top:8px"><button onclick="toggleAI()" style="width:100%;display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;border:1px solid var(--orange-bd);background:var(--orange-bg);color:var(--amber);cursor:pointer;font-size:12px;font-weight:600">&#129302; <span class="nb-label">Análisis IA</span><span style="margin-left:auto;font-size:8px;background:var(--amber);color:#fff;padding:1px 5px;border-radius:4px">Beta</span></button></div>';
+  if(FOS_AI_HABILITADA) html+='<div style="margin-top:8px"><button onclick="toggleAI()" style="width:100%;display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;border:1px solid var(--orange-bd);background:var(--orange-bg);color:var(--amber);cursor:pointer;font-size:12px;font-weight:600">&#129302; <span class="nb-label">Análisis IA</span><span style="margin-left:auto;font-size:8px;background:var(--amber);color:#fff;padding:1px 5px;border-radius:4px">Beta</span></button></div>';
 
   html+='</div>'; // end nav wrapper
 
@@ -4003,9 +4004,9 @@ function renderWelcome(){
     '</div>'+
     // Features
     '<div class="wv3-feats">'+
-    '<div class="wv3-feat"><span class="wv3-feat-icon">🎯</span><div><div class="wv3-feat-title">Motor de Análisis</div><div class="wv3-feat-desc">Régimen SPY + VIX + scoring técnico 0–100 por activo.</div></div></div>'+
-    '<div class="wv3-feat"><span class="wv3-feat-icon">🛡️</span><div><div class="wv3-feat-title">Gestión de Riesgo Referencial</div><div class="wv3-feat-desc">Niveles ATR(14) calculados por volatilidad histórica.</div></div></div>'+
-    '<div class="wv3-feat"><span class="wv3-feat-icon">📊</span><div><div class="wv3-feat-title">Portfolio y Screener</div><div class="wv3-feat-desc">Seguimiento P&amp;L, watchlist y filtro técnico sobre 50+ activos.</div></div></div>'+
+    '<div class="wv3-feat"><span class="wv3-feat-icon">'+icon('decision')+'</span><div><div class="wv3-feat-title">Motor de Análisis</div><div class="wv3-feat-desc">Régimen SPY + VIX + scoring técnico 0–100 por activo.</div></div></div>'+
+    '<div class="wv3-feat"><span class="wv3-feat-icon">'+icon('risk')+'</span><div><div class="wv3-feat-title">Gestión de Riesgo Referencial</div><div class="wv3-feat-desc">Niveles ATR(14) calculados por volatilidad histórica.</div></div></div>'+
+    '<div class="wv3-feat"><span class="wv3-feat-icon">'+icon('port')+'</span><div><div class="wv3-feat-title">Portfolio y Screener</div><div class="wv3-feat-desc">Seguimiento P&amp;L, watchlist y filtro técnico sobre 50+ activos.</div></div></div>'+
     '</div>'+
     '<div class="wv3-disc">🛡 Análisis técnico educativo · No asesoría financiera · No somos bróker · No ejecutamos órdenes</div>'+
     '</div>'+ // end wv3-left
@@ -4416,6 +4417,12 @@ function dashLoadContext(){
 }
 
 // ── PORTFOLIO ──────────────────────────────────────────────────
+// El Analisis IA todavia no existe: sendAIMessage() devuelve un aviso de
+// mantenimiento. Mientras siga asi, sus puntos de entrada quedan ocultos en
+// lugar de ofrecer un boton que no hace nada. Poner a true cuando la API real
+// este conectada: el panel y toda su logica siguen intactos.
+var FOS_AI_HABILITADA = false;
+
 // Jerarquía de KPIs del Portfolio: 1 respuesta (P&L) + 3 apoyos.
 // Revertir al layout anterior: localStorage.setItem('fos_port_kpi_v1','1')
 var FOS_PORT_KPI_V2 = (function(){ try{ return localStorage.getItem('fos_port_kpi_v1')!=='1'; }catch(e){ return true; } })();
@@ -7923,9 +7930,6 @@ function showOnboarding(){
     {icon:'📐',title:'Position Builder',
      desc:'Calcula el tamaño óptimo de cada operación basado en tu capital y tolerancia al riesgo. Nunca más sobredimensiones una posición.',
      action:'Calcular entrada',page:'pb'},
-    {icon:'🤖',title:'Análisis IA — síntesis educativa de tu portfolio',
-     desc:'Pregúntale al asistente sobre tu portfolio. Conoce tus posiciones exactas, el sentimiento del mercado y las noticias del día.',
-     action:'Hablar con AI',fn:'toggleAI'},
   ];
 
   var step=steps[ONBOARD.step];
@@ -7960,7 +7964,7 @@ function showOnboarding(){
 }
 
 function onboardNext(){
-  var steps=[{page:'port'},{page:'sig'},{page:'pb'},{fn:'toggleAI'}];
+  var steps=[{page:'port'},{page:'sig'},{page:'pb'}];   // sin IA mientras no exista
   var s=steps[ONBOARD.step];
   if(s.fn) window[s.fn]&&window[s.fn]();
   else if(s.page) S.page=s.page;
