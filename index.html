@@ -4246,8 +4246,8 @@ function renderDash(){
       '<button class="btn" onclick="setPage(\'watch\')" style="padding:9px 16px">Ver Watchlist</button>'+
       '</div>'+
       '<div class="dash-actions">'+
-      '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'decision\')"><div style="font-size:18px;margin-bottom:5px">🎯</div><div style="font-size:12px;font-weight:600;color:var(--bright)">Motor de Análisis</div><div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">Régimen + scores</div></div>'+
-      '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'screener\')"><div style="font-size:18px;margin-bottom:5px">🔍</div><div style="font-size:12px;font-weight:600;color:var(--bright)">Screener Pro</div><div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">Filtra oportunidades</div></div>'+
+      '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'decision\')"><div style="margin-bottom:5px;color:var(--grn)">'+icon('decision','ico-lg')+'</div><div style="font-size:12px;font-weight:600;color:var(--bright)">Motor de Análisis</div><div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">Régimen + scores</div></div>'+
+      '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'screener\')"><div style="margin-bottom:5px;color:var(--grn)">'+icon('screener','ico-lg')+'</div><div style="font-size:12px;font-weight:600;color:var(--bright)">Screener Pro</div><div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">Filtra oportunidades</div></div>'+
       '</div></div></div>';
     dashLoadContext();
     return;
@@ -4329,10 +4329,10 @@ function renderDash(){
     '<div class="dash-ctx-card">'+
     '<div class="fos-card-title" style="margin-bottom:14px">Acciones Rápidas</div>'+
     '<div class="dash-actions">'+
-    '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'decision\')"><div style="font-size:16px;margin-bottom:4px">🎯</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Motor</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Régimen SPY</div></div>'+
-    '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'ind\')"><div style="font-size:16px;margin-bottom:4px">📈</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Indicadores</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">RSI · MACD · BB</div></div>'+
-    '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'risk\')"><div style="font-size:16px;margin-bottom:4px">🛡️</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Riesgo</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Sizing · R/R</div></div>'+
-    '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'screener\')"><div style="font-size:16px;margin-bottom:4px">🔍</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Screener</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Filtrar activos</div></div>'+
+    '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'decision\')"><div style="margin-bottom:4px;color:var(--grn)">'+icon('decision','ico-lg')+'</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Motor</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Régimen SPY</div></div>'+
+    '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'ind\')"><div style="margin-bottom:4px;color:var(--grn)">'+icon('ind','ico-lg')+'</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Indicadores</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">RSI · MACD · BB</div></div>'+
+    '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'risk\')"><div style="margin-bottom:4px;color:var(--grn)">'+icon('risk','ico-lg')+'</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Riesgo</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Sizing · R/R</div></div>'+
+    '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'screener\')"><div style="margin-bottom:4px;color:var(--grn)">'+icon('screener','ico-lg')+'</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Screener</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Filtrar activos</div></div>'+
     '</div></div>'+
     '<div style="margin-top:14px">'+renderSentimentCompact()+'</div>';
 
@@ -7127,7 +7127,7 @@ function calcSentiment(){
 
   return{score:score,label:label,color:color,emoji:emoji,desc:desc,vixVal:vixVal,
     components:[
-      {name:'Señales BUY',   value:buyPct.toFixed(0)+'%',          score:buyPct,        icon:'⚡'},
+      {name:'Sesgo alcista', value:buyPct.toFixed(0)+'%',          score:buyPct,        icon:'⚡'},
       {name:'Score DE avg',  value:sigAvg.toFixed(0)+'/100',        score:sigAvg,        icon:'📊'},
       {name:'RSI portfolio', value:rsiAvg.toFixed(0),               score:rsiAvg,        icon:'📈'},
       {name:'VIX inverso',   value:'VIX '+vixDisplay,               score:vixScore,      icon:'🌡'},
@@ -7520,8 +7520,8 @@ async function generateRadarReport(){
     '- Sub-scores: Diversificación '+health.subs.div+'/100, Momentum '+health.subs.mom+'/100, Riesgo '+health.subs.risk+'/100, Correlación '+health.subs.corr+'/100, Valoración '+health.subs.val+'/100\n'+
     '- Sentiment del mercado: '+sent.label+' ('+sent.score+'/100)\n'+
     '- SPY esta semana: '+spyChgStr+'\n'+
-    '- Señales BUY fuera del portfolio: '+opportunities+'\n'+
-    '- Señales SELL en el portfolio: '+exitSignals+'\n'+
+    '- Activos con indicador alto fuera del portfolio: '+opportunities+'\n'+
+    '- Activos con indicador bajo en el portfolio: '+exitSignals+'\n'+
     '- Ingresos dividendos próximas 4 semanas: '+divIncome+'\n\n'+
     'NOTICIAS RELEVANTES:\n'+
     getNewsData().slice(0,5).map(function(n,i){return (i+1)+'. '+n.title.substring(0,80);}).join('\n')+'\n\n'+
@@ -7833,9 +7833,9 @@ function renderRadar(){
     // KPIs
     '<div class="krow" style="margin-bottom:16px">'+
     kpi('Health Score',health.total+'/100',health.total>=70?'Portfolio sano':health.total>=50?'Revisar algunos puntos':'Atención requerida',health.total>=70?'g':health.total>=50?'a':'r')+
-    kpi('Diversificación',health.subs.div+'/100','','b')+
+    kpi('Diversificación',health.subs.div+'/100','','n')+
     kpi('Momentum',health.subs.mom+'%','Posiciones en verde','g')+
-    kpi('Valoración',health.subs.val+'/100','Señales BUY/SELL','a')+
+    kpi('Valoración',health.subs.val+'/100','indicador alto/bajo','n')+
     '</div>'+
 
     // Two column layout
@@ -7925,7 +7925,7 @@ function showOnboarding(){
      desc:'Agrega tus posiciones y FinanceOS Invest las conecta con precios de Yahoo Finance. Ve tu P&L con datos de mercado actualizados.',
      action:'Ver Portfolio',page:'port'},
     {icon:'⚡',title:'Señales inteligentes',
-     desc:'20 activos analizados con 4 indicadores técnicos. Score compuesto 0-100. Señales BUY/HOLD/SELL actualizadas con el mercado.',
+     desc:'20 activos analizados con 4 indicadores técnicos. Score compuesto 0-100. Indicadores alto, medio y bajo actualizados con el mercado.',
      action:'Ver Señales',page:'sig'},
     {icon:'📐',title:'Position Builder',
      desc:'Calcula el tamaño óptimo de cada operación basado en tu capital y tolerancia al riesgo. Nunca más sobredimensiones una posición.',
@@ -8581,7 +8581,7 @@ function renderDivs(){
     kpi('Ingreso anual USD','$'+fmtD(totalAnnual),'Proyectado','g')+
     kpi('Ingreso mensual','$'+fmtD(totalAnnual/12),'Promedio','b')+
     kpi('Ingreso anual CLP','$'+fmt(Math.round(totalCLP/1e6))+'M','A tipo de cambio','a')+
-    kpi('Con dividendos',divRows.length+' de '+port.length+'','b')+
+    kpi('Con dividendos',divRows.length+' de '+port.length+'','n')+
     '</div>'+
     (divRows.length>0||DIVS.loading?
       '<div class="cb" style="margin-bottom:14px"><div class="st"><div class="stbar"></div>Proyección mensual — próximos 12 meses</div>'+
