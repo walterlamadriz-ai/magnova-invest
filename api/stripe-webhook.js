@@ -31,9 +31,20 @@ async function sbFetch(path, method, body) {
 }
 
 function generateLicenseKey() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars
-  const block = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  return `FNOS-${block()}-${block()}-${block()}`;
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin caracteres ambiguos
+  // crypto.getRandomValues y no Math.random: en un isolate V8 Math.random no es
+  // un generador criptografico y las claves emitidas seguidas pueden compartir
+  // entropia predecible. Se descartan los valores por encima del mayor multiplo
+  // de 32 para no sesgar el modulo.
+  const rnd = new Uint8Array(24);
+  crypto.getRandomValues(rnd);
+  let out = '', i = 0;
+  while (out.length < 12) {
+    if (i >= rnd.length) { crypto.getRandomValues(rnd); i = 0; }
+    const v = rnd[i++];
+    if (v < 256 - (256 % chars.length)) out += chars[v % chars.length];
+  }
+  return `FNOS-${out.slice(0,4)}-${out.slice(4,8)}-${out.slice(8,12)}`;
 }
 
 // Stripe webhook signature verification (Ed25519 / HMAC-SHA256)
@@ -82,6 +93,17 @@ export default async function handler(req) {
 
   let event;
   try { event = JSON.parse(rawBody); } catch { return json({ error: 'Invalid JSON' }, 400); }
+
+  // Stripe entrega cada evento AL MENOS una vez: los reintentos son normales.
+  // Sin deduplicar, un mismo checkout.session.completed emitia dos licencias o
+  // reescribia el plan dos veces. La PK de webhook_events hace de cerrojo: si
+  // el insert falla por duplicado, el evento ya se proceso y se corta aqui.
+  if (event.id) {
+    const yaVisto = await sbFetch('webhook_events', 'POST', { id: event.id, type: event.type });
+    if (yaVisto === null) {
+      return json({ received: true, duplicate: true });
+    }
+  }
 
   const type = event.type;
   const obj = event.data?.object;

@@ -53,7 +53,7 @@ export default async function handler(req) {
     // Webhook may take a few seconds — retry up to 5 times
     for (let attempt = 0; attempt < 5; attempt++) {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/licenses?stripe_session_id=eq.${sessionId}&select=key,plan,customer_email`,
+        `${SUPABASE_URL}/rest/v1/licenses?stripe_session_id=eq.${sessionId}&select=key,plan`,
         {
           headers: {
             apikey: SUPABASE_SERVICE_KEY,
@@ -63,8 +63,11 @@ export default async function handler(req) {
       );
       const rows = await res.json();
       if (rows && rows.length > 0) {
-        const { key, plan, customer_email } = rows[0];
-        return json({ key, plan, email: customer_email, product });
+        // No se devuelve customer_email: quien tenga el session_id (historial,
+        // referrer, URL compartida) obtendria el correo del cliente. El cliente
+        // ya conoce su propio email; el endpoint solo necesita entregar la clave.
+        const { key, plan } = rows[0];
+        return json({ key, plan, product });
       }
       // Wait 1.5s before retry
       await new Promise(r => setTimeout(r, 1500));

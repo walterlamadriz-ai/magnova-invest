@@ -32,6 +32,12 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: 'ticker required' }), { status: 400, headers: HEADERS });
   }
 
+  // Mismo allowlist que /api/quote. Sin esto, history.js aceptaba cualquier
+  // cadena y la reenviaba a Yahoo dentro de la URL.
+  if (!/^[\^A-Z0-9.\-=]{1,15}$/i.test(ticker)) {
+    return new Response(JSON.stringify({ error: 'invalid_ticker' }), { status: 400, headers: HEADERS });
+  }
+
   // Validate range and interval to prevent abuse
   const validRanges    = ['1d','5d','1mo','3mo','6mo','1y','2y','5y'];
   const validIntervals = ['1m','5m','15m','1h','1d','1wk','1mo'];
