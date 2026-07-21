@@ -507,6 +507,40 @@ body.no-auth .main { margin-left:0 !important; margin-top:0 !important; }
 .kb { border-left: 2px solid var(--blue); }
 /* Rail neutro: para datos sin estado semántico (una magnitud no es "positiva") */
 .kn { border-left: 2px solid var(--border2); }
+
+/* ── CHIPS DE WATCHLIST ──────────────────────────────────────────
+   La clase .wtag se generaba en el HTML pero NO existia en el CSS: eran
+   <span> desnudos, sin padding ni borde, separados solo por el espacio del
+   texto. De ahi que los tickers aparecieran pegados unos a otros. */
+.wtag-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+.wtag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-5);
+  border: 0.5px solid var(--border2);
+  border-radius: var(--r-sm);
+  background: var(--card2);
+  color: var(--text2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color .15s cubic-bezier(.23,1,.32,1),
+              color .15s cubic-bezier(.23,1,.32,1),
+              background-color .15s cubic-bezier(.23,1,.32,1);
+}
+.wtag::after { content: "+"; color: var(--text3); font-weight: 700; }
+.wtag:hover { border-color: var(--grn); color: var(--bright); background: var(--card3); }
+.wtag:hover::after { color: var(--grn); }
+.wtag:active { transform: scale(.97); }
+@media (pointer: coarse) { .wtag { min-height: 44px; } }
 /* Jerarquía 1 respuesta -> 3 apoyos */
 .krow-hero {
   display: grid;
@@ -1865,7 +1899,7 @@ const PAGES=[
   {id:"ind",      icon:"📈",label:"Indicadores",pro:true},
   {id:"risk",     icon:"🛡️",label:"Riesgo",pro:true},
   {id:"back",     icon:"📉",label:"Simulación Histórica",pro:true},
-  {id:"screener", icon:"🔍",label:"Buscador",pro:true},
+  {id:"screener", icon:"🔍",label:"Screener",pro:true},   // decia "Buscador" y la pagina se titula "Screener"
   {id:"capital",  icon:"💰",label:"Plan de Capital",pro:true},
   {id:"divs",     icon:"💰",label:"Dividendos"},
   {id:"rebal",    icon:"🔀",label:"Rebalanceo"},
@@ -3670,7 +3704,7 @@ function renderScreener(){
   var plan=planOf();
   if(plan.locked&&plan.locked.indexOf('screener')>=0){
     document.getElementById('main').innerHTML=
-      _ph('Análisis · Screener','Screener','// Filtro técnico · Score Motor · Export CSV')+
+      _ph('Herramientas · Screener','Screener','// Filtro técnico · Score Motor · Export CSV')+
       lockedBanner('Screener','Filtra más de 50 activos simultáneamente por score técnico, señal y sector. Exporta resultados a CSV.');
     return;
   }
@@ -3950,7 +3984,7 @@ function renderMain(){
   if(!S.user){renderWelcome();return;}
   var plan=planOf();
   if(plan.locked.indexOf(S.page)>=0){renderPaywall();return;}
-  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:renderSentiment,radar:renderRadar,decision:renderDecisionEngine,ind:renderInd,risk:renderRisk,back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:renderScreener,capital:renderCapital,settings:renderSettings,help:renderHelp};
+  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:renderSentimentWidget,radar:renderRadar,decision:renderDecisionEngine,ind:renderInd,risk:renderRisk,back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:renderScreener,capital:renderCapital,settings:renderSettings,help:renderHelp};
   (pages[S.page]||renderDash)();
   var curPage=PAGES.find(function(p){return p.id===S.page;});
   var mLabel=document.getElementById('mobile-page-label');
@@ -4744,7 +4778,7 @@ function renderWatch(){
   var avail=["AAPL","MSFT","GOOGL","AMZN","NVDA","META","TSLA","SPY","QQQ","VTI","IVV","DIA","XLK","XLV","XLE","JPM","V","UNH","WMT","JNJ","AMD","NKE","PG","HD","MA","DIS"].filter(function(t){return wl.indexOf(t)<0;});
 
   var quickTags=avail.slice(0,20).map(function(t){
-    return '<span class="wtag" onclick="addWatch(\''+t+'\')">'+t+' +</span>';
+    return '<span class="wtag" role="button" tabindex="0" onclick="addWatch(\''+t+'\')" aria-label="Agregar '+t+' al watchlist">'+t+'</span>';
   }).join("");
 
   var isPro=S.user&&planOf().locked.indexOf('decision')<0;
@@ -4781,7 +4815,7 @@ function renderWatch(){
     '<div class="fos-module-header"><div><div class="fos-module-crumb">Principal · Watchlist</div><div class="fos-module-title">Watchlist</div><div class="fos-module-sub">'+wl.length+' tickers · <span id="saved">✓ Guardado</span></div></div><div class="ph-right">'+liveBadge()+(isPro?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">🎯 Motor →</button>':'')+' <button class="btn" style="border-color:var(--border);color:var(--text3);font-size:10px" onclick="resetWatch()">↺ Default</button></div></div>'+
     '<div class="cb" style="margin-bottom:14px">'+
     '<div class="st"><div class="stbar"></div>Agregar ticker</div>'+
-    '<div style="line-height:2;margin-bottom:10px">'+quickTags+'</div>'+
+    '<div class="wtag-grid">'+quickTags+'</div>'+
     '<div style="display:flex;gap:8px">'+
     '<input class="inp" id="wc" placeholder="Custom..." maxlength="6" style="width:120px;text-transform:uppercase" onkeydown="if(event.key===\'Enter\')addCustomW()"/>'+
     '<button class="btn" onclick="addCustomW()">+ Agregar</button></div></div>'+
@@ -4849,7 +4883,7 @@ function renderSig(){
   }).join("");
 
   document.getElementById("main").innerHTML=
-    _ph('Análisis · Señales','Señales Técnicas <span style="font-size:10px;background:var(--amber);color:#000;padding:2px 6px;border-radius:4px;font-weight:700;vertical-align:middle;margin-left:6px">REFERENCIAL</span>','// Datos estáticos de muestra · No conectados a análisis en tiempo real · Solo uso educativo',liveBadge())+
+    _ph('Mercado · Señales','Señales Técnicas <span style="font-size:10px;background:var(--amber);color:#000;padding:2px 6px;border-radius:4px;font-weight:700;vertical-align:middle;margin-left:6px">REFERENCIAL</span>','// Datos estáticos de muestra · No conectados a análisis en tiempo real · Solo uso educativo',liveBadge())+
     '<div style="padding:8px 12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:6px;margin-bottom:14px;font-size:11px;color:var(--amber);font-family:\'JetBrains Mono\',monospace">⚠ Los indicadores mostrados son datos de muestra estáticos con fines educativos. No reflejan análisis técnico en tiempo real ni constituyen recomendaciones de inversión.</div>'+
     freeBanner("Estás viendo "+plan.maxS+" de "+ALL_SIG.length+" indicadores. Pro los muestra todos.")+
     '<div style="margin-bottom:14px">'+filterBtns+'</div>'+
@@ -5150,14 +5184,23 @@ function renderNews(){
   }).join('');
 
   // ── Indices widget ────────────────────────────────────────────
-  // Build IDXS from MARKET_BAR live data when available, fallback to static
-  var IDX_MAP={'^GSPC':{n:'S&P 500',v:'5,308.13',c:'+0.23%',up:true},'^IXIC':{n:'NASDAQ',v:'18,900',c:'+0.89%',up:true},'^DJI':{n:'Dow 30',v:'42,100',c:'-0.19%',up:false},'^VIX':{n:'VIX',v:'16.8',c:'-4.2%',up:false},'BTC-USD':{n:'Bitcoin USD',v:'$97,400',c:'+2.1%',up:true}};
+  // Los valores de partida eran cifras reales de 2024 hardcodeadas (VIX 16.8,
+  // Bitcoin $97.400...). Como marketbar no devolvia VIX ni BTC, esos dos se
+  // mostraban con datos de hace mas de un ano SIN ninguna marca de que eran
+  // estaticos. Un dato viejo presentado como actual es peor que un hueco: ahora
+  // el valor arranca vacio y solo se rellena si llega de la API.
+  var IDX_MAP={
+    '^GSPC':  {n:'S&P 500',    v:null,c:null,up:null},
+    '^IXIC':  {n:'NASDAQ',     v:null,c:null,up:null},
+    '^DJI':   {n:'Dow 30',     v:null,c:null,up:null},
+    '^VIX':   {n:'VIX',        v:null,c:null,up:null},
+    'BTC-USD':{n:'Bitcoin USD',v:null,c:null,up:null}
+  };
   if(MARKET_BAR.length){
     MARKET_BAR.forEach(function(b){
-      if(!IDX_MAP[b.sym]) return;
+      if(!IDX_MAP[b.sym]||!isFinite(b.price)) return;
       var isUp=(b.changePct||0)>=0;
-      var sign=isUp?'+':'';
-      var pct=sign+(b.changePct||0).toFixed(2)+'%';
+      var pct=(isUp?'+':'')+(b.changePct||0).toFixed(2)+'%';
       var val=b.sym==='BTC-USD'?'$'+(b.price/1000).toFixed(1)+'K':b.sym==='^VIX'?b.price.toFixed(2):b.price>=10000?b.price.toLocaleString('en-US',{maximumFractionDigits:0}):b.price.toFixed(2);
       IDX_MAP[b.sym]={n:IDX_MAP[b.sym].n,v:val,c:pct,up:isUp};
     });
@@ -5167,8 +5210,8 @@ function renderNews(){
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">'+
       '<span style="font-size:11px;font-weight:600;color:var(--bright);font-family:\'JetBrains Mono\',monospace">'+x.n+'</span>'+
       '<div style="display:flex;gap:8px;align-items:baseline">'+
-      '<span style="font-size:11px;color:var(--bright);font-family:\'JetBrains Mono\',monospace">'+x.v+'</span>'+
-      '<span style="font-size:10px;font-weight:700;font-family:\'JetBrains Mono\',monospace;color:'+(x.up?'var(--grn)':'var(--red)')+'">'+x.c+'</span>'+
+      '<span style="font-size:11px;color:'+(x.v?'var(--bright)':'var(--text3)')+';font-family:\'JetBrains Mono\',monospace">'+(x.v||'sin dato')+'</span>'+
+      (x.c?'<span style="font-size:10px;font-weight:700;font-family:\'JetBrains Mono\',monospace;color:'+(x.up?'var(--grn)':'var(--red)')+'">'+x.c+'</span>':'')+
       '</div></div>';
   }).join('');
 
@@ -5381,17 +5424,10 @@ function sentimentSection(){
     })();
 }
 
-// El sidebar ofrecia 'Sentimiento' y aterrizaba en Contexto: el usuario acababa
-// en una pagina con otro titulo sin explicacion. Si el menu promete una pagina,
-// entrega una pagina.
-function renderSentiment(){
-  document.getElementById('main').innerHTML=
-    _ph('Análisis · Sentimiento','Índice de Sentimiento del Mercado','// Fear &amp; Greed propio · compuesto por indicadores técnicos, volatilidad y amplitud')+
-    '<div style="padding:0 20px 20px">'+sentimentSection()+'</div>'+
-    '<div style="margin:0 20px;padding:10px 12px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">'+
-    'Indice calculado a partir de indicadores técnicos agregados. Es una lectura de contexto, no una recomendación de inversión.'+
-    '</div>';
-}
+// La pagina de Sentimiento la sirve renderSentimentWidget(), que ya tenia dial,
+// historico de 14 dias, distribucion y top-6 pero estaba inalcanzable. Aqui
+// habia un envoltorio de 7 lineas sobre sentimentSection() que mostraba mucho
+// menos; se elimina. sentimentSection() se conserva: la usa Contexto.
 
 function setNewsF(f){S.newsFilter=f;renderMain();}
 
@@ -8443,7 +8479,7 @@ function renderComp(){
   '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-left:8px">Retorno acumulado base-100</span>';
 
   document.getElementById('main').innerHTML=
-    _ph('Análisis · Comparador','Comparador de Activos','// Performance normalizado · Correlación · Sharpe ratio',liveBadge())+
+    _ph('Herramientas · Comparador','Comparador de Activos','// Performance normalizado · Correlación · Sharpe ratio',liveBadge())+
     '<div class="resp2" style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start">'+
     '<div>'+
     '<div class="cb" style="margin-bottom:10px">'+
