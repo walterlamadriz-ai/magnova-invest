@@ -2975,8 +2975,13 @@ function toggleMobileMenu(force){
   if(bd) bd.style.display=open?'block':'none';
 }
 function setPage(p){
-  if(p==='sig'||p==='comp')p='screener';
-  if(p==='pb')p='risk';
+  // Estos redirects venian de una consolidacion anterior (10a9fcf) que oculto
+  // sig/comp del sidebar y los mandaba a screener. Las paginas se volvieron a
+  // mostrar pero el redirect quedo: el usuario pulsaba Senales o Comparador y
+  // aterrizaba en Screener. renderSig y renderComp funcionan, asi que se quita.
+  // 'pb' si sigue redirigiendo, porque ahora es una pestana de Riesgo, pero
+  // fijando antes la pestana: el redirect a secas la dejaba en 'mis posiciones'.
+  if(p==='pb'){ RISK_TAB='nueva'; p='risk'; }
   S.page=p;
   track('module_view',{module:p});
   closeDrawer();
