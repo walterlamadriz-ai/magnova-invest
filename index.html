@@ -1863,7 +1863,7 @@ const PLANS={
   // revierte: son herramientas basicas de seguimiento y bloquearlas dejaba 11
   // de 20 paginas con candado. La incoherencia se corrige por el otro lado,
   // quitandolas del listado Pro del modal.
-  free:{label:"Free",maxT:5,maxA:3,maxS:5,locked:["decision","ind","risk","back","screener","capital"],
+  free:{label:"Free",maxT:5,maxA:3,maxS:5,locked:["decision","ind","back","screener","capital"],
     price:0,desc:"Portafolio básico · 5 activos · Señales limitadas"},
   trial:{label:"Trial",maxT:999,maxA:999,maxS:999,locked:[],
     price:0,desc:"Acceso completo · Todo incluido",trialDays:14},
@@ -3042,29 +3042,22 @@ function renderSidebar(){
   });
   html+='</div>';
 
-  // ANÁLISIS
-  html+='<div class="sb-section"><div class="sb-section-label">Análisis</div>';
-  ["sig","comp","sentiment","radar"].forEach(function(id){
-    var p=PAGES.find(function(x){return x.id===id;});
-    if(p) html+=_nb(p,false);
-  });
-  ["screener","ind","risk","back"].forEach(function(id){
-    var p=PAGES.find(function(x){return x.id===id;});
-    if(!p) return;
-    var locked=plan&&plan.locked.indexOf(id)>=0;
-    html+=_nb(p,locked);
-  });
-  html+='</div>';
-
-  // PRO EXCLUSIVO
-  html+='<div class="sb-section"><div class="sb-section-label">Pro</div>';
-  ["decision","pb","capital"].forEach(function(id){
-    var p=PAGES.find(function(x){return x.id===id;});
-    if(!p) return;
-    var locked=plan&&plan.locked.indexOf(id)>=0;
-    html+=_nb(p,locked);
-  });
-  html+='</div>';
+  // El sidebar se agrupaba por tipo de dato, que es justo lo que hacia
+  // indistinguibles a Senales / Indicadores / Screener: todas eran "Análisis".
+  // Ahora se agrupa por momento del flujo — analizo, decido cuanto, registro —
+  // asi cada grupo responde a una pregunta distinta del usuario.
+  // 'pb' desaparece como entrada: es la pestana "Nueva posicion" de Riesgo.
+  var _grupo=function(titulo,ids){
+    html+='<div class="sb-section"><div class="sb-section-label">'+titulo+'</div>';
+    ids.forEach(function(id){
+      var p=PAGES.find(function(x){return x.id===id&&!x.hidden;});
+      if(!p) return;
+      html+=_nb(p, !!(plan&&plan.locked.indexOf(id)>=0));
+    });
+    html+='</div>';
+  };
+  _grupo('Analizar', ["decision","sig","ind","comp","radar","sentiment","screener"]);
+  _grupo('Decidir',  ["risk","capital","back"]);
 
   // SEGUIMIENTO
   html+='<div class="sb-section"><div class="sb-section-label">Seguimiento</div>';
@@ -4023,7 +4016,7 @@ function renderMain(){
   if(!S.user){renderWelcome();return;}
   var plan=planOf();
   if(plan.locked.indexOf(S.page)>=0){renderPaywall();return;}
-  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:renderPB,comp:renderComp,sentiment:renderSentimentWidget,radar:renderRadar,decision:renderDecisionEngine,ind:renderInd,risk:renderRisk,back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:renderScreener,capital:renderCapital,settings:renderSettings,help:renderHelp};
+  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:function(){RISK_TAB='nueva';renderRisk();},comp:renderComp,sentiment:renderSentimentWidget,radar:renderRadar,decision:renderDecisionEngine,ind:renderInd,risk:function(){RISK_TAB='mis';renderRisk();},back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:renderScreener,capital:renderCapital,settings:renderSettings,help:renderHelp};
   (pages[S.page]||renderDash)();
   var curPage=PAGES.find(function(p){return p.id===S.page;});
   var mLabel=document.getElementById('mobile-page-label');
@@ -4833,8 +4826,7 @@ function renderWatch(){
       :'<td style="color:var(--text3);font-size:10px">🔒</td>';
     return '<tr class="trow" onmouseenter="prefetchFund(\''+t+'\')">'+
       '<td style="font-weight:600;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+t+'\','+lp+')">'+t+portBadge+' <span style="font-size:9px;color:var(--text3)">↗</span></td>'+
-      '<td>'+badge(s.sig)+'</td>'+
-      '<td style="font-weight:700;color:'+(s.sc>=72?"var(--grn)":s.sc>=52?"var(--amber)":"var(--red)")+'">'+s.sc+'</td>'+
+
       '<td>'+sbar(s.sc)+'</td>'+
       '<td style="font-weight:600">$'+fmtD(lp)+'</td>'+
       '<td>'+chgCell(lq)+'</td>'+
@@ -5521,11 +5513,10 @@ function renderInd(){
     var rsiCol = (ind&&ind.rsi!=null) ? (ind.rsi>=70?'var(--red)':ind.rsi<=30?'var(--grn)':'var(--text)') : 'var(--text3)';
     return '<tr class="trow" onclick="openDrawer(\''+h.t+'\','+lp+')">'+
       '<td style="font-weight:600;color:var(--bright)">'+h.t+' <span style="font-size:9px;color:var(--text3)">↗</span></td>'+
-      '<td>'+badge(s.sig)+'</td>'+
-      '<td style="font-weight:700;color:'+(s.sc>=72?"var(--grn)":s.sc>=52?"var(--amber)":"var(--red)")+'">'+s.sc+'</td>'+
       '<td style="color:'+rsiCol+';font-family:\'JetBrains Mono\',monospace;font-weight:'+((ind&&ind.rsi!=null&&(ind.rsi>=70||ind.rsi<=30))?'700':'400')+'">'+rsiE+'</td>'+
       '<td style="font-weight:600">$'+fmtD(lp)+'</td>'+
       '<td style="color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+sma20E+'</td>'+
+      '<td style="font-family:\'JetBrains Mono\',monospace;color:'+((ind&&ind.sma20!=null&&lp)?(lp>=ind.sma20?'var(--grn)':'var(--red)'):'var(--text3)')+'">'+((ind&&ind.sma20!=null&&lp)?((lp>=ind.sma20?'▲ ':'▼ ')+(((lp-ind.sma20)/ind.sma20)*100).toFixed(1)+'%'):'—')+'</td>'+
       '<td><button class="btn" style="padding:2px 8px;font-size:10px">📊 Ver</button></td></tr>';
   }).join("");
 
@@ -5546,7 +5537,7 @@ function renderInd(){
     '<button class="btn" onclick="var t=document.getElementById(\'ind-in\').value.toUpperCase().trim();if(t){var s=ALL_SIG.find(function(x){return x.t===t;});openDrawer(t,s&&s.p?s.p:100);}">📊 Analizar</button>'+
     '</div>'+
     '<div class="st"><div class="stbar"></div>Portfolio — Click para análisis completo</div>'+
-    '<div class="tw"><table class="fos-table"><thead><tr><th>Ticker</th><th>Señal</th><th>Score</th><th>RSI</th><th>Precio Real</th><th>SMA20</th><th>Ver</th></tr></thead><tbody>'+portRows+'</tbody></table></div>'+
+    '<div class="tw"><table class="fos-table"><thead><tr><th>Ticker</th><th>RSI (14)</th><th>Precio</th><th>SMA 20</th><th>vs SMA20</th><th>Ver</th></tr></thead><tbody>'+portRows+'</tbody></table></div>'+
     '<div style="margin-top:8px;font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;padding:8px 0">'+
     '💡 Indicadores reales disponibles en el gráfico — click en cualquier ticker para abrir el análisis completo.'+
     '</div>'+
@@ -5557,14 +5548,35 @@ function renderInd(){
 }
 
 // ── RISK (Pro) ─────────────────────────────────────────────────
+// Riesgo y Position Builder resolvian LA MISMA ecuacion de sizing:
+//   renderRisk:  ps = rA/_r*h.cur           con rA = capital*0.02
+//   pbCompute:   posSize = riskAmt/riskPct  con riskPct = (price-stop)/price
+// que es identica: riskAmt*price/(price-stop). Ambas usaban stop por defecto
+// -8%. La unica diferencia real es el tiempo verbal: auditar lo que YA tengo
+// frente a dimensionar lo que voy a abrir. Eso son dos pestanas, no dos
+// entradas de menu en secciones distintas.
+var RISK_TAB='mis';   // 'mis' | 'nueva'
 function renderRisk(){
   var plan=planOf();
   if(plan.locked&&plan.locked.indexOf('risk')>=0){
     document.getElementById('main').innerHTML=
-      _ph('Análisis · Riesgo','Gestión de Riesgo','// Position sizing · Escenarios · Stop loss')+
-      lockedBanner('Gestión de Riesgo','Calcula el tamaño correcto de cada posición según tu capital y tolerancia al riesgo. Incluye escenarios macro y análisis de correlación.');
+      _ph('Decidir · Riesgo y Sizing','Riesgo y Sizing','// Cuánto arriesgar por posición · Escenarios · Niveles de referencia')+
+      lockedBanner('Riesgo y Sizing','Calcula cuánto capital destinar a cada posición según tu tolerancia al riesgo, tanto para lo que ya tienes como para una posición nueva.');
     return;
   }
+  if(RISK_TAB==='nueva'){ renderPBBody(); return; }
+  renderRiskBody();
+}
+function riskTabs(){
+  var st=function(t){var a=RISK_TAB===t;
+    return 'padding:8px 18px;border-radius:6px;font-size:12px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;border:1px solid '+(a?'var(--grn)':'var(--border)')+';background:'+(a?'var(--grn-bg)':'var(--card2)')+';color:'+(a?'var(--grn)':'var(--text2)')+';font-weight:'+(a?'700':'400');};
+  return '<div style="display:flex;gap:8px;margin:0 20px 18px">'+
+    '<button style="'+st('mis')+'" onclick="RISK_TAB=\'mis\';renderRisk()">Mis posiciones</button>'+
+    '<button style="'+st('nueva')+'" onclick="RISK_TAB=\'nueva\';renderRisk()">Nueva posición</button>'+
+    '</div>';
+}
+function renderRiskBody(){
+  var plan=planOf();
   var cap=S.capital;
   var rA=cap*.02;
   var ev=SCENARIOS.reduce(function(s,sc){return s+sc.prob*sc.ret*cap;},0);
@@ -5650,7 +5662,8 @@ function renderRisk(){
   }
 
   document.getElementById("main").innerHTML=
-    '<div class="fos-module-header"><div><div class="fos-module-crumb">Análisis · Riesgo</div><div class="fos-module-title">Gestión de Riesgo</div><div class="fos-module-sub">Position Sizing · Niveles de Referencia · Escenarios · '+S.portfolio.length+' posiciones</div></div></div>'+
+    '<div class="fos-module-header"><div><div class="fos-module-crumb">Decidir · Riesgo y Sizing</div><div class="fos-module-title">Riesgo y Sizing</div><div class="fos-module-sub">Cuánto arriesgar en cada posición · '+S.portfolio.length+' posiciones abiertas</div></div></div>'+
+    riskTabs()+
     allocHtml+
     '<div class="krow">'+
     kpi("Capital",D(cap),"","g")+
@@ -7025,7 +7038,7 @@ function exportCSV(){
 // ── POSITION BUILDER ────────────────────────────────────────────────────────
 var PB={ticker:'',price:0,capital:0,risk:2,stop:0,rr:2,computed:null}; // capital set on first render
 
-function renderPB(){
+function renderPBBody(){
   var plan=planOf();if(plan.locked&&plan.locked.indexOf('pb')>=0){document.getElementById('main').innerHTML=lockedBanner('Position Builder','Calcula el tamaño correcto de cada posición según tu capital y objetivos de riesgo/retorno.');return;}
   if(!PB.capital||PB.capital<=0) PB.capital=S.capital;
   var cap=PB.capital;
@@ -7097,6 +7110,7 @@ function renderPB(){
 
   document.getElementById("main").innerHTML=
     _ph('Análisis · Position Builder','Position Builder','// Calculadora de entrada óptima · Regla del 2% · Simulación de escenarios')+
+    riskTabs()+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+
     '<div><div class="cb">'+
     '<div class="st"><div class="stbar"></div>Configuración</div>'+
@@ -7135,7 +7149,7 @@ function renderPB(){
 
 function pbFill(ticker,price){
   PB.ticker=ticker;PB.price=price;PB.stop=0;
-  renderPB();
+  renderPBBody();
   setTimeout(function(){pbCalc();},50);
 }
 
@@ -7178,7 +7192,7 @@ function pbCalc(){
 
   PB.ticker=ticker;PB.price=price;PB.capital=capital;PB.risk=risk;PB.stop=stop;PB.rr=rr;
   PB.computed={ticker:ticker,price:price,stop:stop,target:target,riskAmt:riskAmt,posSize:posSize,units:units,rr:rrActual};
-  renderPB();
+  renderPBBody();
 }
 
 function pbAddToPortfolio(){
@@ -8230,7 +8244,6 @@ function mUpgrade(mr){
   var proFeatures=[
     ['🎯','Motor de Análisis','Régimen SPY + scoring técnico por activo'],
     ['📈','Indicadores Pro','RSI, MACD y Bandas Bollinger sobre datos reales'],
-    ['🛡️','Gestión de Riesgo','Position sizing + escenarios de mercado'],
     ['📉','Simulación Histórica','Prueba estrategias sobre datos históricos'],
     ['🔎','Screener sin límite','Filtra 50+ activos por criterio técnico'],
     ['🏦','Plan de Capital','Proyección de aportes y objetivos'],
