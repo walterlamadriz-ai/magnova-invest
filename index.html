@@ -508,6 +508,23 @@ body.no-auth .main { margin-left:0 !important; margin-top:0 !important; }
 /* Rail neutro: para datos sin estado semántico (una magnitud no es "positiva") */
 .kn { border-left: 2px solid var(--border2); }
 
+/* ── FRANJA DE SUITE ─────────────────────────────────────────────
+   Usa tokens para funcionar en ambos temas. z-index 60 y no 9999: solo debe
+   quedar por encima del contenido, nunca del drawer ni de los modales. */
+.suite-nav {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-7);
+  background: var(--bg);
+  border-bottom: 0.5px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: .4px;
+  position: sticky; top: 0; z-index: 60;
+}
+.suite-home    { color: var(--text3); text-decoration: none; transition: color .15s cubic-bezier(.23,1,.32,1); }
+.suite-home:hover { color: var(--text); }
+.suite-sep     { color: var(--border2); }
+.suite-current { color: var(--text2); }
+
 /* ── CHIPS DE WATCHLIST ──────────────────────────────────────────
    La clase .wtag se generaba en el HTML pero NO existia en el CSS: eran
    <span> desnudos, sin padding ni borde, separados solo por el espacio del
@@ -1744,17 +1761,20 @@ div:has(>.dtab), div:has(>.rtab) {
 <g id="i-help"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 1 1 3.4 2.5c-.6.2-.9.8-.9 1.4v.6"/><circle cx="12" cy="17.2" r=".9"/></g>
 </defs></svg>
 
-<!-- Suite nav -->
-<div style="background:#0f1f17;border-bottom:0.5px solid rgba(255,255,255,.07);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:11px;position:sticky;top:0;z-index:9999">
-  <div style="display:flex;align-items:center;gap:16px">
-    <a href="https://financeospro.com" style="color:rgba(255,255,255,.75);text-decoration:none;letter-spacing:.3px" title="Volver al inicio">← financeospro.com</a>
-    <span style="color:rgba(255,255,255,.15)">·</span>
-    <span style="color:rgba(255,255,255,.6);letter-spacing:.5px">INVEST</span>
-  </div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <a href="https://financeospro.com/#pricing" target="_blank" style="color:rgba(255,255,255,.65);text-decoration:none;font-size:10px">Planes →</a>
-  </div>
-</div>
+<!-- Suite nav — franja de vuelta a la suite.
+     Antes: fondo #0f1f17 hardcodeado (verde oscuro sobre app blanca en tema
+     claro: se leia como un banner de otro sitio incrustado), z-index 9999 que
+     competia con el drawer, y un enlace "Planes →" que sacaba de la app y
+     vendia incluso a quien ya habia pagado. Ahora usa tokens, respeta los dos
+     temas, y el upsell queda donde ya existe: freeBanner() y el modal interno,
+     que solo aparecen en plan free. -->
+<nav class="suite-nav" aria-label="Navegación de suite">
+  <a href="https://financeospro.com" class="suite-home">
+    <span aria-hidden="true">←</span> FinanceOS
+  </a>
+  <span class="suite-sep" aria-hidden="true">/</span>
+  <span class="suite-current">Invest</span>
+</nav>
 <div role="button" tabindex="0" class="sb-backdrop" id="sb-backdrop" onclick="toggleMobileMenu(false)"></div>
 <div class="app">
   <nav class="sb" id="sb"></nav>
@@ -1898,7 +1918,7 @@ const PAGES=[
   {id:"decision", icon:"🎯",label:"Motor de Análisis",pro:true},
   {id:"ind",      icon:"📈",label:"Indicadores",pro:true},
   {id:"risk",     icon:"🛡️",label:"Riesgo",pro:true},
-  {id:"back",     icon:"📉",label:"Simulación Histórica",pro:true},
+  {id:"back",     icon:"📉",label:"Probar estrategia",pro:true},
   {id:"screener", icon:"🔍",label:"Screener",pro:true},   // decia "Buscador" y la pagina se titula "Screener"
   {id:"capital",  icon:"💰",label:"Plan de Capital",pro:true},
   {id:"divs",     icon:"💰",label:"Dividendos"},
@@ -3443,7 +3463,32 @@ function renderDecisionEngine(){
   var teaserKey='de_teaser_'+new Date().toISOString().slice(0,10);
   var teaserUsed=isFreeUser&&localStorage.getItem(teaserKey)==='1';
   if(isFreeUser&&!teaserUsed){ localStorage.setItem(teaserKey,'1'); }
+  var DEFAULT_TICKERS=['SPY','QQQ','AAPL','NVDA','MSFT','AMZN','GLD','BTC-USD'];
+  var tickers=[];
+  S.watchlist.forEach(function(w){var tk=typeof w==='string'?w:w.ticker;if(tk&&tickers.indexOf(tk)<0)tickers.push(tk);});
+  S.portfolio.forEach(function(p){if(tickers.indexOf(p.t)<0)tickers.push(p.t);});
+  var usingDefaults=!tickers.length;
+  if(usingDefaults)tickers=DEFAULT_TICKERS;
+  // El usuario preguntaba si el Motor analiza su watchlist o su portafolio.
+  // Analiza AMBOS, y 8 de referencia si los dos estan vacios. Nunca se decia.
+  var nWatch=0, nPort=0;
+  if(!usingDefaults){
+    S.watchlist.forEach(function(w){var tk=typeof w==='string'?w:w.ticker; if(tk) nWatch++;});
+    S.portfolio.forEach(function(pp){ if(!S.watchlist.some(function(w){var tk=typeof w==='string'?w:w.ticker;return tk===pp.t;})) nPort++; });
+  }
+  var explicaUniverso =
+    '<div style="margin:0 20px 14px;padding:12px 16px;background:var(--card2);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text2);line-height:1.65">'+
+    (usingDefaults
+      ? '<b style="color:var(--bright)">Estás viendo 8 activos de referencia.</b> Tu Watchlist y tu Portafolio están vacíos, así que el Motor analiza SPY, QQQ, AAPL, NVDA, MSFT, AMZN, GLD y BTC-USD para que puedas ver cómo funciona. '+
+        '<button class="btn" style="padding:2px 9px;font-size:10px;margin-left:4px" onclick="setPage(\'watch\')">Agregar mis activos →</button>'
+      : '<b style="color:var(--bright)">Analizando '+tickers.length+' activos:</b> '+nWatch+' de tu Watchlist y '+nPort+' de tu Portafolio. '+
+        '<button class="btn" style="padding:2px 9px;font-size:10px;margin-left:4px" onclick="setPage(\'watch\')">Editar Watchlist →</button>')+
+    '<div style="margin-top:8px;font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">'+
+    'El score 0–100 combina tendencia frente a la SMA200 (30%), RSI (25%), MACD (20%) y volumen (25%), ajustado por la fuerza relativa del sector. '+
+    'Los niveles de entrada, stop y objetivo son zonas de referencia calculadas con ATR(14), no recomendaciones.'+
+    '</div></div>';
   main.innerHTML=_ph('Pro · Motor de Análisis','Motor de Análisis','// Régimen SPY · Volatilidad VIX · Scoring técnico 0–100 por activo','<button class="btn" style="font-size:10px;border-color:var(--border);color:var(--text3)" onclick="openModal(\'score-info\')">¿Cómo se calcula? →</button>')+
+    explicaUniverso+
     (isFreeUser&&teaserUsed?'<div style="margin:0 20px 16px;padding:12px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;font-size:12px;color:var(--amber);display:flex;align-items:center;gap:10px">⚡ Vista previa utilizada hoy — <button onclick="openModal(\'upgrade\')" style="background:var(--amber);color:#000;border:none;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer">Activar Pro →</button></div>':'')+
     '<div id="de-body" style="padding:0 20px 40px">'+
     // Skeleton screens — show structure immediately, data fills in
@@ -3467,12 +3512,6 @@ function renderDecisionEngine(){
     '</div>'+
     '</div>';
 
-  var DEFAULT_TICKERS=['SPY','QQQ','AAPL','NVDA','MSFT','AMZN','GLD','BTC-USD'];
-  var tickers=[];
-  S.watchlist.forEach(function(w){var tk=typeof w==='string'?w:w.ticker;if(tk&&tickers.indexOf(tk)<0)tickers.push(tk);});
-  S.portfolio.forEach(function(p){if(tickers.indexOf(p.t)<0)tickers.push(p.t);});
-  var usingDefaults=!tickers.length;
-  if(usingDefaults)tickers=DEFAULT_TICKERS;
 
   Promise.all([deGetRegime(),deGetVIX(),deGetBreadth()].concat(tickers.map(function(t){return deScoreTicker(t);})).concat(tickers.map(function(t){return deGetEarnings(t);})))
   .then(function(results){
@@ -5432,6 +5471,33 @@ function sentimentSection(){
 function setNewsF(f){S.newsFilter=f;renderMain();}
 
 // ── INDICADORES (Pro) ──────────────────────────────────────────
+// Las columnas RSI y SMA20 mostraban '—' hardcodeado: el calculo nunca se hizo.
+// TI.rsi y _smaLast ya existian. Se carga bajo demanda con el mismo patron que
+// loadCapitalData: cache por ticker, una pasada asincrona y re-render.
+var IND_CACHE={};
+var _indLoading=false;
+async function loadIndData(){
+  if(_indLoading) return;
+  var tickers=S.portfolio.map(function(h){return h.t;});
+  var pendientes=tickers.filter(function(t){return IND_CACHE[t]===undefined;});
+  if(!pendientes.length) return;
+  _indLoading=true;
+  for(var i=0;i<pendientes.length;i++){
+    var t=pendientes[i];
+    try{
+      var hist=await fetchHistory(t,'6mo');
+      var closes=(hist||[]).map(function(d){return d.close;}).filter(function(c){return c>0;});
+      if(closes.length<21){ IND_CACHE[t]={rsi:null,sma20:null}; continue; }
+      var rsiArr=TI.rsi(closes,14);
+      var ultimoRsi=null;
+      for(var k=rsiArr.length-1;k>=0;k--){ if(rsiArr[k]!=null){ ultimoRsi=rsiArr[k]; break; } }
+      IND_CACHE[t]={rsi:ultimoRsi, sma20:_smaLast(closes,20)};
+    }catch(e){ IND_CACHE[t]={rsi:null,sma20:null}; }
+  }
+  _indLoading=false;
+  if(S.page==='ind') renderInd();
+}
+
 function renderInd(){
   var plan=planOf();
   if(plan.locked&&plan.locked.indexOf('ind')>=0){
@@ -5448,13 +5514,16 @@ function renderInd(){
   var portRows=S.portfolio.map(function(h){
     var s=ALL_SIG.find(function(x){return x.t===h.t;})||{sig:"HOLD",sc:60};
     var lp=getLivePrice(h.t);
-    var rsiE='—';
-    var sma20E='—';
+    var ind=IND_CACHE[h.t];
+    // '…' mientras carga; '—' solo si de verdad no hay dato para ese ticker
+    var rsiE   = ind===undefined ? '…' : (ind.rsi!=null   ? ind.rsi.toFixed(1) : '—');
+    var sma20E = ind===undefined ? '…' : (ind.sma20!=null ? '$'+fmtD(ind.sma20) : '—');
+    var rsiCol = (ind&&ind.rsi!=null) ? (ind.rsi>=70?'var(--red)':ind.rsi<=30?'var(--grn)':'var(--text)') : 'var(--text3)';
     return '<tr class="trow" onclick="openDrawer(\''+h.t+'\','+lp+')">'+
       '<td style="font-weight:600;color:var(--bright)">'+h.t+' <span style="font-size:9px;color:var(--text3)">↗</span></td>'+
       '<td>'+badge(s.sig)+'</td>'+
       '<td style="font-weight:700;color:'+(s.sc>=72?"var(--grn)":s.sc>=52?"var(--amber)":"var(--red)")+'">'+s.sc+'</td>'+
-      '<td style="color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+rsiE+'</td>'+
+      '<td style="color:'+rsiCol+';font-family:\'JetBrains Mono\',monospace;font-weight:'+((ind&&ind.rsi!=null&&(ind.rsi>=70||ind.rsi<=30))?'700':'400')+'">'+rsiE+'</td>'+
       '<td style="font-weight:600">$'+fmtD(lp)+'</td>'+
       '<td style="color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+sma20E+'</td>'+
       '<td><button class="btn" style="padding:2px 8px;font-size:10px">📊 Ver</button></td></tr>';
@@ -5483,6 +5552,8 @@ function renderInd(){
     '</div>'+
     '<div class="st"><div class="stbar"></div>Todos los tickers — Click para abrir análisis</div>'+
     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">'+tickerCards+'</div>';
+
+  loadIndData();   // carga RSI/SMA reales y re-renderiza al terminar
 }
 
 // ── RISK (Pro) ─────────────────────────────────────────────────
@@ -5607,7 +5678,7 @@ function renderBack(){
   var plan=planOf();
   if(plan.locked&&plan.locked.indexOf('back')>=0){
     document.getElementById("main").innerHTML=
-      _ph('Análisis · Backtesting','Simulación Histórica','// Backtesting + Analizador de Bitácora')+
+      _ph('Herramientas · Simulador','Probar una estrategia','// Qué habría pasado aplicando un cruce de medias en el pasado')+
       lockedBanner("Simulación Histórica","Ejecuta estrategias reales sobre datos históricos y analiza el rendimiento de tus trades.");
     return;
   }
@@ -5621,7 +5692,15 @@ function renderBack(){
     '<button style="'+tabStyle('sim')+'" onclick="BT.tab=\'sim\';renderBack()">⚡ Simulación Histórica</button>'+
     '</div>';
 
-  var html=_ph('Análisis · Backtesting','Simulación Histórica','// Backtesting + análisis de tus operaciones')+tabs;
+  var html=_ph('Herramientas · Simulador','Probar una estrategia','// Qué habría pasado aplicando un cruce de medias en el pasado')+tabs+
+    '<div style="margin:0 20px 14px;padding:12px 16px;background:var(--card2);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text2);line-height:1.65">'+
+    '<b style="color:var(--bright)">Esto responde una sola pregunta:</b> si durante el período elegido hubieras entrado cada vez que la media corta cruzó '+
+    '<b>hacia arriba</b> la larga, y salido cada vez que la cruzó <b>hacia abajo</b>, ¿cómo habría terminado tu capital?'+
+    '<div style="margin-top:8px;font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">'+
+    'Es el cruce de medias, el método más clásico del análisis técnico. Sirve para ver si un activo se ha comportado de forma tendencial o si habría dado muchas señales falsas. '+
+    'Ejemplo: SPY · 1 año · medias 20 y 50 · $10.000. '+
+    'Rendimiento sobre datos históricos: no anticipa el futuro y no descuenta comisiones ni impuestos.'+
+    '</div></div>';
 
   if(BT.tab==='journal'){
     html+=btRenderJournal(sells);
@@ -5719,12 +5798,12 @@ function btRenderSim(){
     '<input id="bt-capital" class="inp" style="width:100%" type="number" value="'+BT.capital+'" oninput="BT.capital=parseFloat(this.value)||10000"/></div>'+
     '</div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">'+
-    '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">SMA Rápida (días)</label>'+
+    '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Media corta — reacciona rápido</label>'+
     '<input id="bt-fast" class="inp" style="width:100%" type="number" value="'+BT.fast+'" min="5" max="50" oninput="BT.fast=parseInt(this.value)||20"/></div>'+
-    '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">SMA Lenta (días)</label>'+
+    '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Media larga — marca la tendencia de fondo</label>'+
     '<input id="bt-slow" class="inp" style="width:100%" type="number" value="'+BT.slow+'" min="20" max="200" oninput="BT.slow=parseInt(this.value)||50"/></div>'+
     '</div>'+
-    '<button class="btn-big" style="width:100%;margin-top:14px" onclick="btRunSim()" '+(BT.running?'disabled':'')+'>'+(BT.running?'⟳ Ejecutando...':'▶ Ejecutar Simulación Histórica')+'</button>'+
+    '<button class="btn-big" style="width:100%;margin-top:14px" onclick="btRunSim()" '+(BT.running?'disabled':'')+'>'+(BT.running?'⟳ Ejecutando...':'▶ Ver qué habría pasadotar Simulación Histórica')+'</button>'+
     '</div>';
 
   if(!res) return formHtml+'<div style="text-align:center;padding:30px;color:var(--text3);font-size:12px">Configura los parámetros y ejecuta la simulación para ver resultados.</div>';
@@ -7145,8 +7224,18 @@ function calcSentiment(){
   var vixScore=Math.max(0,Math.min(100,100-(vixVal-10)*3));
   var vixDisplay=DE_CACHE.vix&&DE_CACHE.vix.vix?DE_CACHE.vix.vix.toFixed(1):'—';
 
-  var rsiAvg=0,rsiCount=0;
-  port.forEach(function(h){var sig=ALL_SIG.find(function(x){return x.t===h.t;});if(sig){rsiAvg+=sig.sc;rsiCount++;}});
+  // Esta variable se llamaba rsiAvg pero sumaba sig.sc, que es un score 0-100,
+  // no un RSI. Se mostraba al usuario como 'RSI portfolio': dato mal etiquetado.
+  // Ahora se usa el RSI real si IND_CACHE ya lo cargo, y si no, se cae al
+  // promedio de score PERO con la etiqueta correcta.
+  var rsiAvg=0,rsiCount=0,rsiEsReal=false;
+  port.forEach(function(h){
+    var ind=IND_CACHE[h.t];
+    if(ind&&ind.rsi!=null){ rsiAvg+=ind.rsi; rsiCount++; rsiEsReal=true; }
+  });
+  if(!rsiCount){
+    port.forEach(function(h){var sig=ALL_SIG.find(function(x){return x.t===h.t;});if(sig){rsiAvg+=sig.sc;rsiCount++;}});
+  }
   rsiAvg=rsiCount?rsiAvg/rsiCount:sigAvg;
 
   var score=Math.round(buyPct*0.30+sigAvg*0.15+rsiAvg*0.25+vixScore*0.15+momentumScore*0.15);
@@ -7165,7 +7254,7 @@ function calcSentiment(){
     components:[
       {name:'Sesgo alcista', value:buyPct.toFixed(0)+'%',          score:buyPct,        icon:'⚡'},
       {name:'Score DE avg',  value:sigAvg.toFixed(0)+'/100',        score:sigAvg,        icon:'📊'},
-      {name:'RSI portfolio', value:rsiAvg.toFixed(0),               score:rsiAvg,        icon:'📈'},
+      {name:(rsiEsReal?'RSI portafolio':'Score portafolio'), value:rsiAvg.toFixed(0), score:rsiAvg, icon:'📈'},
       {name:'VIX inverso',   value:'VIX '+vixDisplay,               score:vixScore,      icon:'🌡'},
       {name:'Momentum P&L',  value:(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%', score:momentumScore, icon:'💰'}
     ]
