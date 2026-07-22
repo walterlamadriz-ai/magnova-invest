@@ -3279,6 +3279,63 @@ function drawSPYMiniChart(regime){
   }
 }
 
+// ── ALL_SIG DINAMICO ─────────────────────────────────────────────
+// ALL_SIG nacio como array estatico: 20 tickers con sig y sc escritos a mano
+// que nunca se recalculaban. Convivia con deScoreTicker, el motor real, asi que
+// el MISMO ticker podia mostrar 89 en Senales y otro numero en Screener sin que
+// nada lo explicara. Esto lo unifica: un solo motor para toda la app.
+// Coste acotado: fetchHistory ya cachea en localStorage y deScoreTicker tiene
+// DE_CACHE con 30 min de TTL, asi que 20 tickers no son 20 llamadas por carga.
+var ALL_SIG_REAL=false;              // true cuando los scores vienen del motor
+var _allSigLoading=false;
+var ALL_SIG_TTL=30*60*1000;
+
+function _allSigKey(){ return 'sig_scores_'+(S.user&&S.user.id||'demo'); }
+
+function _allSigFromCache(){
+  try{
+    var raw=localStorage.getItem(_allSigKey());
+    if(!raw) return false;
+    var o=JSON.parse(raw);
+    if(!o||!o.ts||(Date.now()-o.ts)>ALL_SIG_TTL) return false;
+    var n=0;
+    ALL_SIG.forEach(function(x){
+      var v=o.d[x.t];
+      if(v){ x.sc=v.sc; x.sig=v.sig; n++; }
+    });
+    if(n>0){ ALL_SIG_REAL=true; return true; }
+  }catch(e){}
+  return false;
+}
+
+// Un score 0-100 se traduce a las tres bandas que ya usa la UI.
+function _sigDesdeScore(sc){ return sc>=70?'BUY':sc>=45?'HOLD':'SELL'; }
+
+async function loadAllSigScores(force){
+  if(_allSigLoading) return;
+  if(!force && _allSigFromCache()){ return; }
+  _allSigLoading=true;
+  var guardar={};
+  for(var i=0;i<ALL_SIG.length;i++){
+    var x=ALL_SIG[i];
+    try{
+      var r=await deScoreTicker(x.t);
+      if(r&&isFinite(r.score)){
+        x.sc=Math.round(r.score);
+        x.sig=_sigDesdeScore(x.sc);
+        guardar[x.t]={sc:x.sc,sig:x.sig};
+      }
+    }catch(e){/* un ticker que falla no detiene al resto */}
+  }
+  _allSigLoading=false;
+  if(Object.keys(guardar).length){
+    ALL_SIG_REAL=true;
+    try{ localStorage.setItem(_allSigKey(),JSON.stringify({ts:Date.now(),d:guardar})); }catch(e){}
+    // Repintar solo las pantallas que leen ALL_SIG
+    if(['sig','dash','sentiment','radar','ind'].indexOf(S.page)>=0){ try{ renderMain(); }catch(e){} }
+  }
+}
+
 async function deScoreTicker(ticker){
   if(DE_CACHE.scores[ticker]&&(Date.now()-DE_CACHE.lastFetch)<1800000)return DE_CACHE.scores[ticker];
   var hist=await fetchHistory(ticker,'1y');
@@ -4919,8 +4976,8 @@ function renderSig(){
   }).join("");
 
   document.getElementById("main").innerHTML=
-    _ph('Mercado · Señales','Señales Técnicas <span style="font-size:10px;background:var(--amber);color:#000;padding:2px 6px;border-radius:4px;font-weight:700;vertical-align:middle;margin-left:6px">REFERENCIAL</span>','// Datos estáticos de muestra · No conectados a análisis en tiempo real · Solo uso educativo',liveBadge())+
-    '<div style="padding:8px 12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:6px;margin-bottom:14px;font-size:11px;color:var(--amber);font-family:\'JetBrains Mono\',monospace">⚠ Los indicadores mostrados son datos de muestra estáticos con fines educativos. No reflejan análisis técnico en tiempo real ni constituyen recomendaciones de inversión.</div>'+
+    _ph('Mercado · Señales','Señales Técnicas'+(ALL_SIG_REAL?'':' <span style="font-size:10px;background:var(--amber);color:#000;padding:2px 6px;border-radius:4px;font-weight:700;vertical-align:middle;margin-left:6px">CALCULANDO</span>'),(ALL_SIG_REAL?'// Score 0–100 por activo · SMA200 30% + RSI 25% + MACD 20% + Volumen 25%, ajustado por fuerza del sector':'// Calculando scores con datos reales del último año…'),liveBadge())+
+    (ALL_SIG_REAL?'':'<div style="padding:8px 12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:6px;margin-bottom:14px;font-size:11px;color:var(--amber);font-family:\'JetBrains Mono\',monospace">⏳ Calculando los scores con datos reales del último año. Mientras tanto ves valores de referencia.</div>')+
     freeBanner("Estás viendo "+plan.maxS+" de "+ALL_SIG.length+" indicadores. Pro los muestra todos.")+
     '<div style="margin-bottom:14px">'+filterBtns+'</div>'+
     // "Total" era la suma exacta de los otros tres: dato redundante, fuera.
@@ -9195,6 +9252,9 @@ var _bootRunning=false;
 async function bootLiveData(){
   if(_bootRunning) return;
   _bootRunning=true;
+  // Scores reales en segundo plano: no bloquea el arranque y se sirve de cache
+  // si ya se calcularon hace menos de 30 min.
+  setTimeout(function(){ loadAllSigScores(); }, 1200);
   if(_bootInterval) clearInterval(_bootInterval);
 
   // Boot: portfolio + watchlist + top señales del dashboard
