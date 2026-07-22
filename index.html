@@ -3510,7 +3510,22 @@ function deSetTab(tab){
   }
 }
 
-function renderDecisionEngine(){
+var ANALISIS_TAB='universo';   // 'universo' | 'buscar'
+function renderAnalisis(){
+  if(ANALISIS_TAB==='buscar'){ renderScreenerBody(); return; }
+  renderDecisionEngineBody();
+}
+function analisisTabs(){
+  var st=function(t){var a=ANALISIS_TAB===t;
+    return 'padding:8px 18px;border-radius:6px;font-size:12px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;border:1px solid '+(a?'var(--grn)':'var(--border)')+';background:'+(a?'var(--grn-bg)':'var(--card2)')+';color:'+(a?'var(--grn)':'var(--text2)')+';font-weight:'+(a?'700':'400');};
+  return '<div style="display:flex;gap:8px;margin:0 20px 18px;flex-wrap:wrap;align-items:center">'+
+    '<button style="'+st('universo')+'" onclick="ANALISIS_TAB=\'universo\';renderAnalisis()">Mi universo</button>'+
+    '<button style="'+st('buscar')+'" onclick="ANALISIS_TAB=\'buscar\';renderAnalisis()">Buscar activos</button>'+
+    '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-left:4px">'+
+    (ANALISIS_TAB==='universo'?'Tu watchlist y tu portafolio, con contexto de mercado':'Escribe los tickers que quieras y filtra por criterio')+
+    '</span></div>';
+}
+function renderDecisionEngineBody(){
   var main=document.getElementById('main');
   var isFreeUser=S.user&&planOf().locked.indexOf('decision')>=0;
   // Free users get a teaser: full Régimen card + first ticker analysis with upgrade overlay
@@ -3543,6 +3558,7 @@ function renderDecisionEngine(){
     'Los niveles de entrada, stop y objetivo son zonas de referencia calculadas con ATR(14), no recomendaciones.'+
     '</div></div>';
   main.innerHTML=_ph('Pro · Motor de Análisis','Motor de Análisis','// Régimen SPY · Volatilidad VIX · Scoring técnico 0–100 por activo','<button class="btn" style="font-size:10px;border-color:var(--border);color:var(--text3)" onclick="openModal(\'score-info\')">¿Cómo se calcula? →</button>')+
+    analisisTabs()+
     explicaUniverso+
     (isFreeUser&&teaserUsed?'<div style="margin:0 20px 16px;padding:12px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;font-size:12px;color:var(--amber);display:flex;align-items:center;gap:10px">⚡ Vista previa utilizada hoy — <button onclick="openModal(\'upgrade\')" style="background:var(--amber);color:#000;border:none;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer">Activar Pro →</button></div>':'')+
     '<div id="de-body" style="padding:0 20px 40px">'+
@@ -3794,11 +3810,12 @@ function renderDecisionEngine(){
 }
 
 // ── SCREENER (Pro) ─────────────────────────────────────────────
-function renderScreener(){
+function renderScreenerBody(){
   var plan=planOf();
   if(plan.locked&&plan.locked.indexOf('screener')>=0){
     document.getElementById('main').innerHTML=
       _ph('Herramientas · Screener','Screener','// Filtro técnico · Score Motor · Export CSV')+
+    analisisTabs()+
       lockedBanner('Screener','Filtra más de 50 activos simultáneamente por score técnico, señal y sector. Exporta resultados a CSV.');
     return;
   }
@@ -3938,7 +3955,7 @@ function screenerApplyFilters(){
   S.screenerFilters.rsiMin=parseInt((document.getElementById('scr-rsiMin')||{}).value||0)||0;
   S.screenerFilters.rsiMax=parseInt((document.getElementById('scr-rsiMax')||{}).value||100)||100;
   S.screenerFilters.action=(document.getElementById('scr-action')||{}).value||'ALL';
-  renderScreener();
+  renderScreenerBody();
 }
 
 function screenerRun(){
@@ -3954,7 +3971,7 @@ function screenerRun(){
 
   S.screenerResults=[];
   S.screenerRunning=true;
-  renderScreener();
+  renderScreenerBody();
 
   function tickerTimeout(ms){return new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},ms);});}
 
@@ -3962,17 +3979,17 @@ function screenerRun(){
     return Promise.race([deScoreTicker(ticker),tickerTimeout(10000)]).then(function(r){
       if(r) S.screenerResults.push(r);
       else S.screenerResults.push({ticker:ticker,error:true});
-      renderScreener();
+      renderScreenerBody();
       return r;
     }).catch(function(){
       S.screenerResults.push({ticker:ticker,error:true});
-      renderScreener();
+      renderScreenerBody();
     });
   });
 
   Promise.all(promises).then(function(){
     S.screenerRunning=false;
-    renderScreener();
+    renderScreenerBody();
   });
 }
 
@@ -4078,7 +4095,7 @@ function renderMain(){
   if(!S.user){renderWelcome();return;}
   var plan=planOf();
   if(plan.locked.indexOf(S.page)>=0){renderPaywall();return;}
-  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:function(){RISK_TAB='nueva';renderRisk();},comp:renderComp,sentiment:renderSentimentWidget,radar:renderRadar,decision:renderDecisionEngine,ind:renderInd,risk:function(){RISK_TAB='mis';renderRisk();},back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:renderScreener,capital:renderCapital,settings:renderSettings,help:renderHelp};
+  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:function(){RISK_TAB='nueva';renderRisk();},comp:renderComp,sentiment:renderSentimentWidget,radar:renderRadar,decision:function(){ANALISIS_TAB='universo';renderAnalisis();},ind:renderInd,risk:function(){RISK_TAB='mis';renderRisk();},back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:function(){ANALISIS_TAB='buscar';renderAnalisis();},capital:renderCapital,settings:renderSettings,help:renderHelp};
   (pages[S.page]||renderDash)();
   var curPage=PAGES.find(function(p){return p.id===S.page;});
   var mLabel=document.getElementById('mobile-page-label');
