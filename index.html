@@ -236,6 +236,7 @@
      grid de 4. Forzar escala estricta de 4 habria movido 94 declaraciones:
      eso no es un refactor, es un rediseno. Con base 2 se elimina la
      arbitrariedad real (los 32 valores impares) sin tocar la composicion. */
+  --suite-h: 34px;   /* alto de la franja de suite; lo descuentan .sb y #topbar */
   --sp-1:  2px;
   --sp-2:  4px;
   --sp-3:  6px;
@@ -318,7 +319,7 @@ body {
 }
 
 /* ── LAYOUT ── */
-.app { display:flex; min-height: 100vh; min-height: 100dvh; }
+.app { padding-top: var(--suite-h); display:flex; min-height: 100vh; min-height: 100dvh; }
 
 /* Pre-auth: hide sidebar + topbar so welcome screen is full-width */
 body.no-auth .sb { display: none !important; }
@@ -333,8 +334,8 @@ body.no-auth .main { margin-left:0 !important; margin-top:0 !important; }
   display: flex;
   flex-direction: column;
   position: fixed;
-  top: 0; left: 0;
-  height: 100vh; height: 100dvh;
+  top: var(--suite-h); left: 0;
+  height: calc(100vh - var(--suite-h)); height: calc(100dvh - var(--suite-h));
   overflow-y: auto;
   z-index: 100;
 }
@@ -511,14 +512,19 @@ body.no-auth .main { margin-left:0 !important; margin-top:0 !important; }
 /* ── FRANJA DE SUITE ─────────────────────────────────────────────
    Usa tokens para funcionar en ambos temas. z-index 60 y no 9999: solo debe
    quedar por encima del contenido, nunca del drawer ni de los modales. */
+/* #topbar y .sb son position:fixed con top:0, es decir anclados al VIEWPORT,
+   no al final de esta franja. Se pintaban encima de ella: el fondo oscuro del
+   topbar (var(--bg2)) era la banda negra que tapaba la parte superior.
+   Se fija una altura conocida y los tres elementos la descuentan. */
 .suite-nav {
   display: flex; align-items: center; gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-7);
+  padding: 0 var(--sp-7);
+  height: var(--suite-h);
   background: var(--bg);
   border-bottom: 0.5px solid var(--border);
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px; letter-spacing: .4px;
-  position: sticky; top: 0; z-index: 60;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 120;
 }
 .suite-home    { color: var(--text3); text-decoration: none; transition: color .15s cubic-bezier(.23,1,.32,1); }
 .suite-home:hover { color: var(--text); }
@@ -1336,7 +1342,7 @@ tr:last-child td { border-bottom: none; }
     display: flex!important;
     align-items: center;
     position: fixed;
-    top: 0;
+    top: var(--suite-h);
     left: var(--sb-w);
     right: 0;
     height: 52px;
@@ -1346,7 +1352,7 @@ tr:last-child td { border-bottom: none; }
     gap:10px;
     z-index: 50;
   }
-  .main { margin-top:52px; }
+  .main { margin-top: calc(52px + var(--suite-h)); }
 }
 #topbar { display: none; }
 .tb-title {
