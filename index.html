@@ -8917,10 +8917,20 @@ function _capLoad(){
 }
 function capImportFromPortfolio(silent){
   if(!S.portfolio||!S.portfolio.length){ S.capitalPlan.tickers=[]; return; }
-  var eq=Math.round(100/S.portfolio.length);
-  S.capitalPlan.tickers=S.portfolio.map(function(h,i){
-    return {t:h.t, pct:(i===S.portfolio.length-1?100-eq*(S.portfolio.length-1):eq)};
-  });
+  // Antes repartia a partes iguales (100/N), que no responde a ningun criterio:
+  // ni refleja tu asignacion ni corrige nada. Ahora el aporte va a lo que esta
+  // POR DEBAJO de su objetivo, en proporcion a cuanto le falta. Asi el aporte
+  // mensual rebalancea sin vender: sin costes de transaccion ni hecho imponible.
+  // Si nada esta por debajo, sigue la asignacion objetivo.
+  var reparto=(typeof repartoPorDesvio==='function')?repartoPorDesvio():[];
+  if(reparto.length){
+    S.capitalPlan.tickers=reparto.map(function(r){ return {t:r.t, pct:r.pct}; });
+  } else {
+    var eq=Math.round(100/S.portfolio.length);
+    S.capitalPlan.tickers=S.portfolio.map(function(h,i){
+      return {t:h.t, pct:(i===S.portfolio.length-1?100-eq*(S.portfolio.length-1):eq)};
+    });
+  }
   _capSave();
   if(!silent){ S.capitalResults=null; if(S.page==='capital') renderMain(); }
 }
@@ -9011,7 +9021,7 @@ function renderCapital(){
     '<span style="font-size:10px;color:var(--amber);font-family:\'JetBrains Mono\',monospace;margin-left:8px">⚠ suma '+totalPct.toFixed(1)+'% (debe ser 100%)</span>':'';
 
   var importBtn=(S.portfolio&&S.portfolio.length)?
-    '<button onclick="capImportFromPortfolio(false)" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;margin-left:8px">↩ Importar desde portafolio</button>':'';
+    '<button onclick="capImportFromPortfolio(false)" title="Reparte el aporte hacia lo que está por debajo de su objetivo de Rebalanceo" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--text3);font-size:10px;padding:4px 10px;cursor:pointer;margin-left:8px">↩ Repartir según mi asignación objetivo</button>':'';
 
   // ── Helper: fila de resultado ──
   function etfRow(r){
@@ -9159,14 +9169,80 @@ function renderCapital(){
 // ── REBALANCING TOOL ─────────────────────────────────────────────
 var REBAL={targets:{}};
 
+// ── ASIGNACION OBJETIVO ──────────────────────────────────────────
+// REBAL.targets no se persistia: vivia en memoria y se perdia en cada recarga,
+// asi que el "objetivo" nunca sobrevivia a cerrar la pestana. Y se inicializaba
+// desde los pesos ACTUALES, con lo que el objetivo siempre coincidia con la
+// realidad y el rebalanceo jamas señalaba desvio: se auto-justificaba.
+// Ahora persiste por usuario y, si no hay nada guardado, arranca desde la cesta
+// de referencia del perfil declarado.
+function _rebalKey(){ return 'rebal_tg_'+(S.user&&S.user.id||'demo'); }
+function rebalSaveTargets(){
+  try{ localStorage.setItem(_rebalKey(),JSON.stringify(REBAL.targets)); }catch(e){}
+}
+function rebalLoadTargets(){
+  try{
+    var raw=localStorage.getItem(_rebalKey());
+    if(raw){ REBAL.targets=JSON.parse(raw)||{}; return true; }
+  }catch(e){}
+  return false;
+}
+// Cesta de referencia por perfil, la misma que ofrece Plan de Capital.
+function cestaDePerfil(){
+  var pf=(typeof perfilInversor==='function')?perfilInversor():null;
+  if(!pf) return null;
+  var cestas={
+    '1':[['BIL',40],['BND',30],['VYM',20],['GLD',10]],
+    '2':[['BND',30],['SCHD',30],['VTI',30],['GLD',10]],
+    '3':[['VTI',45],['VXUS',20],['BND',20],['GLD',15]],
+    '4':[['VTI',40],['QQQ',30],['VXUS',20],['GLD',10]],
+    '5':[['QQQ',45],['VTI',35],['VXUS',20]]
+  };
+  return cestas[String(pf.risk)]||cestas['3'];
+}
+// Reparto del aporte mensual segun DESVIO respecto al objetivo: se aporta a lo
+// que esta por debajo, en proporcion a cuanto le falta. Rebalancear comprando
+// en vez de vendiendo evita costes de transaccion y hechos imponibles.
+function repartoPorDesvio(){
+  var port=S.portfolio||[];
+  if(!port.length) return [];
+  var totM=port.reduce(function(a,h){return a+h.sh*(getLivePrice(h.t)||h.cur||0);},0);
+  if(!(totM>0)) return [];
+  var filas=port.map(function(h){
+    var val=h.sh*(getLivePrice(h.t)||h.cur||0);
+    var actual=val/totM*100;
+    var obj=(REBAL.targets[h.t]!=null)?REBAL.targets[h.t]:actual;
+    return {t:h.t, actual:actual, objetivo:obj, desvio:obj-actual};
+  });
+  var bajo=filas.filter(function(f){return f.desvio>0.5;});
+  // Si nada esta por debajo del objetivo, el aporte sigue la asignacion objetivo
+  var base=bajo.length?bajo:filas.filter(function(f){return f.objetivo>0;});
+  var suma=base.reduce(function(a,f){return a+(bajo.length?f.desvio:f.objetivo);},0);
+  if(!(suma>0)) return [];
+  return base.map(function(f){
+    var peso=(bajo.length?f.desvio:f.objetivo)/suma*100;
+    return {t:f.t, pct:Math.round(peso*10)/10, actual:f.actual, objetivo:f.objetivo, desvio:f.desvio};
+  }).sort(function(a,b){return b.pct-a.pct;});
+}
+
 function renderRebal(){
   var plan=planOf();if(plan.locked&&plan.locked.indexOf('rebal')>=0){document.getElementById('main').innerHTML=lockedBanner('Rebalanceo','Mantén tu portafolio alineado con tus objetivos de asignación de activos.');return;}
   var port=S.portfolio;
   var totM=port.reduce(function(s,h){return s+h.sh*(getLivePrice(h.t)||h.cur||0);},0);
 
+  // Primero se intenta recuperar lo guardado. Si no hay nada, el objetivo sale
+  // de la cesta del perfil para los tickers que coincidan; el resto cae al peso
+  // actual como ultimo recurso. Antes TODO arrancaba del peso actual, con lo que
+  // objetivo y realidad siempre coincidian y el desvio era siempre cero.
+  if(!Object.keys(REBAL.targets).length) rebalLoadTargets();
+  var cesta=(typeof cestaDePerfil==='function')?cestaDePerfil():null;
+  var mapaCesta={};
+  if(cesta) cesta.forEach(function(c){ mapaCesta[c[0]]=c[1]; });
   port.forEach(function(h){
     if(REBAL.targets[h.t]===undefined){
-      REBAL.targets[h.t]=Math.round(h.sh*(getLivePrice(h.t)||h.cur||0)/(totM||1)*100);
+      REBAL.targets[h.t]= (mapaCesta[h.t]!=null)
+        ? mapaCesta[h.t]
+        : Math.round(h.sh*(getLivePrice(h.t)||h.cur||0)/(totM||1)*100);
     }
   });
 
@@ -9181,7 +9257,7 @@ function renderRebal(){
     return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'+
       '<span style="font-size:12px;font-weight:700;color:var(--bright);font-family:\'JetBrains Mono\',monospace;width:52px">'+h.t+'</span>'+
       '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;width:36px">'+curW.toFixed(1)+'%</span>'+
-      '<input type="range" min="0" max="60" step="1" value="'+tgt+'" style="flex:1;accent-color:var(--amber)" oninput="REBAL.targets[\''+h.t+'\']=parseInt(this.value);rebalUpdate()"/>'+
+      '<input type="range" min="0" max="60" step="1" value="'+tgt+'" style="flex:1;accent-color:var(--amber)" oninput="REBAL.targets[\''+h.t+'\']=parseInt(this.value);rebalUpdate();rebalSaveTargets()"/>'+
       '<span id="rebal-tgt-'+h.t+'" style="font-size:11px;font-weight:600;color:var(--amber);font-family:\'JetBrains Mono\',monospace;width:32px;text-align:right">'+tgt+'%</span>'+
       '<span style="font-size:11px;font-weight:600;width:60px;text-align:right;color:'+(Math.abs(diff)<0.5?'var(--text3)':diff>0?'var(--grn)':'var(--red)')+';font-family:\'JetBrains Mono\',monospace">'+
       (Math.abs(diff)<0.5?'—':(diff>0?'+':'')+diff.toFixed(1)+'%')+'</span></div>';
