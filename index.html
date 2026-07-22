@@ -7419,7 +7419,11 @@ function radarInit(){
   try{
     var h=JSON.parse(localStorage.getItem('mv_radar_history')||'[]');
     if(Array.isArray(h)) RADAR.history=h.slice(0,12);
-    var p=JSON.parse(localStorage.getItem('mv_radar_profile')||'null');
+    // La clave era global ('mv_radar_profile'): dos cuentas en el mismo
+    // navegador compartian perfil. Pasa a ser por usuario, como 'it_' e 'ia_'.
+    // Se lee la clave antigua como respaldo para no perder perfiles ya creados.
+    var k='mv_profile_'+(S.user&&S.user.id||'demo');
+    var p=JSON.parse(localStorage.getItem(k)||localStorage.getItem('mv_radar_profile')||'null');
     if(p) RADAR.profile=p;
   }catch(e){/* silent */}
 }
@@ -7432,7 +7436,22 @@ function radarSave(){
 
 function radarSaveProfile(p){
   RADAR.profile=p;
-  try{ localStorage.setItem('mv_radar_profile',JSON.stringify(p)); }catch(e){/* silent */}
+  try{
+    localStorage.setItem('mv_profile_'+(S.user&&S.user.id||'demo'),JSON.stringify(p));
+  }catch(e){/* silent */}
+  // Si el perfil trae aporte mensual, Plan de Capital lo usa como punto de
+  // partida en vez del $1000 fijo que estaba hardcodeado.
+  try{
+    if(p&&p.monthly&&parseFloat(p.monthly)>0&&S.capitalPlan){
+      S.capitalPlan.monthly=parseFloat(p.monthly);
+      if(typeof _capSave==='function') _capSave();
+    }
+  }catch(e){/* silent */}
+}
+// Devuelve el perfil o null. Punto unico de lectura para el resto de pantallas.
+function perfilInversor(){
+  var p=RADAR&&RADAR.profile;
+  return (p&&p.risk)?p:null;
 }
 
 // ── HEALTH SCORE ──────────────────────────────────────────────────
@@ -7517,6 +7536,20 @@ function showRiskProfile(onDone){
         {v:'growth',       label:'Crecimiento de capital',desc:'Maximizar el valor del portfolio'},
         {v:'income',       label:'Ingresos pasivos',     desc:'Dividendos y flujo de caja'},
         {v:'preservation', label:'Preservación',          desc:'Mantener el poder adquisitivo'},
+      ]
+    },
+    {
+      // Cuarta pregunta: sin esto Plan de Capital arrancaba en blanco con
+      // $1000/mes fijo, un numero arbitrario que no salia de ninguna parte.
+      // Los tramos estan pensados para LATAM: el escalon bajo es el caso real.
+      key:'monthly',
+      q:'¿Cuánto capital planeas destinar cada mes?',
+      opts:[
+        {v:'0',    label:'Aún no lo defino', desc:'Prefiero ver primero el marco de cálculo'},
+        {v:'250',  label:'Hasta $250',       desc:'Aportes pequeños y constantes'},
+        {v:'1000', label:'$250 – $1.000',    desc:'Aporte mensual regular'},
+        {v:'3000', label:'$1.000 – $5.000',  desc:'Aporte mensual alto'},
+        {v:'8000', label:'Más de $5.000',    desc:'Aporte mensual significativo'},
       ]
     }
   ];
@@ -8064,6 +8097,15 @@ function trialBanner(){
 var ONBOARD={step:0,shown:false};
 
 function showOnboarding(){
+  // El perfil se pide ANTES del recorrido, no dentro: mezclar captura con tour
+  // aumenta el abandono, y el resto de pasos puede referirse a "tu perfil".
+  // Saltable: si el usuario lo cierra, el tour sigue igual.
+  var pf=(typeof perfilInversor==='function')?perfilInversor():null;
+  if(!pf && !localStorage.getItem('mv_perfil_omitido')){
+    try{ localStorage.setItem('mv_perfil_omitido','1'); }catch(e){}
+    showRiskProfile(function(){ showOnboarding(); });
+    return;
+  }
   var steps=[
     {icon:'💼',title:'Tu portfolio, siempre actualizado',
      desc:'Agrega tus posiciones y FinanceOS Invest las conecta con precios de Yahoo Finance. Ve tu P&L con datos de mercado actualizados.',
@@ -8738,19 +8780,54 @@ function renderDivs(){
 // ── PLAN DE CAPITAL (Pro) ────────────────────────────────────────
 // Guía educativa de distribución de capital mensual por ETF, con escalera de
 // tramos según distancia a SMA20/50/100/200 y condición de RSI. Referencial.
-var CAP_LADDER=[
-  {sma:20,  pct:0.10, label:'SMA20'},
-  {sma:50,  pct:0.15, label:'SMA50'},
-  {sma:100, pct:0.25, label:'SMA100'},
-  {sma:200, pct:0.50, label:'SMA200'}
-];
+// La escalera era fija e identica para todo usuario, aunque el wizard de perfil
+// lleva capturando 'horizon' desde siempre sin que nadie lo leyera. Ahora el
+// reparto depende del horizonte declarado: es aritmetica de distribucion, no
+// consejo. Horizonte corto reparte parejo entre las cuatro medias; horizonte
+// largo concentra la mitad en la SMA200.
+var CAP_LADDERS={
+  short: [{sma:20,pct:0.25},{sma:50,pct:0.25},{sma:100,pct:0.25},{sma:200,pct:0.25}],
+  mid:   [{sma:20,pct:0.15},{sma:50,pct:0.20},{sma:100,pct:0.25},{sma:200,pct:0.40}],
+  long:  [{sma:20,pct:0.10},{sma:50,pct:0.15},{sma:100,pct:0.25},{sma:200,pct:0.50}]
+};
+function capLadder(){
+  var pf=(typeof perfilInversor==='function')?perfilInversor():null;
+  var h=(pf&&pf.horizon)||'long';
+  var base=CAP_LADDERS[h]||CAP_LADDERS.long;
+  return base.map(function(t){return {sma:t.sma, pct:t.pct, label:'SMA'+t.sma};});
+}
+// Se conserva el nombre para no romper referencias existentes.
+var CAP_LADDER=capLadder();
+// Carga la cesta de ejemplo del perfil en el plan. Editable despues: solo
+// rellena los valores de partida para que la herramienta tenga con que calcular.
+function capUsarCesta(json){
+  try{
+    var cesta=JSON.parse(json);
+    S.capitalPlan.tickers=cesta.map(function(c){return {t:c[0], pct:c[1]};});
+    var pf=(typeof perfilInversor==='function')?perfilInversor():null;
+    if(pf&&pf.monthly&&parseFloat(pf.monthly)>0) S.capitalPlan.monthly=parseFloat(pf.monthly);
+    _capSave();
+    showToast('Punto de partida cargado — edítalo a tu gusto');
+    loadCapitalData();
+  }catch(e){ showToast('No se pudo cargar el punto de partida','error'); }
+}
 function _smaLast(closes,n){ if(closes.length<n) return null; var arr=TI.sma(closes,n); for(var i=arr.length-1;i>=0;i--){ if(arr[i]!=null) return arr[i]; } return null; }
 
 // ── Plan de Capital: gestión de tickers ─────────────────────────────
 function _capKey(){ return 'cap_tk_'+(S.user&&S.user.id||'demo'); }
-function _capSave(){ try{localStorage.setItem(_capKey(),JSON.stringify(S.capitalPlan.tickers));}catch(e){} }
+function _capSave(){ try{
+  localStorage.setItem(_capKey(),JSON.stringify(S.capitalPlan.tickers));
+  localStorage.setItem(_capKey()+'_m',String(S.capitalPlan.monthly||0));  // no se guardaba: volvia a 1000 en cada recarga
+}catch(e){} }
 function _capLoad(){
   try{
+    var m=localStorage.getItem(_capKey()+'_m');
+    if(m&&parseFloat(m)>0) S.capitalPlan.monthly=parseFloat(m);
+    else {
+      // sin valor guardado, se toma el del perfil antes que el 1000 fijo
+      var pf=(typeof perfilInversor==='function')?perfilInversor():null;
+      if(pf&&pf.monthly&&parseFloat(pf.monthly)>0) S.capitalPlan.monthly=parseFloat(pf.monthly);
+    }
     var raw=localStorage.getItem(_capKey());
     if(raw){ S.capitalPlan.tickers=JSON.parse(raw); return; }
   }catch(e){}
@@ -8869,7 +8946,7 @@ function renderCapital(){
     var rsi=r.rsi, rsiOk=rsi>=30&&rsi<=45;
     var rsiColor=rsiOk?'var(--grn)':(rsi<30?'var(--amber)':'var(--text3)');
     var reached=0;
-    var tramos=CAP_LADDER.map(function(t){
+    var tramos=capLadder().map(function(t){
       var smaV=r.smas[t.sma];
       var amt=etfMonthly*t.pct;
       var active=smaV!=null&&r.price<=smaV;
@@ -8892,13 +8969,57 @@ function renderCapital(){
 
   var tableHtml='';
   if(!tickers.length){
-    tableHtml='<div style="text-align:center;padding:32px 20px;color:var(--text3)">'+
-      '<div style="font-size:11px">Agrega tickers arriba para comenzar.</div></div>';
+    // Antes: pantalla en blanco con 'Agrega tickers arriba'. Ahora se ofrece un
+    // punto de partida derivado del perfil declarado, o la creacion del perfil
+    // si aun no existe. La cesta es EDITABLE y se enuncia como ejemplo de
+    // referencia, no como seleccion recomendada: el proyecto prohibe lenguaje
+    // de asesoria financiera.
+    var pf=(typeof perfilInversor==='function')?perfilInversor():null;
+    if(!pf){
+      tableHtml='<div style="text-align:center;padding:34px 20px;border:1px dashed var(--border2);border-radius:12px">'+
+        '<div style="font-size:14px;font-weight:600;color:var(--bright);margin-bottom:6px">Aún no tienes un punto de partida</div>'+
+        '<div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6;max-width:440px;margin-left:auto;margin-right:auto">'+
+        'Si respondes cuatro preguntas sobre tu tolerancia, horizonte y aporte mensual, la herramienta puede cargar una cesta de ejemplo y un aporte base con los que empezar a calcular.</div>'+
+        '<button class="btn-big" onclick="showRiskProfile(function(){renderCapital();})">Crear mi perfil de inversor →</button>'+
+        '</div>';
+    } else {
+      var cestas={
+        '1':[['BIL',40],['BND',30],['VYM',20],['GLD',10]],
+        '2':[['BND',30],['SCHD',30],['VTI',30],['GLD',10]],
+        '3':[['VTI',45],['VXUS',20],['BND',20],['GLD',15]],
+        '4':[['VTI',40],['QQQ',30],['VXUS',20],['GLD',10]],
+        '5':[['QQQ',45],['VTI',35],['VXUS',20]]
+      };
+      var notas={
+        '1':'Declaraste baja tolerancia a fluctuaciones. El ejemplo reparte el cálculo entre renta fija e índices amplios, y distribuye los tramos de forma pareja entre las cuatro medias.',
+        '2':'Declaraste tolerancia limitada a fluctuaciones. El ejemplo combina renta fija con índices amplios y concentra los tramos en las medias más largas.',
+        '3':'Declaraste tolerancia intermedia. El ejemplo se apoya en índices amplios diversificados, con los tramos repartidos a lo largo de las cuatro medias.',
+        '4':'Declaraste tolerancia alta a fluctuaciones. El ejemplo concentra el cálculo en índices de renta variable y carga los tramos hacia las medias más largas.',
+        '5':'Declaraste la máxima tolerancia a fluctuaciones. El ejemplo usa exclusivamente índices de renta variable y concentra la mitad del tramo en la SMA200.'
+      };
+      var cesta=cestas[String(pf.risk)]||cestas['3'];
+      var hz={short:'menos de 2 años',mid:'2 a 7 años',long:'más de 7 años'}[pf.horizon]||'más de 7 años';
+      var rep={short:'de forma pareja entre las cuatro medias',mid:'con mayor peso en las medias largas',long:'concentrando la mitad en la SMA200'}[pf.horizon]||'concentrando la mitad en la SMA200';
+      tableHtml='<div style="padding:20px;border:1px solid var(--border);border-radius:12px;background:var(--card2)">'+
+        '<div style="font-size:13px;font-weight:700;color:var(--bright);margin-bottom:8px">Punto de partida según tus respuestas</div>'+
+        '<div style="font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:14px">'+
+        'Esta cesta y estos porcentajes son un <b>ejemplo de referencia</b> construido a partir del perfil que declaraste, únicamente para que la herramienta tenga valores con los que calcular. '+
+        'No es una recomendación ni una selección de activos sugerida para ti. Edita, elimina o reemplaza cualquier línea antes de calcular.</div>'+
+        '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6;margin-bottom:14px">'+
+        esc(notas[String(pf.risk)]||notas['3'])+'<br>'+
+        'Con horizonte declarado de <b>'+hz+'</b>, la escalera reparte los tramos '+rep+'.'+
+        '</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">'+
+        cesta.map(function(c){return '<span class="wtag" style="cursor:default">'+c[0]+' '+c[1]+'%</span>';}).join('')+
+        '</div>'+
+        '<button class="btn-big" onclick="capUsarCesta('+JSON.stringify(JSON.stringify(cesta))+')">Cargar este punto de partida</button>'+
+        '</div>';
+    }
   } else if(results&&results.length){
     var totalSuggested=results.reduce(function(s,r){
       if(r.error||!(r.rsi>=30&&r.rsi<=45)) return s;
       var em=monthly*(r.row.pct/100); var reached=0;
-      CAP_LADDER.forEach(function(t){var sv=r.smas[t.sma]; if(sv!=null&&r.price<=sv) reached+=em*t.pct;});
+      capLadder().forEach(function(t){var sv=r.smas[t.sma]; if(sv!=null&&r.price<=sv) reached+=em*t.pct;});
       return s+reached;
     },0);
     tableHtml='<div class="tw"><table class="fos-table"><thead><tr>'+
