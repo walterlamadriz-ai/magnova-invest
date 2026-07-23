@@ -2403,21 +2403,28 @@ async function refreshLive(tickers,manual){
     var isVercel=_USE_EDGE;
 
     if(isVercel){
-      // ONE request for all tickers via our Edge Function
+      // /api/quote recorta a 10 tickers por peticion. Antes se enviaban TODOS
+      // en una sola URL: el servidor devolvia solo los 10 primeros, gotAny se
+      // ponia en true y el fallback nunca corria, asi que del 11 en adelante
+      // ninguna posicion recibia precio (ni valor actual, ni P&L, ni retorno).
+      // Ahora se pide en trozos de 10 y se recorren todos.
       try{
-        var batchRes=await fetchWithTimeout('/api/quote?ticker='+tickers.join(','),6000);
-        var batchData=await batchRes.json();
-        Object.keys(batchData).forEach(function(t){
-          var q=batchData[t];
-          if(q&&q.price){
-            LIVE[t]=q;
-            S.portfolio.forEach(function(h){if(h.t===t)h.cur=q.price;});
-            ALL_SIG.forEach(function(s){if(s.t===t)s.p=q.price;});
-            gotAny=true;
-          }
-        });
-        if(mySignal.aborted) return;
-        if(gotAny) updateLivePricesInDOM();
+        for(var qi=0; qi<tickers.length; qi+=10){
+          if(mySignal.aborted) return;
+          var trozo=tickers.slice(qi, qi+10);
+          var batchRes=await fetchWithTimeout('/api/quote?ticker='+trozo.join(','),6000);
+          var batchData=await batchRes.json();
+          Object.keys(batchData).forEach(function(t){
+            var q=batchData[t];
+            if(q&&q.price){
+              LIVE[t]=q;
+              S.portfolio.forEach(function(h){if(h.t===t)h.cur=q.price;});
+              ALL_SIG.forEach(function(s){if(s.t===t)s.p=q.price;});
+              gotAny=true;
+            }
+          });
+          if(gotAny) updateLivePricesInDOM();
+        }
       }catch(e){if(mySignal.aborted) return;/* fall through to individual fetches */}
     }
 
@@ -4021,6 +4028,23 @@ function screenerRun(){
   });
 }
 
+// Abre el Billing Portal de Stripe. El token va en el cuerpo; el servidor
+// resuelve el customer_id del perfil, el cliente nunca lo maneja.
+async function abrirPortalPago(){
+  var btn=document.getElementById('btn-portal');
+  if(btn){ btn.disabled=true; btn.textContent='Abriendo…'; }
+  try{
+    var sess=await sb.auth.getSession();
+    var tok=sess&&sess.data&&sess.data.session&&sess.data.session.access_token;
+    if(!tok){ showToast('Debes iniciar sesión','error'); return; }
+    var res=await fetch('/api/billing-portal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tok})});
+    var data=await res.json().catch(function(){return {};});
+    if(res.ok&&data.url){ window.location.href=data.url; return; }
+    showToast(data.error||'No se pudo abrir el portal de pago','error');
+  }catch(e){ showToast('Error de conexión','error'); }
+  finally{ if(btn){ btn.disabled=false; btn.textContent='Gestionar o cancelar suscripción'; } }
+}
+
 // ── SETTINGS ───────────────────────────────────────────────────
 function renderSettings(){
   var u=S.user;
@@ -4047,6 +4071,9 @@ function renderSettings(){
     '</div>'+
     (trialInfo?'<div style="margin-top:12px">'+trialInfo+'</div>':'')+
     (u&&u.plan==='free'?'<div style="margin-top:12px"><button class="btn-big" onclick="openModal(\'upgrade\')" style="padding:10px 24px">⚡ Actualizar a Pro — $29.99/mes</button></div>':'')+
+    // Gestionar/cancelar suscripcion via el Billing Portal de Stripe. Solo se
+    // ofrece a quien tiene una suscripcion de pago (pro/teams), no en trial ni free.
+    ((u&&(u.plan==='pro'||u.plan==='teams'))?'<div style="margin-top:12px"><button class="btn" id="btn-portal" onclick="abrirPortalPago()">Gestionar o cancelar suscripción</button><div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:6px">Cambiar tarjeta, ver facturas o cancelar. Se abre el portal seguro de Stripe.</div></div>':'')+
     '</div>'+
 
     // Appearance section
@@ -6519,20 +6546,49 @@ function saveTrade(){
   });
   persistTrades();
 
-  // Auto-update portfolio avg_cost if buy/sell matches existing position
-  if(type==='buy'||type==='sell'){
-    var pos=S.portfolio.find(function(h){return h.t===ticker;});
-    if(pos){
-      var allBuys=S.trades.filter(function(t){return t.ticker===ticker&&t.type==='buy';});
-      if(allBuys.length){
-        pos.cost=allBuys.reduce(function(s,t){return s+t.amount;},0)/allBuys.reduce(function(s,t){return s+t.qty;},0);
-        sbUpdateHolding(pos);persist();
+  // Reconstruir la posicion desde TODAS las operaciones del ticker (buys suman
+  // unidades y coste, sells restan). Antes solo actualizaba el coste de una
+  // posicion YA existente: una compra de un activo nuevo quedaba solo en la
+  // Bitacora y nunca creaba la posicion en el portafolio.
+  var creoPosicion=false;
+  if((type==='buy'||type==='sell')&&ticker){
+    var ops=S.trades.filter(function(t){return t.ticker===ticker;})
+                    .sort(function(a,b){return (a.date||'')<(b.date||'')?-1:1;});
+    var netUds=0, netCoste=0;
+    ops.forEach(function(t){
+      if(t.type==='buy'){ netUds+=(t.qty||0); netCoste+=(t.amount||0); }
+      else if(t.type==='sell'&&netUds>0){
+        var medio=netCoste/netUds;
+        var vend=Math.min(t.qty||0,netUds);
+        netUds-=vend; netCoste-=medio*vend;
       }
+    });
+    var pos=S.portfolio.find(function(h){return h.t===ticker;});
+    if(netUds>0.0000001){
+      var costeMedio=netCoste/netUds;
+      if(pos){
+        pos.sh=netUds; pos.cost=costeMedio;
+        sbUpdateHolding(pos);
+      } else {
+        // posicion nueva: crearla. sbAddHolding devuelve el id real de la DB.
+        var nuevo={id:S.nextId++, t:ticker, type:(rsi&&rsi.tipo)||'Stock', sh:netUds, cost:costeMedio, cur:price||costeMedio};
+        S.portfolio.push(nuevo);
+        creoPosicion=true;
+        if(typeof sbAddHolding==='function'){
+          sbAddHolding(nuevo).then(function(realId){ if(realId){ nuevo.id=realId; persist(); } }).catch(function(){});
+        }
+      }
+      persist();
+    } else if(pos){
+      // se vendio todo: quitar la posicion del portafolio
+      S.portfolio=S.portfolio.filter(function(h){return h.t!==ticker;});
+      if(typeof sbDeleteHolding==='function') sbDeleteHolding(pos.id);
+      persist();
     }
   }
 
   closeModal();
-  showToast('Operación registrada en Bitácora');
+  showToast(creoPosicion?ticker+' agregado a tu portafolio':'Operación registrada en Bitácora');
   setPage("bitacora");
 }
 
