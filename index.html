@@ -4926,7 +4926,7 @@ function renderWatch(){
       '</tr>';
   }).join("");
 
-  var emptyMsg=wl.length===0?'<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:20px;font-family:\'JetBrains Mono\'">Lista vacía — agrega tickers arriba</td></tr>':'';
+  var emptyMsg=wl.length===0?'<tr><td colspan="9" style="text-align:center;color:var(--text3);padding:20px;font-family:\'JetBrains Mono\'">Lista vacía — agrega tickers arriba</td></tr>':'';
 
   var deHeader=isPro
     ?'<th onclick="setPage(\'decision\')" style="cursor:pointer;color:var(--blue)" title="Ver Motor de Análisis completo">🎯 DE Score</th>'
@@ -5300,7 +5300,6 @@ function renderNews(){
       '<span style="font-size:12px;font-weight:700;color:var(--bright);flex:1;font-family:\'JetBrains Mono\',monospace">'+m.t+'</span>'+
       '<span style="font-size:11px;color:var(--text);font-family:\'JetBrains Mono\',monospace;width:54px;text-align:right">'+m.last.toFixed(2)+'</span>'+
       '<span style="font-size:10px;font-weight:700;font-family:\'JetBrains Mono\',monospace;width:50px;text-align:right;color:'+(pos?'var(--grn)':'var(--red)')+'">'+( pos?'+':'')+m.chg.toFixed(2)+'%</span>'+
-      '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;width:36px;text-align:right">'+m.vol+'</span>'+
       '</div>';
   }).join('');
 
@@ -5430,8 +5429,9 @@ function renderNews(){
         '<div class="fos-module-sub">'+new Date().toLocaleDateString("es-CL",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+'</div>'+
       '</div>'+
       '<div style="display:flex;align-items:center;gap:8px">'+
-        (usingStaticNews&&_newsFetched?'<span style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);padding:3px 8px;border-radius:5px">⚠ Modo ejemplo</span>':'')+
-        '<div class="live"><div class="livd"></div>LIVE</div>'+
+        (usingStaticNews
+          ?'<span style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);padding:3px 8px;border-radius:5px">'+(_newsFetched?'⚠ Titulares de ejemplo · sin conexión':'⏳ Cargando titulares reales…')+'</span>'
+          :'<div class="live"><div class="livd"></div>LIVE</div>')+
       '</div>'+
     '</div>'+
 
@@ -8152,8 +8152,7 @@ function radarViewHistory(i){
   renderRadar();
 }
 
-// coachLoad kept for backward compatibility
-function coachLoad(){radarInit();}
+
 
 
 
