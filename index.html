@@ -3909,6 +3909,8 @@ function renderScreenerBody(){
     '<div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start">'+
     '<div>'+
       '<label style="font-size:10px;font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:1px;color:var(--text3);display:block;margin-bottom:5px">Tickers (separados por espacio o coma)</label>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">'+
+      [['ETFs amplios','etf'],['Tecnología','tech'],['Dividendos','dividend'],['Sectores SPDR','sectors'],['Renta fija / oro','safe']].map(function(c){return '<button onclick="scrPreset(\''+c[1]+'\')" style="padding:4px 11px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--card2);color:var(--text2);font-size:11px;cursor:pointer;font-family:\'JetBrains Mono\',monospace;transition:border-color .15s" onmouseover="this.style.borderColor=\'var(--grn)\';this.style.color=\'var(--grn)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--text2)\'">'+c[0]+'</button>';}).join('')+'</div>'+
       '<textarea id="scr-tickers" rows="2" style="width:100%;box-sizing:border-box;background:var(--card3);border:1px solid var(--border);border-radius:8px;color:var(--bright);font-family:\'JetBrains Mono\',monospace;font-size:12px;padding:8px 10px;resize:vertical;outline:none">'+S.screenerTickers+'</textarea>'+
     '</div>'+
     '<button onclick="screenerRun()" class="btn" style="margin-top:22px;padding:9px 20px;font-size:13px;font-weight:600;'+(running?'opacity:.6;pointer-events:none':'')+'">'+(running?'⏳ Analizando...':'▶ Analizar')+'</button>'+
@@ -3968,6 +3970,22 @@ function screenerApplyFilters(){
   renderScreenerBody();
 }
 
+// Presets de categoria: rellenan el screener sin construir un universo de
+// miles de activos (mantiene el foco curado). Aprovecha el motor que ya corre
+// sobre listas de tickers.
+function scrPreset(cat){
+  var sets={
+    etf:     'SPY QQQ VTI VOO IVV VXUS VEA VWO BND SCHD',
+    tech:    'AAPL MSFT NVDA GOOGL META AMZN AMD TSLA AVGO CRM',
+    dividend:'SCHD VYM JNJ PG KO PEP JPM HD VZ ABBV',
+    sectors: 'XLK XLF XLV XLE XLI XLY XLP XLU XLB XLRE',
+    safe:    'BND TLT AGG BIL SHY GLD IAU SLV TIP VTIP'
+  };
+  var v=sets[cat]||'';
+  S.screenerTickers=v;
+  var ta=document.getElementById('scr-tickers'); if(ta) ta.value=v;
+  screenerRun();
+}
 function screenerRun(){
   var tickers=(document.getElementById('scr-tickers')||{}).value||S.screenerTickers;
   S.screenerTickers=tickers.trim();
@@ -4081,6 +4099,13 @@ function renderSettings(){
     '<div><div style="font-size:13px;font-weight:500;color:var(--bright)">Exportar Bitácora</div>'+
     '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">CSV con historial de operaciones</div></div>'+
     '<button class="btn" onclick="exportTradesCSV()">⬇ Exportar</button>'+
+    '</div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:10px">'+
+    '<div><div style="font-size:13px;font-weight:500;color:var(--bright)">Copia de seguridad completa</div>'+
+    '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Todo en un archivo .json — restaurable</div></div>'+
+    '<div style="display:flex;gap:6px"><button class="btn" onclick="exportBackup()">⬇ Exportar</button>'+
+    '<button class="btn" onclick="document.getElementById(\'backup-file\').click()">⬆ Importar</button>'+
+    '<input type="file" id="backup-file" accept="application/json,.json" style="display:none" onchange="importBackup(this.files[0])"></div>'+
     '</div>'+
     '</div>'+
     '</div>'+
@@ -7150,6 +7175,46 @@ function sendFromInput(){
 
 
 // ── EXPORT CSV ──────────────────────────────────────────────────────────────
+// Copia de seguridad completa: todo vive en localStorage, un borrado de
+// navegador lo pierde todo. Serializa lo esencial y permite restaurarlo.
+function exportBackup(){
+  var data={
+    _v:1, _fecha:new Date().toISOString(),
+    portfolio:S.portfolio, trades:S.trades, watchlist:S.watchlist,
+    capitalPlan:S.capitalPlan, capital:S.capital,
+    profile:(RADAR&&RADAR.profile)||null,
+    rebalTargets:(REBAL&&REBAL.targets)||{}
+  };
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='financeos-invest-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click(); URL.revokeObjectURL(a.href);
+  showToast('Copia de seguridad descargada');
+}
+function importBackup(file){
+  if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var d=JSON.parse(e.target.result);
+      if(!d||typeof d!=='object') throw new Error('formato');
+      if(Array.isArray(d.portfolio)) S.portfolio=d.portfolio;
+      if(Array.isArray(d.trades)) S.trades=d.trades;
+      if(Array.isArray(d.watchlist)) S.watchlist=d.watchlist;
+      if(d.capitalPlan) S.capitalPlan=d.capitalPlan;
+      if(typeof d.capital==='number') S.capital=d.capital;
+      if(d.profile&&typeof radarSaveProfile==='function') radarSaveProfile(d.profile);
+      if(d.rebalTargets&&typeof REBAL==='object'){ REBAL.targets=d.rebalTargets; if(typeof rebalSaveTargets==='function') rebalSaveTargets(); }
+      if(typeof persist==='function') persist();
+      if(typeof persistTrades==='function') persistTrades();
+      if(typeof _capSave==='function') _capSave();
+      showToast('Copia restaurada correctamente');
+      renderMain();
+    }catch(err){ showToast('Archivo no válido','error'); }
+  };
+  reader.readAsText(file);
+}
 function exportCSV(){
   var port=S.portfolio;
   var totM=port.reduce(function(s,h){return s+h.sh*h.cur;},0);
@@ -9116,6 +9181,9 @@ function renderCapital(){
   if(!S.capitalPlan.tickers) _capLoad();
   var tickers=S.capitalPlan.tickers||[];
   var monthly=S.capitalPlan.monthly||0;
+  var cadencia=S.capitalPlan.cadencia||"mensual";
+  var divisor={mensual:1,quincenal:26/12,semanal:52/12}[cadencia];
+  var porAporte=monthly/divisor;
   var results=S.capitalResults;
   var loading=S.capitalLoading;
   var totalPct=tickers.reduce(function(s,x){return s+x.pct;},0);
@@ -9259,7 +9327,11 @@ function renderCapital(){
     '<div><div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:5px">Capital mensual (USD)</div>'+
     '<input type="number" id="cap-monthly" value="'+monthly+'" min="0" step="50" style="width:150px;background:var(--card3);border:1px solid var(--border);border-radius:8px;color:var(--bright);font-family:\'JetBrains Mono\',monospace;font-size:16px;font-weight:700;padding:8px 12px;outline:none"></div>'+
     '<button onclick="loadCapitalData()" class="btn-big" style="padding:9px 20px;font-size:13px'+(loading?';opacity:.6;pointer-events:none':'')+'">'+(loading?'<span class="spin-sm"></span> Calculando...':'📊 Calcular distribución')+'</button>'+
+    '<div><div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:5px">Cadencia</div>'+
+    '<div style="display:inline-flex;background:var(--card3);border:1px solid var(--border);border-radius:8px;padding:2px">'+
+    ['mensual','quincenal','semanal'].map(function(c){var a=cadencia===c;return '<button onclick="S.capitalPlan.cadencia=\''+c+'\';renderCapital()" style="padding:6px 12px;border:none;border-radius:6px;font-family:\'JetBrains Mono\',monospace;font-size:11px;cursor:pointer;text-transform:capitalize;background:'+(a?'var(--grn-bg)':'transparent')+';color:'+(a?'var(--grn)':'var(--text3)')+';font-weight:'+(a?'700':'400')+'">'+c+'</button>';}).join('')+'</div></div>'+
     '</div>'+
+    (cadencia!=='mensual'?'<div style="font-size:11px;color:var(--text2);font-family:\'JetBrains Mono\',monospace;margin-bottom:14px">\u2248 $'+fmt(Math.round(porAporte))+' por aporte '+cadencia+'. Repartir el aporte en tramos m\u00e1s frecuentes es una t\u00e9cnica de promediado (DCA); no altera el c\u00e1lculo de tramos por media m\u00f3vil.</div>':'')+
     // Fila 2: editor de tickers
     '<div style="border-top:1px solid var(--border);padding-top:12px">'+
     '<div style="display:flex;align-items:center;margin-bottom:8px">'+
