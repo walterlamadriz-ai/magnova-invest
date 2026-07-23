@@ -7645,8 +7645,58 @@ function calcHealthScore(){
 // ── RISK PROFILE MODAL ────────────────────────────────────────────
 function showRiskProfile(onDone){
   var mr=document.getElementById('mroot');
+  // 4 preguntas -> 9. Antes eran casi todo tolerancia y CERO capacidad, que es
+  // lo que da credibilidad regulatoria (estilo MiFID ligero) y hace que el
+  // resultado se sienta calculado y no elegido. Se agrupan en bloques visibles:
+  // capacidad objetiva, tu como inversor, y el aporte (operativo).
+  // Lenguaje neutro: 'declaras/estimas', nunca 'deberías/te conviene'.
   var q=[
+    // ── Bloque A · Capacidad financiera (nuevas) ──
     {
+      block:'Capacidad financiera',
+      key:'age',
+      q:'¿En qué rango de edad estás?',
+      opts:[
+        {v:'young',label:'18 – 30',desc:'Mayor margen temporal por delante'},
+        {v:'adult',label:'31 – 45',desc:'Etapa de acumulación'},
+        {v:'mature',label:'46 – 60',desc:'Horizonte más acotado'},
+        {v:'senior',label:'60+',desc:'Menor margen temporal'},
+      ]
+    },
+    {
+      block:'Capacidad financiera',
+      key:'emergency',
+      q:'Ante un gasto inesperado grande, ¿podrías cubrirlo sin tocar lo invertido?',
+      opts:[
+        {v:'yes',label:'Sí, tengo fondo de emergencia',desc:'Cubriría varios meses de gastos'},
+        {v:'partial',label:'Parcialmente',desc:'Cubriría parte, tocaría algo de lo invertido'},
+        {v:'no',label:'No',desc:'Tendría que retirar lo invertido'},
+      ]
+    },
+    {
+      block:'Capacidad financiera',
+      key:'income_stability',
+      q:'¿Cómo describes la estabilidad de tus ingresos?',
+      opts:[
+        {v:'stable',label:'Estables y predecibles',desc:'Ingreso fijo mes a mes'},
+        {v:'variable',label:'Variables',desc:'Fluctúan según el mes o la actividad'},
+        {v:'uncertain',label:'Inciertos',desc:'Difíciles de anticipar'},
+      ]
+    },
+    {
+      block:'Capacidad financiera',
+      key:'wealth_pct',
+      q:'¿Qué parte de tu patrimonio piensas destinar a esto?',
+      opts:[
+        {v:'low',label:'Menos del 10%',desc:'Una porción menor del total'},
+        {v:'mid',label:'10 – 30%',desc:'Una parte relevante'},
+        {v:'high',label:'30 – 60%',desc:'Una parte mayoritaria'},
+        {v:'most',label:'Más del 60%',desc:'La mayor parte de tu patrimonio'},
+      ]
+    },
+    // ── Bloque B · Tú como inversor ──
+    {
+      block:'Tú como inversor',
       key:'risk',
       q:'¿Cuál es tu tolerancia al riesgo como inversor?',
       opts:[
@@ -7658,6 +7708,7 @@ function showRiskProfile(onDone){
       ]
     },
     {
+      block:'Tú como inversor',
       key:'horizon',
       q:'¿Cuál es tu horizonte de inversión?',
       opts:[
@@ -7667,6 +7718,7 @@ function showRiskProfile(onDone){
       ]
     },
     {
+      block:'Tú como inversor',
       key:'goal',
       q:'¿Cuál es tu objetivo principal?',
       opts:[
@@ -7676,9 +7728,18 @@ function showRiskProfile(onDone){
       ]
     },
     {
-      // Cuarta pregunta: sin esto Plan de Capital arrancaba en blanco con
-      // $1000/mes fijo, un numero arbitrario que no salia de ninguna parte.
-      // Los tramos estan pensados para LATAM: el escalon bajo es el caso real.
+      block:'Tú como inversor',
+      key:'knowledge',
+      q:'¿Cómo describirías tu familiaridad con instrumentos como ETFs, RSI o medias móviles?',
+      opts:[
+        {v:'learning',label:'Los estoy aprendiendo',desc:'Empezando a familiarizarme'},
+        {v:'basic',label:'Los entiendo a nivel básico',desc:'Conozco los conceptos'},
+        {v:'fluent',label:'Los uso con soltura',desc:'Trabajo con ellos habitualmente'},
+      ]
+    },
+    // ── Bloque C · Aporte (operativo, alimenta Plan de Capital) ──
+    {
+      block:'Tu aporte',
       key:'monthly',
       q:'¿Cuánto capital planeas destinar cada mes?',
       opts:[
@@ -7697,10 +7758,16 @@ function showRiskProfile(onDone){
   function renderStep(){
     var qd=q[step];
     var prog=Math.round((step/q.length)*100);
+    // numero de bloque para el eyebrow (1·Capacidad, 2·Inversor, 3·Aporte)
+    var bloques=[]; q.forEach(function(x){ if(bloques.indexOf(x.block)<0) bloques.push(x.block); });
+    var nBloque=bloques.indexOf(qd.block)+1;
     mr.innerHTML='<div class="overlay" onclick=""><div class="modal" style="max-width:460px" onclick="event.stopPropagation()">'+
-      '<div style="height:3px;background:var(--border);border-radius:2px;margin-bottom:22px;overflow:hidden">'+
-      '<div style="height:100%;width:'+prog+'%;background:var(--amber);border-radius:2px;transition:.4s"></div></div>'+
-      '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px">Perfil de inversor · '+(step+1)+' de '+q.length+'</div>'+
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">'+
+      '<div style="flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden">'+
+      '<div style="height:100%;width:'+prog+'%;background:var(--grn);border-radius:2px;transition:.4s"></div></div>'+
+      '<span style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--text3);white-space:nowrap">'+(step+1)+'/'+q.length+' respondidas</span>'+
+      '</div>'+
+      '<div style="font-size:9px;color:var(--grn);font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Bloque '+nBloque+' · '+qd.block+'</div>'+
       '<h2 style="font-family:\'Fraunces\',Georgia,serif;font-weight:600;font-size:21px;line-height:1.2;letter-spacing:-.01em;margin-bottom:20px;color:var(--bright)">'+qd.q+'</h2>'+
       '<div style="display:flex;flex-direction:column;gap:8px">'+
       qd.opts.map(function(o){
@@ -7715,6 +7782,7 @@ function showRiskProfile(onDone){
       (step>0?'<button class="btn" onclick="profilePrev()">← Anterior</button>':'')+
       '<button class="btn-big" onclick="profileNext()" '+(profile[qd.key]?'':'disabled')+'>'+(step===q.length-1?'Guardar perfil →':'Siguiente →')+'</button>'+
       '</div>'+
+      (step===q.length-1?'<div style="margin-top:14px;font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6;border-top:1px solid var(--border);padding-top:10px">Este perfil es orientativo y sirve para ajustar los cálculos de la herramienta. No constituye asesoramiento financiero ni una evaluación de idoneidad.</div>':'')+
       '</div></div>';
   }
 
