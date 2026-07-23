@@ -6082,6 +6082,7 @@ function renderModal(){
   else if(S.modal==="delpos") mDel(mr);
   else if(S.modal==="addtrade") mTrade(mr);
   else if(S.modal==="score-info") mScoreInfo(mr);
+  else if(S.modal==="como-calcula") mComoCalcula(mr);
   else if(S.modal==="addalert") mAlert(mr);
 }
 
@@ -6327,6 +6328,57 @@ function mTrade(mr){
     '</div></div>';
   setTimeout(function(){var el=document.getElementById("tr_ticker");if(el)el.focus();},100);
 }
+
+function mComoCalcula(mr){
+  var cfg=COMO_CALCULA[S.comoCalculaKey]||COMO_CALCULA['score'];
+  mr.innerHTML='<div class="overlay" onclick="closeModal()">'+
+    '<div class="modal" onclick="event.stopPropagation()" style="max-width:540px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'+
+    '<h2 style="margin:0;font-family:\'Fraunces\',Georgia,serif;font-weight:600;font-size:19px">'+cfg.titulo+'</h2>'+
+    '<button onclick="closeModal()" style="background:transparent;border:none;color:var(--text3);font-size:18px;cursor:pointer" aria-label="Cerrar"><span aria-hidden="true">\u2715</span></button>'+
+    '</div>'+
+    '<p style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:16px">'+cfg.intro+'</p>'+
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">'+
+    cfg.rows.map(function(r){
+      return '<div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px 14px">'+
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">'+
+        '<span style="font-family:\'JetBrains Mono\',monospace;font-size:12px;font-weight:700;color:var(--bright);min-width:80px">'+r.factor+'</span>'+
+        '<span style="font-size:10px;padding:2px 8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);border-radius:4px;color:var(--blue);font-family:\'JetBrains Mono\',monospace">'+r.pts+'</span>'+
+        '</div>'+
+        '<p style="font-size:11px;color:var(--text2);margin:0;line-height:1.5">'+r.desc+'</p>'+
+        '</div>';
+    }).join('')+
+    '</div>'+
+    '<div style="padding:10px 14px;background:rgba(255,255,255,.03);border-radius:7px;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);line-height:1.6">'+cfg.nota+'</div>'+
+    '</div></div>';
+}
+var COMO_CALCULA={
+  health:{
+    titulo:'\u00bfC\u00f3mo se calcula el Health Score?',
+    intro:'Es un diagn\u00f3stico t\u00e9cnico de TU cartera (0\u2013100). No mide si vas a ganar; mide qu\u00e9 tan equilibrada y s\u00f3lida est\u00e1 su estructura hoy.',
+    rows:[
+      {factor:'Diversificaci\u00f3n',pts:'HHI',desc:'\u00cdndice Herfindahl sobre los pesos: cuanto m\u00e1s repartido el capital, mayor score. Una sola posici\u00f3n dominante lo baja.'},
+      {factor:'Momentum',pts:'% verde',desc:'Proporci\u00f3n de posiciones por encima de su coste. Refleja el estado actual del conjunto, no una predicci\u00f3n.'},
+      {factor:'Riesgo',pts:'concentraci\u00f3n',desc:'Penaliza tener demasiado peso en un solo activo o sector. Cuanto m\u00e1s concentrado, m\u00e1s riesgo idiosincr\u00e1tico.'},
+      {factor:'RSI cartera',pts:'promedio',desc:'RSI medio de las posiciones. Valores extremos (muy alto o muy bajo) restan; la zona media suma.'},
+      {factor:'Valoraci\u00f3n',pts:'sesgo',desc:'Balance entre activos t\u00e9cnicamente altos y bajos dentro de la cartera.'}
+    ],
+    nota:'Es una lectura de contexto sobre tu cartera, no una recomendaci\u00f3n de compra o venta.'
+  },
+  escalera:{
+    titulo:'\u00bfC\u00f3mo se reparte el aporte por medias?',
+    intro:'El aporte mensual se divide en tramos seg\u00fan qu\u00e9 tan por debajo de sus medias m\u00f3viles est\u00e1 cada activo. Comprar m\u00e1s cuando el precio est\u00e1 bajo su media es la l\u00f3gica del promediado por costo (DCA).',
+    rows:[
+      {factor:'SMA20',pts:'tramo corto',desc:'Media de 20 d\u00edas: reacciona r\u00e1pido. Si el precio est\u00e1 por debajo, se activa este tramo. Pesa menos en perfiles de horizonte largo.'},
+      {factor:'SMA50',pts:'tramo medio',desc:'Media de 50 d\u00edas: tendencia intermedia.'},
+      {factor:'SMA100',pts:'tramo largo',desc:'Media de 100 d\u00edas.'},
+      {factor:'SMA200',pts:'tramo base',desc:'Media de 200 d\u00edas: la tendencia de fondo. Concentra la mitad del tramo en horizontes largos, porque un precio bajo su SMA200 es la se\u00f1al de descuento m\u00e1s conservadora.'},
+      {factor:'RSI 30\u201345',pts:'zona activa',desc:'El tramo solo se activa si el RSI est\u00e1 en 30\u201345: sobreventa moderada. Evita aportar de m\u00e1s cuando el activo ya viene muy comprado.'}
+    ],
+    nota:'El reparto por medias es un marco de c\u00e1lculo, no una instrucci\u00f3n de compra. La decisi\u00f3n de asignar capital es exclusiva del usuario.'
+  }
+};
+function abrirComoCalcula(key){ S.comoCalculaKey=key; openModal('como-calcula'); }
 
 function mScoreInfo(mr){
   var rows=[
@@ -8099,6 +8151,7 @@ function renderRadar(){
     kpi('Momentum',health.subs.mom+'%','Posiciones en verde','g')+
     kpi('Valoración',health.subs.val+'/100','indicador alto/bajo','n')+
     '</div>'+
+    '<div style="margin:-6px 0 16px"><button onclick="abrirComoCalcula(\'health\')" style="background:none;border:none;color:var(--blue);font-size:11px;cursor:pointer;padding:0;font-family:\'JetBrains Mono\',monospace">\u00bfC\u00f3mo se calcula? \u2192</button></div>'+
 
     // Two column layout
     '<div class="resp2" style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start">'+
@@ -9130,7 +9183,7 @@ function renderCapital(){
 
   document.getElementById('main').innerHTML=
     '<div class="fos-module-header"><div><div class="fos-module-crumb">Pro · Plan de Capital</div><div class="fos-module-title">Plan de Capital</div>'+
-    '<div class="fos-module-sub">Distribución referencial del capital mensual según condiciones de mercado (SMA + RSI)</div></div></div>'+
+    '<div class="fos-module-sub">Distribución referencial del capital mensual según condiciones de mercado (SMA + RSI)</div></div>'+'<button onclick="abrirComoCalcula(\'escalera\')" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--blue);font-size:10px;cursor:pointer;padding:5px 10px;font-family:\'JetBrains Mono\',monospace;align-self:flex-start">\u00bfC\u00f3mo se reparte? \u2192</button></div>'+
 
     '<div class="fos-card" style="padding:16px;margin-bottom:16px">'+
     // Fila 1: capital mensual + calcular
