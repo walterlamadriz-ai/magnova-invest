@@ -11,8 +11,8 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net"/>
 <link rel="preconnect" href="https://nelwgbcddwiaimzbcuas.supabase.co"/>
 <!-- Non-blocking font load -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" media="print" onload="this.media='all'"/>
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Share+Tech+Mono&display=swap"/></noscript>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Share+Tech+Mono&display=swap" media="print" onload="this.media='all'"/>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Share+Tech+Mono&display=swap"/></noscript>
 <!-- SEO & GEO -->
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
@@ -1519,9 +1519,13 @@ tr:last-child td { border-bottom: none; }
 .fos-score--g { background:rgba(61,190,122,.15);color:var(--grn);border:1px solid rgba(61,190,122,.3); }
 .fos-score--a { background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25); }
 .fos-score--r { background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25); }
-.fos-module-header { display: flex; align-items: flex-start; justify-content: space-between; padding:24px 28px 20px; gap:16px; flex-wrap: wrap; }
-.fos-module-title { font-size: 24px; font-weight: 700; color: var(--bright); margin:0 0 4px; line-height: 1.1; letter-spacing: -.5px; }
-.fos-module-crumb { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); margin-bottom:6px; }
+.fos-module-header { display: flex; align-items: flex-start; justify-content: space-between; padding:var(--sp-16) 28px var(--sp-6); gap:16px; flex-wrap: wrap; }
+/* Serif display SOLO en el titulo de modulo. El contraste serif-title /
+   sans-body / mono-datos es lo que da jerarquia de tres niveles y evita que la
+   app lea como "dashboard tecnico". Fraunces ya es fuente de marca (la landing). */
+.fos-module-title { font-family: 'Fraunces', Georgia, serif; font-size: 27px; font-weight: 600; color: var(--bright); margin:0 0 var(--sp-3); line-height: 1.12; letter-spacing: -.01em; }
+.fos-module-title em { font-style: italic; }
+.fos-module-crumb { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom:var(--sp-3); }
 .fos-module-sub { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); margin:0; line-height: 1.5; }
 /* ── DASHBOARD v2 ── */
 .dash-wrap { padding:20px 24px; }
@@ -7645,7 +7649,7 @@ function showRiskProfile(onDone){
       '<div style="height:3px;background:var(--border);border-radius:2px;margin-bottom:22px;overflow:hidden">'+
       '<div style="height:100%;width:'+prog+'%;background:var(--amber);border-radius:2px;transition:.4s"></div></div>'+
       '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px">Perfil de inversor · '+(step+1)+' de '+q.length+'</div>'+
-      '<h2 style="font-size:16px;margin-bottom:18px;color:var(--bright)">'+qd.q+'</h2>'+
+      '<h2 style="font-family:\'Fraunces\',Georgia,serif;font-weight:600;font-size:21px;line-height:1.2;letter-spacing:-.01em;margin-bottom:20px;color:var(--bright)">'+qd.q+'</h2>'+
       '<div style="display:flex;flex-direction:column;gap:8px">'+
       qd.opts.map(function(o){
         var sel=profile[qd.key]===o.v;
