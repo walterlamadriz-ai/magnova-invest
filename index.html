@@ -173,14 +173,20 @@
 /* ── TOKENS ── */
 :root {
   /* Colores — modo claro (idéntico a FinanceOS light) */
-  --grn:       #1a6b4a;
-  /* Verde para superficies solidas que llevan texto blanco. En claro coincide
-     con --grn; en oscuro --grn es brillante (#22c55e) y el blanco encima solo
-     alcanza 2.28:1, asi que ahi diverge. */
-  --grn-solid: #1a6b4a;
-  --grn-bg:    #e8f5ef;
-  --grn-lt:    #d0eddf;
-  --grn-d:     #145538;
+  /* ── Marca: azul tinta ───────────────────────────────────────────────
+     Era verde, el mismo hex que la ganancia. Compartir color con la semantica
+     hacia que el color no dijera nada: boton y "+$400" eran identicos. Verde y
+     rojo quedan reservados a resultado (--pos/--neg), y la marca se mueve a un
+     hue que no compite con el P&L. Los nombres --grn* se conservan a proposito:
+     renombrar 260 usos anadiria riesgo sin cambiar nada visual. */
+  --grn:       #1e3a5f;
+  /* Superficies solidas con texto blanco encima. En claro coincide con --grn;
+     en oscuro --grn es claro y el blanco encima no llegaria a AA, asi que ahi
+     diverge. */
+  --grn-solid: #1e3a5f;
+  --grn-bg:    #eaf0f7;
+  --grn-lt:    #cfdeee;
+  --grn-d:     #142a44;
 
   --red:       #c0392b;
   --red-bg:    #fdf0ee;
@@ -266,11 +272,11 @@
 
 /* ── DARK MODE ── */
 [data-theme="dark"] {
-  --grn:       #22c55e;
-  --grn-solid: #177a4a; /* blanco encima = 5.36:1 (sobre --grn seria 2.28:1) */
-  --grn-bg:    #052e16;
-  --grn-lt:    #14532d;
-  --grn-d:     #4fd48a;
+  --grn:       #7ab0ec;
+  --grn-solid: #2c5c94; /* blanco encima = 5.6:1 (sobre --grn seria ~2:1) */
+  --grn-bg:    #0d1b2b;
+  --grn-lt:    #17304d;
+  --grn-d:     #a8ccf5;
 
   --red:       #f87171;
   --red-bg:    #2a120f;
