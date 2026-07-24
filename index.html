@@ -415,7 +415,7 @@ body.no-auth .main { margin-left:0 !important; margin-top:0 !important; }
   min-height: 100vh; min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding-bottom:48px;
+  padding-bottom: calc(30px + var(--sp-4));   /* alto de la franja de aviso fija */
 }
 
 /* ── PAGE HEADER ── */
@@ -951,15 +951,16 @@ tr:last-child td { border-bottom: none; }
 }
 .skel-line {
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--card3) 25%, var(--card2) 50%, var(--card3) 75%);
+  background: linear-gradient(90deg, var(--card3) 25%, var(--card4) 50%, var(--card3) 75%);
   background-size: 800px 100%;
   animation: skel-shimmer 1.4s ease-in-out infinite;
 }
 .skel-card {
-  background: var(--card2);
-  border: 1px solid var(--border);
+  background: var(--card);
+  border: 1px solid var(--border2);
   border-radius: 12px;
   padding:14px 16px;
+  box-shadow: var(--shadow-sm);
 }
 /* ── DISCLAIMER LEGAL ── */
 .disclaimer-bar {
@@ -968,13 +969,16 @@ tr:last-child td { border-bottom: none; }
   left: var(--sb-w);
   right: 0;
   z-index: 200;
+  height: 30px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
   background: var(--amber-bg);
   border-top: 0.5px solid rgba(180,83,9,.15);
-  padding:8px 28px;
+  padding: 0 28px;
   font-size: 10px;
   color: var(--amber);
   font-family: 'JetBrains Mono', monospace;
-  line-height: 1.5;
 }
 
 /* ── ALERT SAAS GRID ── */
@@ -1276,7 +1280,8 @@ tr:last-child td { border-bottom: none; }
     z-index: 400;
   }
   .sb.mobile-open { transform: translateX(0); }
-  .main { margin-left:0; padding-bottom:calc(64px + env(safe-area-inset-bottom, 0px)); }
+  /* En movil se apilan: barra de tabs (56px) + franja de aviso (30px). */
+  .main { margin-left:0; padding-bottom:calc(56px + 30px + env(safe-area-inset-bottom, 0px)); }
   .ph { padding:14px 16px 12px; }
   .page-body { padding:16px; }
   .g2, .g3 { grid-template-columns: 1fr; }
@@ -8729,19 +8734,34 @@ function startTrial(){
 // ── DEMO MODE (realistic fictional data) ──────────────────────
 
 function installPWA(){
+  // Si el navegador ya emitio beforeinstallprompt, instala directamente.
   if(_deferredPrompt){
     _deferredPrompt.prompt();
     _deferredPrompt.userChoice.then(function(){_deferredPrompt=null;});
     return;
   }
-  // iOS Safari has no beforeinstallprompt — show manual instructions
-  var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
-  if(isIOS){
-    if(typeof toast==='function') toast('Toca Compartir → "Agregar a inicio"');
-    else alert('Para instalar: toca el botón Compartir y elige "Agregar a pantalla de inicio".');
-  } else {
-    if(typeof toast==='function') toast('Usa el menú del navegador → Instalar app');
+  // Ya instalada (se abre en modo app)
+  if(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches){
+    showToast('La app ya está instalada','info'); return;
   }
+  // Sin evento disponible: instrucciones segun el navegador. El toast antes
+  // llamaba a toast() (no existe) y no daba ninguna senal: el boton "parecia no
+  // funcionar". Ahora se abre un modal con los pasos concretos.
+  var ua=navigator.userAgent;
+  var isIOS=/iPad|iPhone|iPod/.test(ua);
+  var pasos = isIOS
+    ? 'En Safari: toca el botón <b>Compartir</b> (el cuadro con la flecha) y elige <b>«Agregar a inicio»</b>.'
+    : /Firefox/.test(ua)
+      ? 'Firefox de escritorio no instala apps web. Ábrela en <b>Chrome</b> o <b>Edge</b> y usa el icono de instalar de la barra de direcciones.'
+      : 'En Chrome o Edge: busca el icono <b>⊕ Instalar</b> al final de la barra de direcciones, o abre el menú <b>⋮ → Instalar FinanceOS Invest</b>.';
+  var mr=document.getElementById('mroot');
+  mr.innerHTML='<div class="overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()" style="max-width:420px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'+
+    '<h2 style="margin:0;font-family:\'Fraunces\',Georgia,serif;font-weight:600;font-size:18px">Instalar la app</h2>'+
+    '<button onclick="closeModal()" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer" aria-label="Cerrar"><span aria-hidden="true">✕</span></button>'+
+    '</div>'+
+    '<p style="font-size:13px;color:var(--text2);line-height:1.7;margin:0">'+pasos+'</p>'+
+    '</div></div>';
 }
 
 
@@ -9693,7 +9713,7 @@ window.addEventListener('beforeinstallprompt',function(e){
 window.addEventListener('appinstalled',function(){
   _deferredPrompt=null;
   document.querySelectorAll('[data-pwa-install]').forEach(function(el){el.style.display='none';});
-  if(typeof toast==='function') toast('App instalada ✓');
+  if(typeof showToast==='function') showToast('App instalada ✓');
 });
 
 
@@ -9723,10 +9743,29 @@ function renderDisclaimer(){
   var d=document.createElement('div');
   d.id='disclaimer-bar';
   d.className='disclaimer-bar';
-  d.innerHTML='⚠ <strong>FinanceOS Invest no es un bróker, no ejecuta órdenes ni custodia fondos.</strong> Análisis educativo basado en datos históricos — no constituye asesoría financiera ni garantía de rentabilidad. Precios: Yahoo Finance ~15 min de retraso · Fundamentos: Financial Modeling Prep. Consulta con un asesor certificado antes de invertir. · MAXNOVA & LUCI Global LLC · <a href="/terms.html" target="_blank" style="text-decoration:underline;opacity:.7;color:inherit">Términos</a> · <a href="/privacy.html" target="_blank" style="text-decoration:underline;opacity:.7;color:inherit">Privacidad</a>';
+  // Antes el texto completo (~350 caracteres) iba en la franja fija: en
+  // pantallas estrechas envolvia a 3-4 lineas y tapaba el contenido. Ahora es
+  // una sola linea truncada con 'Ver aviso', y el texto integro se muestra al
+  // hacer clic. Asi la altura es predecible y .main puede reservar el hueco.
+  d.innerHTML='<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">⚠ <strong>No es un bróker</strong> · análisis educativo, no asesoría financiera · precios con ~15 min de retraso</span>'+
+    '<button onclick="toggleDisclaimer()" style="flex-shrink:0;background:none;border:1px solid rgba(180,83,9,.3);border-radius:4px;color:inherit;font:inherit;font-size:9px;padding:2px 8px;cursor:pointer;margin-left:8px">Ver aviso</button>';
   document.body.appendChild(d);
 }
 
+
+// Muestra el aviso legal completo (antes vivia entero en la franja fija).
+function toggleDisclaimer(){
+  var mr=document.getElementById('mroot');
+  mr.innerHTML='<div class="overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()" style="max-width:520px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'+
+    '<h2 style="margin:0;font-family:\'Fraunces\',Georgia,serif;font-weight:600;font-size:18px">Aviso importante</h2>'+
+    '<button onclick="closeModal()" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer" aria-label="Cerrar"><span aria-hidden="true">\u2715</span></button>'+
+    '</div>'+
+    '<p style="font-size:12px;color:var(--text2);line-height:1.7;margin:0 0 12px"><strong style="color:var(--bright)">FinanceOS Invest no es un br\u00f3ker, no ejecuta \u00f3rdenes ni custodia fondos.</strong> An\u00e1lisis educativo basado en datos hist\u00f3ricos \u2014 no constituye asesor\u00eda financiera ni garant\u00eda de rentabilidad. Consulta con un asesor certificado antes de invertir.</p>'+
+    '<p style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.7;margin:0 0 12px">Precios: Yahoo Finance (~15 min de retraso) \u00b7 Fundamentos: Financial Modeling Prep \u00b7 MAXNOVA & LUCI Global LLC</p>'+
+    '<div style="display:flex;gap:14px"><a href="/terms.html" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">T\u00e9rminos \u2192</a><a href="/privacy.html" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">Privacidad \u2192</a></div>'+
+    '</div></div>';
+}
 
 // ── SUPABASE ──────────────────────────────────────────────────
 var SB_URL="https://nelwgbcddwiaimzbcuas.supabase.co";
