@@ -15,7 +15,10 @@
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Share+Tech+Mono&display=swap"/></noscript>
 <!-- SEO & GEO -->
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
-<link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+<!-- Logo de marca FinanceOS Pro. Antes el favicon era un SVG de relleno con las
+     letras "FI" sobre el verde antiguo, que ya ni siquiera es color de marca. -->
+<link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"/>
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
 <!-- PWA -->
 <link rel="manifest" href="/manifest.webmanifest"/>
@@ -372,14 +375,11 @@ body.no-auth .main { margin-left:0 !important; margin-top:0 !important; }
 }
 .logo-icon {
   width: 34px; height: 34px;
-  background: var(--grn-solid);
-  border-radius:var(--r-md);
+  /* Sin fondo: el logo trae el suyo. Antes pintaba un cuadro solido detras y
+     una sombra rgba(34,197,94) — el verde viejo, que ya no es color de marca. */
+  border-radius:var(--r-md); overflow:hidden;
   display: flex; align-items:center; justify-content:center;
-  font-size: 13px; font-weight: 700;
-  color: #fff;
-  letter-spacing: .5px;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(34,197,94,.35);
 }
 .logo-name {
   font-size: 15px;
@@ -1213,7 +1213,7 @@ tr:last-child td { border-bottom: none; }
 .wv3-disc{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);line-height:1.7}
 .wv3-auth-card{background:var(--card);border:0.5px solid var(--border2);border-radius:var(--r-xl);padding:28px 28px 24px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.35)}
 .wv3-auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:20px}
-.wv3-auth-icon{width:34px;height:34px;border-radius:var(--r-md);background:var(--grn-solid);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.wv3-auth-icon{width:34px;height:34px;border-radius:var(--r-md);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .wv3-auth-name{font-size:15px;color:var(--text)}
 .wv3-auth-name b{color:var(--grn);font-weight:700}
 .wv3-tabs{display:grid;grid-template-columns:1fr 1fr;position:relative;background:var(--bg2);border-radius:var(--r-md);padding:4px;margin-bottom:20px}
@@ -1437,8 +1437,8 @@ body:not(.no-auth) #mainnav {
 .mn-brand { display:flex; align-items:center; gap:var(--sp-4); font-size:13px; color:var(--text2); flex-shrink:0; }
 .mn-brand b { color:var(--bright); font-weight:600; }
 .mn-brand-i {
-  width:26px; height:26px; border-radius:var(--r-sm); background:var(--grn-solid); color:#fff;
-  display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;
+  width:26px; height:26px; border-radius:var(--r-sm); overflow:hidden;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
 }
 .mn-items { display:flex; gap:var(--sp-1); flex:1; flex-wrap:wrap; }
 .mn-item {
@@ -3106,7 +3106,7 @@ function renderMainNav(){
   }
 
   el.innerHTML='<div class="mn-row">'+
-    '<div class="mn-brand"><span class="mn-brand-i">FI</span><span>FinanceOS <b>Invest</b></span></div>'+
+    '<div class="mn-brand"><span class="mn-brand-i"><img src="/icon-192.png" alt="" width="26" height="26" style="display:block;width:100%;height:100%;object-fit:contain"/></span><span>FinanceOS <b>Invest</b></span></div>'+
     '<div class="mn-items">'+fila1+'</div>'+
     '<button class="mn-item mn-cfg" onclick="setPage(\'settings\')" aria-label="Configuración">⚙</button>'+
     '</div>'+fila2;
@@ -3224,7 +3224,7 @@ function renderSidebar(){
   // Logo
   var html=
     '<div class="logo">'+
-    '<div class="logo-icon">FI</div>'+
+    '<div class="logo-icon"><img src="/icon-192.png" alt="" width="26" height="26" style="display:block;width:100%;height:100%;object-fit:contain"/></div>'+
     '<div class="logo-name"><span>FinanceOS</span> <span class="logo-name-invest">Invest</span></div>'+
     '</div>';
 
@@ -4485,7 +4485,7 @@ function renderWelcome(){
     // ── COLUMNA DERECHA ──
     '<div class="wv3-right">'+
     '<div class="wv3-auth-card">'+
-    '<div class="wv3-auth-logo"><div class="wv3-auth-icon">FI</div><div class="wv3-auth-name">FinanceOS <b>Invest</b></div></div>'+
+    '<div class="wv3-auth-logo"><div class="wv3-auth-icon"><img src="/icon-192.png" alt="" width="26" height="26" style="display:block;width:100%;height:100%;object-fit:contain"/></div><div class="wv3-auth-name">FinanceOS <b>Invest</b></div></div>'+
     // Tabs
     '<div class="wv3-tabs">'+
     '<div id="wv3-slider" class="wv3-tab-slider"></div>'+
