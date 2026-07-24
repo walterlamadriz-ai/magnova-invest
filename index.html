@@ -9258,6 +9258,18 @@ function capUpdatePct(t,val){
 }
 function capHandleAddKey(e){ if(e.key==='Enter') capAddTicker(document.getElementById('cap-add-t').value, document.getElementById('cap-add-p').value); }
 
+// Rellena el importe con el capital que el usuario ya tiene sin comprometer.
+// Se avisa de forma explicita porque repartir un monto unico NO es lo mismo que
+// un aporte periodico: la escalera espera precios mejores para soltar los tramos
+// altos, y con dinero que ya se tiene eso deja capital parado, mientras que con
+// un aporte mensual no cuesta nada esperar (el mes siguiente entra dinero igual).
+function capUsarDisponible(monto){
+  S.capitalPlan.monthly=monto;
+  _capSave();
+  renderCapital();
+  showToast('Importe fijado en $'+fmt(Math.round(monto))+' — reparto de un monto unico, no aporte recurrente');
+}
+
 async function loadCapitalData(){
   if(S.capitalLoading) return;
   var inp=document.getElementById('cap-monthly');
@@ -9299,6 +9311,11 @@ function renderCapital(){
   var cadencia=S.capitalPlan.cadencia||"mensual";
   var divisor={mensual:1,quincenal:26/12,semanal:52/12}[cadencia];
   var porAporte=monthly/divisor;
+  // Capital disponible = el mismo numero que muestra Portfolio en su KPI
+  // "Disponible": capital declarado menos lo ya comprometido a coste.
+  var _comprometido=0;
+  try{ (S.portfolio||[]).forEach(function(h){ _comprometido+=(h.sh||0)*(h.cost||0); }); }catch(e){}
+  var capDisponible=Math.max(0,(S.capital||0)-_comprometido);
   var results=S.capitalResults;
   var loading=S.capitalLoading;
   var totalPct=tickers.reduce(function(s,x){return s+x.pct;},0);
@@ -9440,7 +9457,12 @@ function renderCapital(){
     // Fila 1: capital mensual + calcular
     '<div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px">'+
     '<div><div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:5px">Capital mensual (USD)</div>'+
-    '<input type="number" id="cap-monthly" value="'+monthly+'" min="0" step="50" style="width:150px;background:var(--card3);border:1px solid var(--border);border-radius:var(--r-md);color:var(--bright);font-family:\'JetBrains Mono\',monospace;font-size:16px;font-weight:700;padding:8px 12px;outline:none"></div>'+
+    '<input type="number" id="cap-monthly" value="'+monthly+'" min="0" step="50" style="width:150px;background:var(--card3);border:1px solid var(--border);border-radius:var(--r-md);color:var(--bright);font-family:\'JetBrains Mono\',monospace;font-size:16px;font-weight:700;padding:8px 12px;outline:none">'+
+    // Atajo para repartir un monto que ya se tiene, en vez del aporte periodico.
+    // No cambia el calculo: solo rellena el importe. La escalera SMA/RSI opera
+    // igual sobre el numero que haya en el campo.
+    (capDisponible>0?'<div style="margin-top:6px"><button onclick="capUsarDisponible('+capDisponible+')" style="background:none;border:none;padding:0;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--grn);cursor:pointer;text-decoration:underline">Usar capital disponible ($'+fmt(Math.round(capDisponible))+')</button></div>':'')+
+    '</div>'+
     '<button onclick="loadCapitalData()" class="btn-big" style="padding:9px 20px;font-size:13px'+(loading?';opacity:.6;pointer-events:none':'')+'">'+(loading?'<span class="spin-sm"></span> Calculando...':'📊 Calcular distribución')+'</button>'+
     '<div><div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:5px">Cadencia</div>'+
     '<div style="display:inline-flex;background:var(--card3);border:1px solid var(--border);border-radius:var(--r-md);padding:2px">'+
