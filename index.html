@@ -531,6 +531,11 @@ body.no-auth .main { margin-left:0 !important; margin-top:0 !important; }
 .suite-sep     { color: var(--border2); }
 .suite-current { color: var(--text2); }
 
+/* Barra de fuerza (score) — las clases .sbar/.sf se usaban en sbar() pero no
+   tenian CSS, asi que la columna 'Fuerza' salia vacia. */
+.sbar { display:inline-block; width:60px; height:6px; background:var(--card3); border-radius:3px; overflow:hidden; vertical-align:middle; }
+.sf   { display:block; height:100%; border-radius:3px; }
+
 /* ── CHIPS DE WATCHLIST ──────────────────────────────────────────
    La clase .wtag se generaba en el HTML pero NO existia en el CSS: eran
    <span> desnudos, sin padding ni borde, separados solo por el espacio del
@@ -2876,6 +2881,17 @@ function chgCell(lq,size){
   var s=size||9;
   return '<span style="font-size:'+s+'px;color:'+(p>=0?'var(--grn)':'var(--red)')+'"> '+(p>=0?'+':'')+p.toFixed(2)+'%</span>';
 }
+// Distancia del precio actual sobre su minimo de 52 semanas: cuanto mas cerca
+// del minimo, mas 'barato' esta respecto a su propio rango anual. Varia por
+// ticker, a diferencia de la columna anterior que daba 8.7% fijo para todos.
+function dist52wCell(cur,lq){
+  var low=lq&&lq.low52;
+  if(!cur||!low||low<=0) return '<span style="color:var(--text3)">—</span>';
+  var d=(cur/low-1)*100;
+  // cerca del minimo = verde (descuento); lejos = neutro
+  var col=d<15?'var(--grn)':d<40?'var(--amber)':'var(--text3)';
+  return '<span style="font-weight:600;font-size:11px;color:'+col+'" title="Minimo 52 semanas: $'+fmtD(low)+'">+'+d.toFixed(0)+'%</span>';
+}
 function distCell(cur,ref){
   // Distance from cur to ref as %, colored by closeness
   if(!cur||!ref) return '<span style="color:var(--text3)">—</span>';
@@ -4972,7 +4988,7 @@ function renderWatch(){
       '<td>'+sbar(s.sc)+'</td>'+
       '<td style="font-weight:600">$'+fmtD(lp)+'</td>'+
       '<td>'+chgCell(lq)+'</td>'+
-      '<td>'+distCell(lp,lp*.92)+'</td>'+
+      '<td>'+dist52wCell(lp,lq)+'</td>'+
       deCell+
       '<td><button class="btn btn-r" style="padding:2px 7px;font-size:10px" onclick="event.stopPropagation();rmWatch(\''+t+'\')" aria-label="Cerrar"><span aria-hidden="true">✕</span></button></td>'+
       '</tr>';
@@ -4992,7 +5008,7 @@ function renderWatch(){
     '<div style="display:flex;gap:8px">'+
     '<input class="inp" id="wc" placeholder="Custom..." maxlength="6" style="width:120px;text-transform:uppercase" onkeydown="if(event.key===\'Enter\')addCustomW()"/>'+
     '<button class="btn" onclick="addCustomW()">+ Agregar</button></div></div>'+
-    '<div class="tw"><table id="tbl-watch" class="fos-table"><thead><tr><th>Ticker</th><th>Señal</th>'+sortTh("watch","sc","Score")+'<th>Fuerza</th>'+sortTh("watch","price","Precio")+sortTh("watch","chg","Δ Hoy")+'<th title="Distancia al stop –8%">Stop –8%</th>'+deHeader+'<th>Quitar</th></tr></thead>'+
+    '<div class="tw"><table id="tbl-watch" class="fos-table"><thead><tr><th>Ticker</th><th>Señal</th>'+sortTh("watch","sc","Score")+'<th>Fuerza</th>'+sortTh("watch","price","Precio")+sortTh("watch","chg","Δ Hoy")+'<th title="Distancia sobre el mínimo de 52 semanas">vs mín 52s</th>'+deHeader+'<th>Quitar</th></tr></thead>'+
     '<tbody>'+emptyMsg+wRows+'</tbody></table></div>'+
     '';
 
@@ -5051,7 +5067,7 @@ function renderSig(){
       '<td>'+sbar(s.sc)+'</td>'+
       '<td style="font-weight:600">$'+fmtD(lp)+'</td>'+
       '<td>'+chgCell(lq)+'</td>'+
-      '<td>'+distCell(lp,lp*.92)+'</td>'+
+      '<td>'+dist52wCell(lp,lq)+'</td>'+
       '<td>'+wbtn+'</td></tr>';
   }).join("");
 
@@ -5067,7 +5083,7 @@ function renderSig(){
     kpi("Indicador Medio",sigs.filter(function(s){return s.sig==="HOLD";}).length,"de "+sigs.length,"a")+
     kpi("Indicador Bajo",sigs.filter(function(s){return s.sig==="SELL";}).length,"de "+sigs.length,"r")+
     '</div>'+
-    '<div class="tw"><table id="tbl-sig"><thead><tr><th>Ticker</th><th>Indicador</th>'+sortTh("sig","sc","Score")+'<th>Fuerza</th>'+sortTh("sig","price","Precio")+sortTh("sig","chg","Δ Hoy")+'<th>Ref. –8%</th><th>Watch</th></tr></thead>'+
+    '<div class="tw"><table id="tbl-sig"><thead><tr><th>Ticker</th><th>Indicador</th>'+sortTh("sig","sc","Score")+'<th>Fuerza</th>'+sortTh("sig","price","Precio")+sortTh("sig","chg","Δ Hoy")+'<th title="Distancia sobre el mínimo de 52 semanas">vs mín 52s</th><th>Watch</th></tr></thead>'+
     '<tbody>'+rows+'</tbody></table></div>'+
     '<div style="margin-top:12px;padding:8px 10px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">'+
     '⚠ Los sesgos mostrados resultan de modelos técnicos automatizados (Trend×30% · Vol×20% · RSI×25% · MACD×25%). '+
