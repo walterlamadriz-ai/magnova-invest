@@ -2340,12 +2340,12 @@ async function fetchQuote(ticker){
       var price=m.regularMarketPrice; var prev=m.chartPreviousClose||m.previousClose||price;
       q={ticker:ticker,price:price,prevClose:prev,change:price-prev,changePct:prev?(price-prev)/prev:0,
          volume:m.regularMarketVolume||0,marketCap:0,high52:m.fiftyTwoWeekHigh||price*1.2,
-         low52:m.fiftyTwoWeekLow||price*0.8,currency:m.currency||'USD'};
+         low52:m.fiftyTwoWeekLow||0,currency:m.currency||'USD'};
     }
     var out={ticker:ticker,price:q.price,prevClose:q.prevClose,
              change:q.change,changePct:q.changePct,volume:q.volume||0,
              marketCap:q.marketCap||0,high52:q.high52||q.price*1.2,
-             low52:q.low52||q.price*0.8,exchange:'',marketState:'REGULAR'};
+             low52:q.low52||0,exchange:'',marketState:'REGULAR'};
     _cacheSet(ckey,out);fetchStats.ok++;fetchStats.lastOk=Date.now();
     return out;
   }catch(e){fetchStats.fail++;fetchStats.lastErr=e.message;return null;}
@@ -2980,7 +2980,10 @@ function marketStatusBadge(){
   '</span>';
 }
 function chgCell(lq,size){
-  if(!lq) return '';
+  // Devolvia cadena vacia sin dato: la celda quedaba en blanco y parecia que la
+  // fila estaba incompleta, en vez de decir que ese precio no llego. La columna
+  // vecina ya usaba '—' para lo mismo.
+  if(!lq||lq.changePct==null) return '<span style="color:var(--text3)">—</span>';
   var p=(lq.changePct||0)*100;
   var s=size||9;
   return '<span style="font-size:'+s+'px;color:'+(p>=0?'var(--pos)':'var(--neg)')+'"> '+(p>=0?'+':'')+p.toFixed(2)+'%</span>';
@@ -2994,7 +2997,10 @@ function dist52wCell(cur,lq){
   var d=(cur/low-1)*100;
   // cerca del minimo = verde (descuento); lejos = neutro
   var col=d<15?'var(--grn)':d<40?'var(--amber)':'var(--text3)';
-  return '<span style="font-weight:600;font-size:11px;color:'+col+'" title="Minimo 52 semanas: $'+fmtD(low)+'">+'+d.toFixed(0)+'%</span>';
+  // El signo se calcula: el precio puede quedar POR DEBAJO del minimo de 52
+  // semanas cuando ese minimo aun no refleja la sesion actual, y con el '+'
+  // fijo se leia '+-3%'.
+  return '<span style="font-weight:600;font-size:11px;color:'+col+'" title="Mínimo 52 semanas: $'+fmtD(low)+'">'+(d>=0?'+':'')+d.toFixed(0)+'%</span>';
 }
 function distCell(cur,ref){
   // Distance from cur to ref as %, colored by closeness
@@ -9959,8 +9965,11 @@ async function bootLiveData(){
   var tickers=[];
   S.portfolio.forEach(function(h){if(tickers.indexOf(h.t)<0)tickers.push(h.t);});
   S.watchlist.forEach(function(t){if(tickers.indexOf(t)<0)tickers.push(t);});
-  // Top 8 de ALL_SIG: el dashboard muestra Top Señales con su Δ% live
-  ALL_SIG.slice(0,8).forEach(function(s){if(tickers.indexOf(s.t)<0)tickers.push(s.t);});
+  // TODAS las señales, no solo las 8 primeras. Señales muestra hasta 20 filas
+  // (maxS=999 en Pro) y las columnas Δ Hoy y vs mín 52s salen de LIVE[t]: con
+  // solo 8 tickers cargados, 12 de las 20 filas quedaban vacias.
+  // Son 20 tickers = 2 peticiones de 10, el mismo coste que ya tenia el resto.
+  ALL_SIG.forEach(function(s){if(tickers.indexOf(s.t)<0)tickers.push(s.t);});
 
   // ① Show cached prices instantly — user sees something immediately
   try{
@@ -9993,6 +10002,9 @@ async function bootLiveData(){
     var t2=[];
     S.portfolio.forEach(function(h){if(t2.indexOf(h.t)<0)t2.push(h.t);});
     S.watchlist.forEach(function(t){if(t2.indexOf(t)<0)t2.push(t);});
+    // Mismo conjunto que en el arranque: si el refresco periodico no incluyera
+    // las señales, sus columnas en vivo se quedarian congeladas a los 5 minutos.
+    ALL_SIG.forEach(function(s){if(t2.indexOf(s.t)<0)t2.push(s.t);});
     refreshLive(t2).then(function(){
       updateLiveBadge();
       updateLivePricesInDOM();
