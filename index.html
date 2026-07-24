@@ -1459,15 +1459,28 @@ body:not(.no-auth) #mainnav {
 /* En movil se queda solo la flecha: ocultar el enlace entero dejaria la vuelta
    a la suite sin ningun acceso, que era justo lo que daba la franja eliminada. */
 @media (max-width: 760px){ .mn-suite span { display:none; } }
-/* Segunda fila: destinos del grupo activo. Solo aparece cuando hay mas de uno. */
-.mn-sub { display:flex; gap:var(--sp-1); padding:0 28px var(--sp-4); flex-wrap:wrap; }
+/* Segunda fila: destinos secundarios del grupo activo, con el mismo lenguaje
+   visual que los accesos rapidos del Dashboard (pastilla con borde e icono) y
+   alineados a la derecha. Solo aparece cuando el grupo tiene mas de un destino. */
+.mn-sub { display:flex; gap:var(--sp-2); padding:0 28px var(--sp-4); flex-wrap:wrap;
+          align-items:center; justify-content:flex-end; }
+.mn-sub-lbl { margin-right:auto; font-family:'JetBrains Mono',monospace; font-size:10px;
+              letter-spacing:1px; text-transform:uppercase; color:var(--text3); }
 .mn-subitem {
-  background:none; border:none; cursor:pointer; padding:var(--sp-3) var(--sp-5);
-  border-radius:var(--r-sm); font-family:'JetBrains Mono',monospace; font-size:11px;
-  color:var(--text3); white-space:nowrap;
+  display:inline-flex; align-items:center; gap:var(--sp-3);
+  background:var(--card); border:1px solid var(--border); border-radius:var(--r-md);
+  padding:6px 12px; cursor:pointer; font-family:inherit; font-size:11px; color:var(--text2);
+  white-space:nowrap; transition:border-color .15s, color .15s;
 }
-.mn-subitem:hover { color:var(--bright); background:var(--card2); }
-.mn-subitem.act { color:var(--grn); background:var(--grn-bg); font-weight:600; }
+.mn-subitem:hover { border-color:var(--grn-lt); color:var(--bright); }
+.mn-subitem.act { color:var(--bright); border-color:var(--grn-lt); background:var(--grn-bg); font-weight:600; }
+.mn-subitem svg { width:14px; height:14px; color:var(--grn); flex-shrink:0; }
+@media (max-width: 760px){
+  /* Solo iconos: con varias etiquetas la fila se parte en pantallas estrechas. */
+  .mn-subitem > span:not(.fos-pro-badge) { display:none; }
+  .mn-subitem { padding:6px 9px; }
+  .mn-sub { padding:0 16px var(--sp-3); }
+}
 /* El sidebar deja de existir en escritorio: su ancho reservado pasa a 0 y el
    contenido gana los 256px. En movil ya no se mostraba (hay #mob-tab-bar). */
 .sb { display:none !important; }
@@ -3117,15 +3130,21 @@ function renderMainNav(){
   // los 13 destinos absorbidos quedarian inalcanzables.
   var fila2='';
   if(activo&&activo.pages.length>1){
-    fila2='<div class="mn-sub">'+activo.pages.map(function(id){
-      var p=PAGES.find(function(x){return x.id===id;});
-      if(!p) return '';
-      var bloqueado=!!(plan&&plan.locked&&plan.locked.indexOf(id)>=0);
-      var act=S.page===id?' act':'';
-      var accion=bloqueado?"openModal('upgrade')":'setPage(\''+id+'\')';
-      return '<button class="mn-subitem'+act+'" onclick="'+accion+'">'+p.label+
-        (bloqueado?' <span class="fos-pro-badge">PRO</span>':'')+'</button>';
-    }).join('')+'</div>';
+    // La categoria principal es la entrada y ya esta en la fila de arriba: aqui
+    // solo bajan sus destinos secundarios, para no repetirla en las dos filas.
+    var subs=activo.pages.slice(1);
+    fila2='<div class="mn-sub">'+
+      '<span class="mn-sub-lbl">'+activo.label+'</span>'+
+      subs.map(function(id){
+        var p=PAGES.find(function(x){return x.id===id;});
+        if(!p) return '';
+        var bloqueado=!!(plan&&plan.locked&&plan.locked.indexOf(id)>=0);
+        var act=S.page===id?' act':'';
+        var accion=bloqueado?"openModal('upgrade')":'setPage(\''+id+'\')';
+        return '<button class="mn-subitem'+act+'" onclick="'+accion+'">'+
+          (icon(id)||'')+'<span>'+p.label+'</span>'+
+          (bloqueado?'<span class="fos-pro-badge">PRO</span>':'')+'</button>';
+      }).join('')+'</div>';
   }
 
   el.innerHTML='<div class="mn-row">'+
