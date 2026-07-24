@@ -1423,6 +1423,10 @@ tr:last-child td { border-bottom: none; }
   .main { margin-top: 0; }
 }
 #topbar { display: none; }
+/* Banda de mercado: scroll horizontal sin barra visible — es una franja de 52px
+   y una scrollbar nativa se comeria un tercio de su alto. */
+.mkt-strip { scrollbar-width: none; -ms-overflow-style: none; }
+.mkt-strip::-webkit-scrollbar { display: none; }
 /* ── Navegacion superior (sustituye al sidebar) ── */
 #mainnav { display:none; }
 /* #topbar (la banda de mercado) es position:fixed a top:34px con 52px de alto y
@@ -3120,25 +3124,43 @@ function renderTopbar(){
   var r=DE_CACHE.regime;
   var v=DE_CACHE.vix;
 
-  // Ticker chips from MARKET_BAR
+  // Banda completa de mercado. Antes solo mostraba 4 simbolos (SPY/QQQ/VIX/BTC)
+  // y los 11 vivian dentro de Contexto: el dato mas util de la app solo se veia
+  // entrando a una pantalla concreta. Ahora la banda es global y Contexto ya no
+  // la duplica.
   var BAR_DEF=[
-    {sym:'^GSPC', label:'SPY'},
-    {sym:'^IXIC', label:'QQQ'},
-    {sym:'^VIX',  label:'VIX', vixOnly:true},
-    {sym:'BTC-USD', label:'BTC'}
+    {sym:'^GSPC',   label:'S&P 500'},
+    {sym:'^DJI',    label:'Dow 30'},
+    {sym:'^IXIC',   label:'Nasdaq'},
+    {sym:'^RUT',    label:'Russell 2K'},
+    {sym:'CL=F',    label:'Crude'},
+    {sym:'GC=F',    label:'Gold'},
+    {sym:'SI=F',    label:'Silver'},
+    {sym:'EURUSD=X',label:'EUR/USD'},
+    {sym:'^TNX',    label:'10-Yr'},
+    {sym:'BTC-USD', label:'BTC'},
+    {sym:'^VIX',    label:'VIX', vixOnly:true}
   ];
-  var sep='<span style="width:1px;height:20px;background:var(--border2);flex-shrink:0"></span>';
+  var sep='<span style="width:1px;height:18px;background:var(--border2);flex-shrink:0"></span>';
   var chips='';
   if(MARKET_BAR.length){
     BAR_DEF.forEach(function(bt){
       var b=MARKET_BAR.find(function(x){return x.sym===bt.sym;});
-      if(!b) return;
+      if(!b||!isFinite(b.price)) return;
       var isUp=(b.changePct||0)>=0;
       var col=bt.vixOnly?'var(--text2)':(isUp?'var(--pos)':'var(--neg)');
       var pctStr=bt.vixOnly?'':(isUp?'+':'')+((b.changePct||0)).toFixed(2)+'%';
-      var valStr=bt.sym==='BTC-USD'?'$'+(b.price/1000).toFixed(1)+'K':b.price>=1000?b.price.toLocaleString('en-US',{maximumFractionDigits:0}):b.price.toFixed(2);
+      // Cada instrumento tiene su formato: el bono va en %, el euro a 4 decimales
+      // y bitcoin en miles. Con un formato unico se leian mal casi todos.
+      var valStr;
+      if(bt.sym==='EURUSD=X')      valStr=b.price.toFixed(4);
+      else if(bt.sym==='^TNX')     valStr=b.price.toFixed(2)+'%';
+      else if(bt.sym==='BTC-USD')  valStr='$'+(b.price/1000).toFixed(1)+'K';
+      else if(b.price>=10000)      valStr=b.price.toLocaleString('en-US',{maximumFractionDigits:0});
+      else if(b.price>=1000)       valStr=b.price.toLocaleString('en-US',{maximumFractionDigits:0});
+      else                         valStr=b.price.toFixed(2);
       chips+=sep+
-        '<div style="display:flex;align-items:center;gap:5px;padding:0 10px">'+
+        '<div style="display:flex;align-items:center;gap:5px;padding:0 10px;flex-shrink:0">'+
         '<span style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:var(--text3);letter-spacing:.3px">'+bt.label+'</span>'+
         '<span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:600;color:var(--bright)">'+valStr+'</span>'+
         (pctStr?'<span style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:'+col+'">'+pctStr+'</span>':'')+'</div>';
@@ -3159,8 +3181,10 @@ function renderTopbar(){
   }
 
   el.innerHTML=
-    '<div style="display:flex;align-items:center;height:100%;overflow:hidden">'+chips+regChip+'</div>'+
-    '<div style="flex:1"></div>'+
+    // Los 11 simbolos no caben en una pantalla estrecha: scroll horizontal en
+    // vez de recortar, para que ninguno quede inaccesible. flex:1 aqui y no en
+    // un separador aparte, para que la banda ocupe el espacio disponible.
+    '<div class="mkt-strip" style="display:flex;align-items:center;height:100%;flex:1;min-width:0;overflow-x:auto;overflow-y:hidden">'+chips+regChip+'</div>'+
     '<span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;color:var(--text3);margin-right:14px;white-space:nowrap">~15min delay</span>'+
     '<div role="button" tabindex="0" title="'+u.email+'" style="width:28px;height:28px;border-radius:50%;background:var(--grn-bg);border:1px solid var(--grn-lt);display:flex;align-items:center;justify-content:center;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--grn);flex-shrink:0;cursor:pointer" onclick="setPage(\'settings\')">'+initials+'</div>';
 
@@ -4642,6 +4666,39 @@ function renderPaywall(){
 }
 
 // ── DASHBOARD ──────────────────────────────────────────────────
+// ── MARKET MOVERS ────────────────────────────────────────────────────────
+// Vivia dentro de Contexto. Al consolidar Contexto en el Dashboard se extrae a
+// funcion propia en vez de duplicar el widget en dos pantallas.
+function moversCard(){
+  var MOVERS=[
+    {t:"NVDA",last:878,chg:1.4},{t:"AAPL",last:196.5,chg:3.1},
+    {t:"GOOGL",last:191,chg:5.4},{t:"TSLA",last:247,chg:2.4},
+    {t:"AMZN",last:199,chg:1.2},{t:"META",last:522,chg:-4.1}
+  ];
+  // Los precios de partida son de relleno; se sustituyen por LIVE cuando llega.
+  // Se marca cuales siguen siendo de relleno para no presentarlos como actuales.
+  var conDato=0;
+  MOVERS.forEach(function(m){
+    if(LIVE[m.t]){ m.last=LIVE[m.t].price; m.chg=(LIVE[m.t].changePct||0)*100; m.live=true; conDato++; }
+  });
+  var upd=liveUpdated?('Yahoo Finance · '+timeAgo(liveUpdated)):'Cargando…';
+  var filas=MOVERS.map(function(m){
+    var pos=m.chg>=0;
+    return '<div role="button" tabindex="0" onclick="openDrawer(\''+m.t+'\','+m.last+')" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);cursor:pointer">'+
+      '<span style="font-size:12px;font-weight:700;color:var(--bright);flex:1;font-family:\'JetBrains Mono\',monospace">'+m.t+'</span>'+
+      (m.live
+        ? '<span style="font-size:11px;color:var(--text);font-family:\'JetBrains Mono\',monospace;width:60px;text-align:right">'+m.last.toFixed(2)+'</span>'+
+          '<span style="font-size:10px;font-weight:700;font-family:\'JetBrains Mono\',monospace;width:56px;text-align:right;color:'+(pos?'var(--pos)':'var(--neg)')+'">'+(pos?'+':'')+m.chg.toFixed(2)+'%</span>'
+        : '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;width:116px;text-align:right">sin dato</span>')+
+      '</div>';
+  }).join('');
+  return '<div class="cb" style="padding:0;overflow:hidden">'+
+    '<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--card2);display:flex;justify-content:space-between;align-items:center">'+
+      '<span class="fos-section-label" style="margin:0">Market Movers</span>'+
+      '<span style="font-size:8px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+(conDato?upd:'sin datos en vivo')+'</span>'+
+    '</div>'+filas+'</div>';
+}
+
 function renderDash(){
   var plan=planOf();
   var port=S.portfolio.slice(0,plan.maxT);
@@ -4807,6 +4864,8 @@ function renderDash(){
     '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'risk\')"><div style="margin-bottom:4px;color:var(--grn)">'+icon('risk','ico-lg')+'</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Riesgo</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Sizing · R/R</div></div>'+
     '<div role="button" tabindex="0" class="dash-action-btn" onclick="setPage(\'screener\')"><div style="margin-bottom:4px;color:var(--grn)">'+icon('screener','ico-lg')+'</div><div style="font-size:11px;font-weight:600;color:var(--bright)">Screener</div><div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Filtrar activos</div></div>'+
     '</div></div>'+
+    // Market Movers llega desde Contexto al consolidar esa pantalla aqui.
+    '<div style="margin-top:14px">'+moversCard()+'</div>'+
     '<div style="margin-top:14px">'+renderSentimentCompact()+'</div>';
 
   var now=new Date();
@@ -5604,23 +5663,8 @@ function renderNews(){
       '</div></div></div>';
   }).join('');
 
-  // ── Market Movers widget ──────────────────────────────────────
-  var MOVERS=[
-    {t:"NVDA",last:878,chg:1.4,vol:"128M"},{t:"AAPL",last:196.5,chg:3.1,vol:"79M"},
-    {t:"GOOGL",last:191,chg:5.4,vol:"42M"},{t:"TSLA",last:247,chg:2.4,vol:"65M"},
-    {t:"AMZN",last:199,chg:1.2,vol:"50M"},{t:"META",last:522,chg:-4.1,vol:"40M"}
-  ];
-  MOVERS.forEach(function(m){if(LIVE[m.t]){m.last=LIVE[m.t].price;m.chg=(LIVE[m.t].changePct||0)*100;}});
-  var lastUpdStr=liveUpdated?'Yahoo Finance · actualizado '+timeAgo(liveUpdated):'Cargando...';
-  var moverRows=MOVERS.map(function(m){
-    var pos=m.chg>=0;
-    return '<div role="button" tabindex="0" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s" onclick="openDrawer(\''+m.t+'\','+m.last+')" onmouseover="this.style.background=\'rgba(247,147,26,.04)\'" onmouseout="this.style.background=\'transparent\'">'+
-      '<span style="font-size:12px;font-weight:700;color:var(--bright);flex:1;font-family:\'JetBrains Mono\',monospace">'+m.t+'</span>'+
-      '<span style="font-size:11px;color:var(--text);font-family:\'JetBrains Mono\',monospace;width:54px;text-align:right">'+m.last.toFixed(2)+'</span>'+
-      '<span style="font-size:10px;font-weight:700;font-family:\'JetBrains Mono\',monospace;width:50px;text-align:right;color:'+(pos?'var(--pos)':'var(--neg)')+'">'+( pos?'+':'')+m.chg.toFixed(2)+'%</span>'+
-      '</div>';
-  }).join('');
-
+  // Market Movers se movio al Dashboard (funcion moversCard): Contexto se
+  // consolida alli y no tiene sentido mantener dos copias del mismo widget.
   // ── Indices widget ────────────────────────────────────────────
   // Los valores de partida eran cifras reales de 2024 hardcodeadas (VIX 16.8,
   // Bitcoin $97.400...). Como marketbar no devolvia VIX ni BTC, esos dos se
@@ -5753,11 +5797,8 @@ function renderNews(){
       '</div>'+
     '</div>'+
 
-    // ── TICKER STRIP (Yahoo Finance style — full bleed, compact) ──
-    '<div style="margin:10px 0 0;background:#0d1117;border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06);overflow:hidden;display:flex;align-items:stretch;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">'+
-      tickerStrip+
-    '</div>'+
-
+    // La tira de mercado vivia aqui: ahora es la banda global del topbar y se
+    // ve en todas las pantallas, asi que duplicarla en Contexto sobraba.
     offlineNotice+
     breakingBanner+
 
@@ -5801,15 +5842,6 @@ function renderNews(){
         '<span style="font-size:8px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">~15min delay</span>'+
       '</div>'+
       '<div style="padding:4px 14px 8px">'+idxRows+'</div>'+
-    '</div>'+
-
-    // Market Movers
-    '<div class="fos-card" style="overflow:hidden">'+
-      '<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--card2);display:flex;justify-content:space-between;align-items:center">'+
-        '<span class="fos-section-label" style="margin:0">Market Movers</span>'+
-        '<span style="font-size:8px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+lastUpdStr+'</span>'+
-      '</div>'+
-      moverRows+
     '</div>'+
 
     '</div>'+ // end right
