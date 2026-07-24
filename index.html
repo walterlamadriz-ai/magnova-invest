@@ -439,7 +439,13 @@ body.no-auth .main { margin-left:0 !important; margin-top:0 !important; }
 }
 
 /* ── PAGE HEADER ── */
-.ph {
+/* Cabecera de modulo. Conviven dos formas de escribirla — _ph() genera .ph
+   (17 usos) y otros modulos ponen .fos-module-header a mano (9 usos) — pero son
+   el mismo componente, asi que comparten una unica regla en vez de dos que se
+   desincronizan. Antes renderizaban distinto: .ph a 24/20 y fos-module-header
+   a 20/20, porque la regla #main > div le pisaba su padding. */
+.ph,
+.fos-module-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1552,7 +1558,6 @@ tr:last-child td { border-bottom: none; }
 .fos-score--g { background:rgba(61,190,122,.15);color:var(--grn);border:1px solid rgba(61,190,122,.3); }
 .fos-score--a { background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25); }
 .fos-score--r { background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25); }
-.fos-module-header { display: flex; align-items: flex-start; justify-content: space-between; padding:var(--sp-16) 28px var(--sp-6); gap:16px; flex-wrap: wrap; }
 /* Serif display SOLO en el titulo de modulo. El contraste serif-title /
    sans-body / mono-datos es lo que da jerarquia de tres niveles y evita que la
    app lea como "dashboard tecnico". Fraunces ya es fuente de marca (la landing). */
@@ -1621,11 +1626,11 @@ tr:last-child td { border-bottom: none; }
 }
 
 /* ── PAGE BODY PADDING ── */
-#main > *:not(.ph) { padding:0; }
+#main > *:not(.ph):not(.fos-module-header) { padding:0; }
 .page-body, #main > div { }
 
 /* content padding */
-#main > div:not(.ph) { padding:20px 28px; }
+#main > div:not(.ph):not(.fos-module-header) { padding:20px 28px; }
 
 /* ── DRAWER INNER COMPONENTS ── */
 .sigb {
