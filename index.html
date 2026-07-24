@@ -1153,7 +1153,27 @@ tr:last-child td { border-bottom: none; }
 .welcome-sub { font-size: 11px; color: var(--text3); margin-top:1px; }
 
 /* ── WELCOME v3 ────────────────────────────────────────── */
-.wv3-outer{min-height: 100vh; min-height: 100dvh;display:flex;flex-direction:column;background:var(--bg)}
+.wv3-outer{min-height: 100vh; min-height: 100dvh;display:flex;flex-direction:column;background:var(--bg);position:relative;isolation:isolate}
+/* Fondo ASCII animado del hero. Se implementa nativo (canvas 2D + JetBrains
+   Mono, la fuente que ya carga la pagina) en vez de instalar un componente de
+   registro: este proyecto no tiene React ni build step, y el codigo de ese
+   componente no es auditable sin cuenta en el registro.
+   Va detras del contenido y no captura eventos. */
+/* Opacidad baja y desvanecido hacia el centro: a .5 el patron competia con el
+   subtitulo y el texto dejaba de leerse. El ASCII debe ser textura de fondo,
+   nunca disputarle contraste al contenido. */
+#ascii-bg{
+  position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;
+  opacity:.16;
+  -webkit-mask-image:linear-gradient(100deg, #000 0%, transparent 42%, transparent 100%);
+  mask-image:linear-gradient(100deg, #000 0%, transparent 42%, transparent 100%);
+}
+/* Sin animacion para quien la desactivo por accesibilidad: el canvas se oculta
+   y queda un degradado estatico con el mismo tono. */
+@media (prefers-reduced-motion: reduce){
+  #ascii-bg{display:none}
+  .wv3-outer{background:radial-gradient(120% 80% at 50% 0%, var(--grn-bg) 0%, var(--bg) 60%)}
+}
 .wv3-wrap{flex:1;display:grid;grid-template-columns:1fr;gap:32px;align-items:center;padding:28px 24px 20px;max-width:1100px;margin:0 auto;width:100%}
 @media(min-width:900px){.wv3-wrap{grid-template-columns:3fr 2fr;gap:48px;padding:32px 40px 24px}}
 .wv3-left{display:flex;flex-direction:column;gap:22px;max-width:560px}
@@ -4225,10 +4245,80 @@ function renderMain(){
   }
 }
 
+// ── FONDO ASCII DEL HERO ────────────────────────────────────────────────
+// Canvas 2D con JetBrains Mono (ya cargada). Campo de ondas superpuestas que
+// se mapea a una rampa de caracteres: cuanta mas amplitud, caracter mas denso.
+// Se hace nativo y no con un componente de registro externo porque este
+// proyecto no tiene React ni build step, y aquel codigo no era auditable.
+var _asciiRAF=null, _asciiObs=null;
+function asciiBgStart(){
+  var cv=document.getElementById('ascii-bg');
+  if(!cv) return;
+  // renderWelcome puede ejecutarse varias veces y cada vez crea un canvas nuevo.
+  // Sin esto, el bucle anterior seguia vivo pintando sobre el canvas desechado y
+  // arranca() lo veia "ya animando", asi que el canvas nuevo no se pintaba nunca.
+  if(_asciiRAF){ cancelAnimationFrame(_asciiRAF); _asciiRAF=null; }
+  if(_asciiObs){ try{ _asciiObs.disconnect(); }catch(e){} _asciiObs=null; }
+  // Respeta la preferencia de accesibilidad: sin animacion no se arranca nada.
+  if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var ctx=cv.getContext('2d'); if(!ctx) return;
+  var RAMPA=' .:-=+*#%@';
+  var paso=14, t=0, cols=0, filas=0, dpr=1;
+
+  function medir(){
+    var r=cv.getBoundingClientRect();
+    dpr=Math.min(window.devicePixelRatio||1, 2); // 2 basta: mas es gastar GPU
+    cv.width=Math.max(1,Math.floor(r.width*dpr));
+    cv.height=Math.max(1,Math.floor(r.height*dpr));
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    cols=Math.ceil(r.width/paso); filas=Math.ceil(r.height/paso);
+    ctx.font='12px "JetBrains Mono", ui-monospace, monospace';
+    ctx.textBaseline='top';
+  }
+  function color(){
+    var cs=getComputedStyle(document.documentElement);
+    return (cs.getPropertyValue('--grn')||'#d8c9a3').trim();
+  }
+  var tinte=color();
+
+  function pinta(){
+    var r=cv.getBoundingClientRect();
+    ctx.clearRect(0,0,r.width,r.height);
+    ctx.fillStyle=tinte;
+    for(var y=0;y<filas;y++){
+      var linea='';
+      for(var x=0;x<cols;x++){
+        // Tres ondas desfasadas: da movimiento organico sin ruido aleatorio,
+        // que parpadearia entre fotogramas.
+        var v=Math.sin(x*0.14+t)+Math.sin(y*0.21-t*0.7)+Math.sin((x+y)*0.09+t*0.4);
+        var i=Math.floor(((v+3)/6)*(RAMPA.length-1));
+        linea+=RAMPA[Math.max(0,Math.min(RAMPA.length-1,i))];
+      }
+      ctx.fillText(linea,0,y*paso);
+    }
+    t+=0.02;
+    _asciiRAF=requestAnimationFrame(pinta);
+  }
+  function arranca(){ if(!_asciiRAF){ tinte=color(); _asciiRAF=requestAnimationFrame(pinta); } }
+  function para(){ if(_asciiRAF){ cancelAnimationFrame(_asciiRAF); _asciiRAF=null; } }
+
+  medir();
+  window.addEventListener('resize',function(){ medir(); },{passive:true});
+  // No gastar bateria pintando lo que no se ve: ni fuera de viewport ni con la
+  // pestana en segundo plano.
+  try{
+    _asciiObs=new IntersectionObserver(function(e){ e[0].isIntersecting?arranca():para(); });
+    _asciiObs.observe(cv);
+  }catch(e){ arranca(); }
+  document.addEventListener('visibilitychange',function(){ document.hidden?para():arranca(); });
+  arranca();
+}
+
 // ── WELCOME ────────────────────────────────────────────────────
 function renderWelcome(){
   document.getElementById('main').innerHTML=
     '<div class="wv3-outer">'+
+    '<canvas id="ascii-bg" aria-hidden="true"></canvas>'+
     '<div class="wv3-wrap">'+
     // ── COLUMNA IZQUIERDA ──
     '<div class="wv3-left">'+
@@ -4299,6 +4389,7 @@ function renderWelcome(){
     '</div>'+ // end wv3-wrap
     '<div class="wv3-footer">© 2025–2026 MAXNOVA &amp; LUCI Global LLC · No somos asesores financieros · Datos referenciales</div>'+
     '</div>'; // end wv3-outer
+  asciiBgStart();
   // Animaciones de count-up en score cards
   wv3CountUp('wv3-s-aapl',78,400);
   wv3CountUp('wv3-s-nvda',64,550);
