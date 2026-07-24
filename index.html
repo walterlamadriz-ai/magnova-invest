@@ -1160,20 +1160,25 @@ tr:last-child td { border-bottom: none; }
    registro: este proyecto no tiene React ni build step, y el codigo de ese
    componente no es auditable sin cuenta en el registro.
    Va detras del contenido y no captura eventos. */
-/* Opacidad baja y desvanecido hacia el centro: a .5 el patron competia con el
-   subtitulo y el texto dejaba de leerse. El ASCII debe ser textura de fondo,
-   nunca disputarle contraste al contenido. */
-#ascii-bg{
-  position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;
-  opacity:.16;
-  -webkit-mask-image:linear-gradient(100deg, #000 0%, transparent 42%, transparent 100%);
-  mask-image:linear-gradient(100deg, #000 0%, transparent 42%, transparent 100%);
+/* Globo: textura de fondo del hero, anclado a la izquierda y detras del texto.
+   Opacidad baja a proposito — es ambiente, no debe disputarle contraste al
+   contenido. El mask lo desvanece antes de la columna de texto. */
+#globe-bg{
+  position:absolute; top:50%; left:0; transform:translate(-22%,-50%);
+  width:min(760px,72vw); height:min(760px,72vw);
+  z-index:-1; pointer-events:none; opacity:.62;
+  -webkit-mask-image:radial-gradient(circle at 44% 50%, #000 46%, transparent 82%);
+  mask-image:radial-gradient(circle at 44% 50%, #000 46%, transparent 82%);
 }
-/* Sin animacion para quien la desactivo por accesibilidad: el canvas se oculta
-   y queda un degradado estatico con el mismo tono. */
+/* Sin animacion para quien la desactivo por accesibilidad: se oculta el canvas
+   y queda un degradado estatico del mismo tono. */
 @media (prefers-reduced-motion: reduce){
-  #ascii-bg{display:none}
-  .wv3-outer{background:radial-gradient(120% 80% at 50% 0%, var(--grn-bg) 0%, var(--bg) 60%)}
+  #globe-bg{display:none}
+  .wv3-outer{background:radial-gradient(90% 70% at 12% 50%, var(--grn-bg) 0%, var(--bg) 62%)}
+}
+@media (max-width:900px){
+  /* En movil el texto ocupa todo el ancho: el globo estorbaria la lectura. */
+  #globe-bg{opacity:.28; transform:translate(-38%,-50%)}
 }
 .wv3-wrap{flex:1;display:grid;grid-template-columns:1fr;gap:32px;align-items:center;padding:28px 24px 20px;max-width:1100px;margin:0 auto;width:100%}
 @media(min-width:900px){.wv3-wrap{grid-template-columns:3fr 2fr;gap:48px;padding:32px 40px 24px}}
@@ -4358,70 +4363,78 @@ function renderMain(){
   }
 }
 
-// ── FONDO ASCII DEL HERO ────────────────────────────────────────────────
-// Canvas 2D con JetBrains Mono (ya cargada). Campo de ondas superpuestas que
-// se mapea a una rampa de caracteres: cuanta mas amplitud, caracter mas denso.
-// Se hace nativo y no con un componente de registro externo porque este
-// proyecto no tiene React ni build step, y aquel codigo no era auditable.
-var _asciiRAF=null, _asciiObs=null;
-function asciiBgStart(){
-  var cv=document.getElementById('ascii-bg');
+// ── GLOBO DEL HERO ───────────────────────────────────────────────────────
+// Globo de puntos dibujado en canvas 2D. Se implementa nativo en vez de
+// instalar cobe desde un registro externo: este proyecto no tiene React ni
+// build step, y el codigo del componente de aquel registro no es auditable
+// sin cuenta. La malla se genera con espiral de Fibonacci (puntos repartidos
+// uniformemente sobre la esfera, sin acumularse en los polos) y se rota sobre
+// el eje Y; los puntos de la cara oculta se descartan por su normal.
+var _globeRAF=null, _globeObs=null;
+function globeBgStart(){
+  var cv=document.getElementById('globe-bg');
   if(!cv) return;
-  // renderWelcome puede ejecutarse varias veces y cada vez crea un canvas nuevo.
-  // Sin esto, el bucle anterior seguia vivo pintando sobre el canvas desechado y
-  // arranca() lo veia "ya animando", asi que el canvas nuevo no se pintaba nunca.
-  if(_asciiRAF){ cancelAnimationFrame(_asciiRAF); _asciiRAF=null; }
-  if(_asciiObs){ try{ _asciiObs.disconnect(); }catch(e){} _asciiObs=null; }
-  // Respeta la preferencia de accesibilidad: sin animacion no se arranca nada.
+  // Igual que el hero anterior: renderWelcome puede ejecutarse varias veces y
+  // cada vez crea un canvas nuevo. Sin cancelar, el bucle viejo seguiria vivo
+  // sobre un canvas desechado y bloquearia el arranque del nuevo.
+  if(_globeRAF){ cancelAnimationFrame(_globeRAF); _globeRAF=null; }
+  if(_globeObs){ try{ _globeObs.disconnect(); }catch(e){} _globeObs=null; }
   if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   var ctx=cv.getContext('2d'); if(!ctx) return;
-  var RAMPA=' .:-=+*#%@';
-  var paso=14, t=0, cols=0, filas=0, dpr=1;
 
-  function medir(){
-    var r=cv.getBoundingClientRect();
-    dpr=Math.min(window.devicePixelRatio||1, 2); // 2 basta: mas es gastar GPU
-    cv.width=Math.max(1,Math.floor(r.width*dpr));
-    cv.height=Math.max(1,Math.floor(r.height*dpr));
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    cols=Math.ceil(r.width/paso); filas=Math.ceil(r.height/paso);
-    ctx.font='12px "JetBrains Mono", ui-monospace, monospace';
-    ctx.textBaseline='top';
+  var N=2600, pts=[], phi=Math.PI*(3-Math.sqrt(5));
+  for(var i=0;i<N;i++){
+    var y=1-(i/(N-1))*2, r=Math.sqrt(Math.max(0,1-y*y)), th=phi*i;
+    pts.push([Math.cos(th)*r, y, Math.sin(th)*r]);
   }
-  function color(){
+
+  var t=0, dpr=1, W=0, H=0, R=0;
+  function medir(){
+    var rc=cv.getBoundingClientRect();
+    dpr=Math.min(window.devicePixelRatio||1,2);
+    W=Math.max(1,rc.width); H=Math.max(1,rc.height);
+    cv.width=Math.floor(W*dpr); cv.height=Math.floor(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    R=Math.min(W,H)*0.42;
+  }
+  function tinte(){
     var cs=getComputedStyle(document.documentElement);
     return (cs.getPropertyValue('--grn')||'#d8c9a3').trim();
   }
-  var tinte=color();
+  var col=tinte();
 
   function pinta(){
-    var r=cv.getBoundingClientRect();
-    ctx.clearRect(0,0,r.width,r.height);
-    ctx.fillStyle=tinte;
-    for(var y=0;y<filas;y++){
-      var linea='';
-      for(var x=0;x<cols;x++){
-        // Tres ondas desfasadas: da movimiento organico sin ruido aleatorio,
-        // que parpadearia entre fotogramas.
-        var v=Math.sin(x*0.14+t)+Math.sin(y*0.21-t*0.7)+Math.sin((x+y)*0.09+t*0.4);
-        var i=Math.floor(((v+3)/6)*(RAMPA.length-1));
-        linea+=RAMPA[Math.max(0,Math.min(RAMPA.length-1,i))];
-      }
-      ctx.fillText(linea,0,y*paso);
+    ctx.clearRect(0,0,W,H);
+    var cx=W/2, cy=H/2;
+    var ct=Math.cos(t), st=Math.sin(t);
+    // Inclinacion fija del eje: un globo perfectamente vertical lee como circulo
+    var tilt=-0.38, ctl=Math.cos(tilt), stl=Math.sin(tilt);
+    for(var i=0;i<N;i++){
+      var p=pts[i];
+      var x=p[0]*ct - p[2]*st;
+      var z=p[0]*st + p[2]*ct;
+      var y=p[1]*ctl - z*stl;
+      z=p[1]*stl + z*ctl;
+      if(z<0) continue;               // cara oculta
+      var d=0.55+0.45*z;              // los puntos del frente pesan mas
+      ctx.globalAlpha=d*d;
+      ctx.fillStyle=col;
+      var s=d*2.0;
+      ctx.fillRect(cx+x*R-s/2, cy+y*R-s/2, s, s);
     }
-    t+=0.02;
-    _asciiRAF=requestAnimationFrame(pinta);
+    ctx.globalAlpha=1;
+    t+=0.0022;
+    _globeRAF=requestAnimationFrame(pinta);
   }
-  function arranca(){ if(!_asciiRAF){ tinte=color(); _asciiRAF=requestAnimationFrame(pinta); } }
-  function para(){ if(_asciiRAF){ cancelAnimationFrame(_asciiRAF); _asciiRAF=null; } }
+  function arranca(){ if(!_globeRAF){ col=tinte(); _globeRAF=requestAnimationFrame(pinta); } }
+  function para(){ if(_globeRAF){ cancelAnimationFrame(_globeRAF); _globeRAF=null; } }
 
   medir();
-  window.addEventListener('resize',function(){ medir(); },{passive:true});
-  // No gastar bateria pintando lo que no se ve: ni fuera de viewport ni con la
-  // pestana en segundo plano.
+  window.addEventListener('resize',medir,{passive:true});
+  // No gastar bateria pintando lo que no se ve.
   try{
-    _asciiObs=new IntersectionObserver(function(e){ e[0].isIntersecting?arranca():para(); });
-    _asciiObs.observe(cv);
+    _globeObs=new IntersectionObserver(function(e){ e[0].isIntersecting?arranca():para(); });
+    _globeObs.observe(cv);
   }catch(e){ arranca(); }
   document.addEventListener('visibilitychange',function(){ document.hidden?para():arranca(); });
   arranca();
@@ -4431,7 +4444,7 @@ function asciiBgStart(){
 function renderWelcome(){
   document.getElementById('main').innerHTML=
     '<div class="wv3-outer">'+
-    '<canvas id="ascii-bg" aria-hidden="true"></canvas>'+
+    '<canvas id="globe-bg" aria-hidden="true"></canvas>'+
     '<div class="wv3-wrap">'+
     // ── COLUMNA IZQUIERDA ──
     '<div class="wv3-left">'+
@@ -4502,7 +4515,7 @@ function renderWelcome(){
     '</div>'+ // end wv3-wrap
     '<div class="wv3-footer">© 2025–2026 MAXNOVA &amp; LUCI Global LLC · No somos asesores financieros · Datos referenciales</div>'+
     '</div>'; // end wv3-outer
-  asciiBgStart();
+  globeBgStart();
   // Animaciones de count-up en score cards
   wv3CountUp('wv3-s-aapl',78,400);
   wv3CountUp('wv3-s-nvda',64,550);
