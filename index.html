@@ -251,6 +251,7 @@
      eso no es un refactor, es un rediseno. Con base 2 se elimina la
      arbitrariedad real (los 32 valores impares) sin tocar la composicion. */
   --suite-h: 34px;   /* alto de la franja de suite; lo descuentan .sb y #topbar */
+  --topbar-h: 52px;  /* alto de la banda de mercado (#topbar, fixed): el nav superior lo reserva */
   --sp-1:  2px;
   --sp-2:  4px;
   --sp-3:  6px;
@@ -267,7 +268,7 @@
   --sp-24: 48px;
 
   /* Sidebar */
-  --sb-w:  256px;
+  --sb-w:  0px;
 }
 
 /* ── DARK MODE ── */
@@ -1411,9 +1412,55 @@ tr:last-child td { border-bottom: none; }
     gap:10px;
     z-index: 50;
   }
-  .main { margin-top: calc(52px + var(--suite-h)); }
+  /* Ya no reserva el hueco de las bandas fijas: ahora lo hace #mainnav, que va
+     encima de .main dentro de la misma columna. Mantenerlo aqui lo contaba dos
+     veces y dejaba 86px muertos entre el nav y la cabecera del modulo. */
+  .main { margin-top: 0; }
 }
 #topbar { display: none; }
+/* ── Navegacion superior (sustituye al sidebar) ── */
+#mainnav { display:none; }
+/* #topbar (la banda de mercado) es position:fixed a top:34px con 52px de alto y
+   z-index 50, asi que esta fuera del flujo y tapaba la primera fila del nav.
+   El nav reserva esa altura y se fija justo debajo. */
+body:not(.no-auth) #mainnav {
+  display:block; position:sticky; top:calc(var(--suite-h) + var(--topbar-h)); z-index:40;
+  margin-top:var(--topbar-h);
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.mn-row { display:flex; align-items:center; gap:var(--sp-6); padding:var(--sp-5) 28px; }
+.mn-brand { display:flex; align-items:center; gap:var(--sp-4); font-size:13px; color:var(--text2); flex-shrink:0; }
+.mn-brand b { color:var(--bright); font-weight:600; }
+.mn-brand-i {
+  width:26px; height:26px; border-radius:var(--r-sm); background:var(--grn-solid); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;
+}
+.mn-items { display:flex; gap:var(--sp-1); flex:1; flex-wrap:wrap; }
+.mn-item {
+  background:none; border:none; cursor:pointer; padding:var(--sp-4) var(--sp-6);
+  border-radius:var(--r-sm); font-family:inherit; font-size:13px; color:var(--text2);
+  white-space:nowrap; transition:background .15s, color .15s;
+}
+.mn-item:hover { background:var(--card2); color:var(--bright); }
+.mn-item.act { color:var(--bright); font-weight:600; background:var(--grn-bg); }
+.mn-cfg { flex-shrink:0; font-size:15px; }
+/* Segunda fila: destinos del grupo activo. Solo aparece cuando hay mas de uno. */
+.mn-sub { display:flex; gap:var(--sp-1); padding:0 28px var(--sp-4); flex-wrap:wrap; }
+.mn-subitem {
+  background:none; border:none; cursor:pointer; padding:var(--sp-3) var(--sp-5);
+  border-radius:var(--r-sm); font-family:'JetBrains Mono',monospace; font-size:11px;
+  color:var(--text3); white-space:nowrap;
+}
+.mn-subitem:hover { color:var(--bright); background:var(--card2); }
+.mn-subitem.act { color:var(--grn); background:var(--grn-bg); font-weight:600; }
+/* El sidebar deja de existir en escritorio: su ancho reservado pasa a 0 y el
+   contenido gana los 256px. En movil ya no se mostraba (hay #mob-tab-bar). */
+.sb { display:none !important; }
+@media (max-width: 900px) {
+  .mn-row { padding:var(--sp-4) 16px; gap:var(--sp-4); }
+  .mn-brand span:not(.mn-brand-i) { display:none; }
+  .mn-sub { padding:0 16px var(--sp-3); }
+}
 .tb-title {
   font-size: 15px;
   font-weight: 600;
@@ -1848,6 +1895,10 @@ div:has(>.dtab), div:has(>.rtab) {
   <nav class="sb" id="sb"></nav>
   <div id="topbar"></div>
   <div style="display:flex;flex-direction:column;flex:1;min-width:0">
+    <!-- La navegacion va DENTRO de la columna de contenido: .app es un flex row,
+         y como hermano directo el nav se colocaba al lado del contenido en vez
+         de encima, partiendo la pantalla en dos. -->
+    <nav id="mainnav"></nav>
     <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg)" id="mobile-header">
       <button class="hbg-btn" onclick="toggleMobileMenu()" title="Menú" aria-label="Abrir menú"><span aria-hidden="true">☰</span></button>
       <span id="mobile-page-label" style="font-size:13px;font-weight:600;color:var(--bright);letter-spacing:.2px"></span>
@@ -2995,7 +3046,60 @@ function showToast(msg,type){
   requestAnimationFrame(function(){ t.classList.add('show'); });
   setTimeout(function(){ t.classList.remove('show'); setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},300); },3000);
 }
-function render(){renderSidebar();renderTopbar();renderMain();renderModal();renderDisclaimer();}
+function render(){renderSidebar();renderTopbar();renderMainNav();renderMain();renderModal();renderDisclaimer();}
+
+// ── NAVEGACION SUPERIOR ──────────────────────────────────────────────────
+// Sustituye al sidebar de 256px (17.8% del ancho a 1440px). El sidebar listaba
+// 20 destinos planos, que es lo que impedia llevarlos arriba: 20 items no caben
+// en horizontal. Se consolidan en 7 grupos y los destinos absorbidos pasan a una
+// segunda fila que solo aparece cuando el grupo activo tiene mas de uno.
+// Ningun modulo se reescribe: cambia la navegacion, no las paginas.
+var NAV_C=[
+  {id:'dash',     label:'Dashboard',  pages:['dash','news']},
+  {id:'port',     label:'Portfolio',  pages:['port','rebal','bitacora']},
+  {id:'watch',    label:'Watchlist',  pages:['watch','alert']},
+  {id:'decision', label:'Análisis',   pages:['decision','sig','ind','radar','sentiment']},
+  {id:'screener', label:'Explorar',   pages:['screener','comp']},
+  {id:'risk',     label:'Decidir',    pages:['risk','capital','back']},
+  {id:'divs',     label:'Dividendos', pages:['divs']}
+];
+function navGrupoDe(pageId){
+  for(var i=0;i<NAV_C.length;i++) if(NAV_C[i].pages.indexOf(pageId)>=0) return NAV_C[i];
+  return null;
+}
+function renderMainNav(){
+  var el=document.getElementById('mainnav');
+  if(!el) return;
+  if(!S.user){ el.innerHTML=''; return; }
+  var plan=S.user?PLANS[S.user.plan]:null;
+  var activo=navGrupoDe(S.page);
+
+  var fila1=NAV_C.map(function(g){
+    var act=(activo&&activo.id===g.id)?' act':'';
+    return '<button class="mn-item'+act+'" onclick="setPage(\''+g.pages[0]+'\')">'+g.label+'</button>';
+  }).join('');
+
+  // Segunda fila: solo si el grupo activo agrupa mas de un destino. Sin esto,
+  // los 13 destinos absorbidos quedarian inalcanzables.
+  var fila2='';
+  if(activo&&activo.pages.length>1){
+    fila2='<div class="mn-sub">'+activo.pages.map(function(id){
+      var p=PAGES.find(function(x){return x.id===id;});
+      if(!p) return '';
+      var bloqueado=!!(plan&&plan.locked&&plan.locked.indexOf(id)>=0);
+      var act=S.page===id?' act':'';
+      var accion=bloqueado?"openModal('upgrade')":'setPage(\''+id+'\')';
+      return '<button class="mn-subitem'+act+'" onclick="'+accion+'">'+p.label+
+        (bloqueado?' <span class="fos-pro-badge">PRO</span>':'')+'</button>';
+    }).join('')+'</div>';
+  }
+
+  el.innerHTML='<div class="mn-row">'+
+    '<div class="mn-brand"><span class="mn-brand-i">FI</span><span>FinanceOS <b>Invest</b></span></div>'+
+    '<div class="mn-items">'+fila1+'</div>'+
+    '<button class="mn-item mn-cfg" onclick="setPage(\'settings\')" aria-label="Configuración">⚙</button>'+
+    '</div>'+fila2;
+}
 
 function renderTopbar(){
   var el=document.getElementById('topbar');
@@ -3081,6 +3185,9 @@ function setPage(p){
     }
   });
   renderTopbar();
+  // La barra superior se repinta entera: al cambiar de grupo cambia tambien la
+  // segunda fila, asi que no basta con mover la clase 'act' como en el sidebar.
+  renderMainNav();
   renderMain();
 }
 
