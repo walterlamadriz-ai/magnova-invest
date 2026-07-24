@@ -8378,7 +8378,7 @@ function renderRadar(){
     '<button onclick="generateRadarReport()" class="btn-big" style="padding:8px 18px;font-size:12px"'+(RADAR.loading?' disabled':'')+'>'+(RADAR.loading?'<span style="display:inline-flex;align-items:center;gap:6px"><span class="spin-sm"></span>Analizando...</span>':'📡 '+(hasReport?'Actualizar Radar':'Generar Radar'))+'</button>')+
 
     // KPIs
-    '<div class="krow" style="margin-bottom:16px">'+
+    '<div class="krow">'+
     kpi('Health Score',health.total+'/100',health.total>=70?'Portfolio sano':health.total>=50?'Revisar algunos puntos':'Atención requerida',health.total>=70?'g':health.total>=50?'a':'r')+
     kpi('Diversificación',health.subs.div+'/100','','n')+
     kpi('Momentum',health.subs.mom+'%','Posiciones en verde','g')+
@@ -8983,7 +8983,7 @@ function renderComp(){
         return '<tr class="trow"><td style="font-size:11px;color:var(--text2)">'+m.label+'</td>'+cells+bestCell+'</tr>';
       }).join('');
 
-      statsContent='<div class="tw" style="margin-top:14px"><table><thead>'+headerRow+'</thead><tbody>'+dataRows+'</tbody></table></div>';
+      statsContent='<div class="tw"><table><thead>'+headerRow+'</thead><tbody>'+dataRows+'</tbody></table></div>';
 
       if(tickerStats.length>=2){
         var corrInsight=tickerStats.slice(1).map(function(s){
