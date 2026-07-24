@@ -253,7 +253,7 @@
      grid de 4. Forzar escala estricta de 4 habria movido 94 declaraciones:
      eso no es un refactor, es un rediseno. Con base 2 se elimina la
      arbitrariedad real (los 32 valores impares) sin tocar la composicion. */
-  --suite-h: 34px;   /* alto de la franja de suite; lo descuentan .sb y #topbar */
+  --suite-h: 0px;    /* la franja de suite se elimino; se conserva el token porque .sb y #topbar lo descuentan */
   --topbar-h: 52px;  /* alto de la banda de mercado (#topbar, fixed): el nav superior lo reserva */
   --sp-1:  2px;
   --sp-2:  4px;
@@ -1453,6 +1453,12 @@ body:not(.no-auth) #mainnav {
 .mn-item:hover { background:var(--card2); color:var(--bright); }
 .mn-item.act { color:var(--bright); font-weight:600; background:var(--grn-bg); }
 .mn-cfg { flex-shrink:0; font-size:15px; }
+/* Enlace de vuelta a la suite, junto al engranaje: agrupa "salir de la app" y
+   "configuracion", que es donde el usuario los busca. */
+.mn-suite { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.4px; text-decoration:none; }
+/* En movil se queda solo la flecha: ocultar el enlace entero dejaria la vuelta
+   a la suite sin ningun acceso, que era justo lo que daba la franja eliminada. */
+@media (max-width: 760px){ .mn-suite span { display:none; } }
 /* Segunda fila: destinos del grupo activo. Solo aparece cuando hay mas de uno. */
 .mn-sub { display:flex; gap:var(--sp-1); padding:0 28px var(--sp-4); flex-wrap:wrap; }
 .mn-subitem {
@@ -1909,13 +1915,9 @@ div:has(>.dtab), div:has(>.rtab) {
      vendia incluso a quien ya habia pagado. Ahora usa tokens, respeta los dos
      temas, y el upsell queda donde ya existe: freeBanner() y el modal interno,
      que solo aparecen en plan free. -->
-<nav class="suite-nav" aria-label="Navegación de suite">
-  <a href="https://financeospro.com" class="suite-home">
-    <span aria-hidden="true">←</span> FinanceOS
-  </a>
-  <span class="suite-sep" aria-hidden="true">/</span>
-  <span class="suite-current">Invest</span>
-</nav>
+<!-- La franja de suite ocupaba 34px fijos en todas las pantallas para un solo
+     enlace. El enlace se movio junto al engranaje del nav; "Invest" era
+     redundante con la marca de la barra. -->
 <div role="button" tabindex="0" class="sb-backdrop" id="sb-backdrop" onclick="toggleMobileMenu(false)"></div>
 <div class="app">
   <nav class="sb" id="sb"></nav>
@@ -3129,6 +3131,7 @@ function renderMainNav(){
   el.innerHTML='<div class="mn-row">'+
     '<div class="mn-brand"><span class="mn-brand-i"><img src="/icon-192.png" alt="" width="26" height="26" style="display:block;width:100%;height:100%;object-fit:contain"/></span><span>FinanceOS <b>Invest</b></span></div>'+
     '<div class="mn-items">'+fila1+'</div>'+
+    '<a class="mn-item mn-cfg mn-suite" href="https://financeospro.com" title="Volver a FinanceOS">←<span> FinanceOS</span></a>'+
     '<button class="mn-item mn-cfg" onclick="setPage(\'settings\')" aria-label="Configuración">⚙</button>'+
     '</div>'+fila2;
 }
