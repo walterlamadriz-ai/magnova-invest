@@ -590,7 +590,10 @@ body.no-auth .main { margin-left:0 !important; margin-top:0 !important; }
   border-radius: var(--r-lg);
   padding:18px 20px;
   box-shadow: var(--shadow-sm);
-  margin-bottom:14px;
+  /* Unica fuente del espaciado de este componente: antes 41 usos de .cb
+     llevaban margenes inline de 10/12/14/16px que pisaban esta regla, asi que
+     tarjetas identicas quedaban a distancias distintas segun quien las escribio. */
+  margin-bottom:var(--sp-7);
 }
 
 /* ── SECTION TITLE ── */
@@ -4082,7 +4085,7 @@ function renderSettings(){
     _ph('Cuenta · Configuración','Configuración','// Cuenta · Preferencias · Plan')+
 
     // Account section
-    '<div class="cb" style="margin-bottom:14px">'+
+    '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Cuenta</div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
     '<div><div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-bottom:4px">EMAIL</div>'+
@@ -4098,7 +4101,7 @@ function renderSettings(){
     '</div>'+
 
     // Appearance section
-    '<div class="cb" style="margin-bottom:14px">'+
+    '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Apariencia</div>'+
     '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0">'+
     '<div>'+
@@ -4112,7 +4115,7 @@ function renderSettings(){
     '</div>'+
 
     // App / PWA section
-    '<div class="cb" style="margin-bottom:14px">'+
+    '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Aplicación</div>'+
     '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;gap:12px">'+
     '<div>'+
@@ -4124,7 +4127,7 @@ function renderSettings(){
     '</div>'+
 
     // Capital section
-    '<div class="cb" style="margin-bottom:14px">'+
+    '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Capital de referencia</div>'+
     '<p style="font-size:12px;color:var(--text2);margin-bottom:10px">Usado en Position Builder y cálculos de riesgo. No se conecta a ningún broker.</p>'+
     '<div style="display:flex;align-items:center;gap:10px">'+
@@ -4135,7 +4138,7 @@ function renderSettings(){
     '</div>'+
 
     // Data section
-    '<div class="cb" style="margin-bottom:14px">'+
+    '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Datos y privacidad</div>'+
     '<div style="display:flex;flex-direction:column;gap:10px">'+
     '<div style="display:flex;align-items:center;justify-content:space-between">'+
@@ -4159,7 +4162,7 @@ function renderSettings(){
     '</div>'+
 
     // Danger zone
-    '<div class="cb" style="border-color:var(--red);margin-bottom:14px">'+
+    '<div class="cb" style="border-color:var(--red)">'+
     '<div class="st"><div class="stbar" style="background:var(--red)"></div>Zona de riesgo</div>'+
     '<div style="display:flex;align-items:center;justify-content:space-between">'+
     '<div><div style="font-size:13px;font-weight:500;color:var(--bright)">Cerrar sesión</div>'+
@@ -4822,7 +4825,7 @@ function renderBitacora(){
     '</div>'+
     // Trading performance stats
     (sells.length>=2?
-    '<div class="cb" style="margin-bottom:14px"><div class="st"><div class="stbar"></div>Performance de Trading</div>'+
+    '<div class="cb"><div class="st"><div class="stbar"></div>Performance de Trading</div>'+
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">'+
     '<div style="text-align:center;padding:10px;background:var(--card2);border-radius:var(--r-md);border:1px solid var(--border)">'+
       '<div style="font-size:18px;font-weight:700;color:'+(winRate>=50?'var(--grn)':'var(--red)')+'">'+winRate+'%</div>'+
@@ -5007,7 +5010,7 @@ function renderWatch(){
 
   document.getElementById("main").innerHTML=
     '<div class="fos-module-header"><div><div class="fos-module-crumb">Principal · Watchlist</div><div class="fos-module-title">Watchlist</div><div class="fos-module-sub">'+wl.length+' tickers · <span id="saved">✓ Guardado</span></div></div><div class="ph-right">'+liveBadge()+(isPro?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">🎯 Motor →</button>':'')+' <button class="btn" style="border-color:var(--border);color:var(--text3);font-size:10px" onclick="resetWatch()">↺ Default</button></div></div>'+
-    '<div class="cb" style="margin-bottom:14px">'+
+    '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Agregar ticker</div>'+
     '<div class="wtag-grid">'+quickTags+'</div>'+
     '<div style="display:flex;gap:8px">'+
@@ -5807,7 +5810,7 @@ function renderRiskBody(){
         '<div style="width:34px;text-align:right;font-size:12px;font-weight:700;color:'+b.color+';font-family:\'JetBrains Mono\',monospace">'+b.pct+'%</div>'+
       '</div>';
     }).join('');
-    allocHtml='<div class="cb" style="margin-bottom:16px">'+
+    allocHtml='<div class="cb">'+
       '<div class="st"><div class="stbar"></div>Asignación Sugerida — Perfil '+al.label+'</div>'+
       barsHtml+
       '<div style="padding:8px 12px;background:var(--card3);border-radius:var(--r-sm);margin-top:8px;font-size:11px;font-family:\'JetBrains Mono\',monospace;color:var(--text2)">'+
@@ -5817,7 +5820,7 @@ function renderRiskBody(){
       '<button onclick="showRiskProfile(function(){renderRisk();})" style="margin-top:10px;background:transparent;border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text3);font-size:10px;font-family:\'JetBrains Mono\',monospace;padding:4px 10px;cursor:pointer">✎ Cambiar perfil</button>'+
       '</div>';
   } else {
-    allocHtml='<div class="cb" style="margin-bottom:16px">'+
+    allocHtml='<div class="cb">'+
       '<div class="st"><div class="stbar"></div>Asignación Sugerida</div>'+
       '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-bottom:10px">Crea tu perfil de riesgo para obtener una asignación de activos personalizada.</div>'+
       '<button onclick="showRiskProfile(function(){renderRisk();})" class="btn" style="font-size:11px">Crear perfil de riesgo →</button>'+
@@ -5947,11 +5950,11 @@ function btRenderJournal(sells){
     kpi("Profit Factor",profitFactor!=null?profitFactor.toFixed(2):"—","ratio gana/pierde",profitFactor&&profitFactor>=1.5?"g":profitFactor&&profitFactor>=1?"a":"r")+
     kpi("Max Drawdown",D(maxDD),"caída máxima acumulada","r")+
     '</div>'+
-    '<div class="cb" style="margin-bottom:14px">'+
+    '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Equity Curve — trades reales de tu Bitácora</div>'+
     '<div style="display:flex;gap:2px;height:80px;align-items:flex-end;padding:4px">'+eqBars+'</div>'+
     '</div>'+
-    '<div class="cb" style="margin-bottom:14px">'+
+    '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Rendimiento por Activo</div>'+
     '<div class="tw"><table><thead><tr><th>Activo</th><th>Trades</th><th>W/L</th><th>Win Rate</th><th>P&L</th></tr></thead>'+
     '<tbody>'+tkRows+'</tbody></table></div></div>'+
@@ -5961,7 +5964,7 @@ function btRenderJournal(sells){
 function btRenderSim(){
   var res=BT.result;
   var formHtml=
-    '<div class="cb" style="margin-bottom:16px">'+
+    '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Parámetros de Simulación Histórica</div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px">'+
     '<div><label style="font-size:11px;color:var(--text3);display:block;margin-bottom:4px">Ticker</label>'+
@@ -6013,7 +6016,7 @@ function btRenderSim(){
     kpi("Max Drawdown",pct(res.maxDrawdownPct),"caída máx","r")+
     kpi("Max Drawdown %",pct(res.maxDrawdownPct),"caída máx acumulada","r")+
     '</div>'+
-    '<div class="cb" style="margin-bottom:14px">'+
+    '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Equity Curve — '+BT.ticker+' · SMA'+BT.fast+'/'+BT.slow+'</div>'+
     '<div style="display:flex;gap:1px;height:80px;align-items:flex-end;padding:4px">'+eqBars+'</div>'+
     '</div>'+
@@ -6646,7 +6649,7 @@ function renderCorrelationMatrix(port){
   var loaded=tickers.every(function(t){return dHistCache[t+'_60']&&dHistCache[t+'_60'].length>5;});
 
   if(!loaded){
-    return '<div class="cb" style="margin-top:14px">'+
+    return '<div class="cb">'+
       '<div class="st"><div class="stbar"></div>Correlación de portafolio</div>'+
       '<p style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin:0 0 10px">Calcula las correlaciones Pearson entre activos (2 meses de historia)</p>'+
       '<button class="btn" onclick="loadCorrData()">📊 Calcular matriz de correlación</button>'+
@@ -6677,7 +6680,7 @@ function renderCorrelationMatrix(port){
     return '<tr><th style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;padding:3px 8px 3px 0;text-align:right">'+ta+'</th>'+cells+'</tr>';
   }).join('');
 
-  return '<div class="cb" style="margin-top:14px">'+
+  return '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Correlación de portafolio <span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">(Pearson · 2 meses)</span></div>'+
     '<p style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin:0 0 10px">🔴 Alta correlación (>0.7) · 🟡 Media (0.4–0.7) · 🟢 Baja/negativa (diversificación)</p>'+
     '<div style="overflow-x:auto"><table style="border-collapse:collapse">'+header+bodyRows+'</table></div>'+
@@ -7347,7 +7350,7 @@ function renderPBBody(){
     }).join('');
     var conc=(c.posSize/cap);
     scenHtml=
-      '<div class="cb" style="margin-top:14px">'+
+      '<div class="cb">'+
       '<div class="st"><div class="stbar"></div>Simulación de escenarios — '+c.ticker+'</div>'+
       '<div class="tw"><table><thead><tr><th>Movimiento</th><th>Precio</th><th>P&L</th><th>Retorno</th></tr></thead><tbody>'+scRows+'</tbody></table></div>'+
       '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px">'+
@@ -8369,7 +8372,7 @@ function renderRadar(){
     // LEFT: history sidebar
     '<div>'+
     (RADAR.history.length>0?
-      '<div class="cb" style="margin-bottom:10px">'+
+      '<div class="cb">'+
       '<div class="st"><div class="stbar"></div>Historial ('+RADAR.history.length+' semanas)</div>'+
       sparkHTML+
       histItems+
@@ -8972,7 +8975,7 @@ function renderComp(){
             '<span style="font-size:11px;color:var(--text2)">'+advice+'</span>'+
             '<span style="font-size:11px;font-weight:700;color:var(--amber);font-family:\'JetBrains Mono\',monospace">'+c.toFixed(2)+'</span></div>';
         }).join('');
-        if(corrInsight) statsContent+='<div class="cb" style="margin-top:12px"><div class="st"><div class="stbar"></div>Correlación</div>'+corrInsight+
+        if(corrInsight) statsContent+='<div class="cb"><div class="st"><div class="stbar"></div>Correlación</div>'+corrInsight+
           '<div style="font-size:9px;color:var(--text3);margin-top:8px;font-family:\'JetBrains Mono\',monospace">1.0=idéntico · 0=independientes · -1=opuestos</div></div>';
       }
     }
@@ -8993,7 +8996,7 @@ function renderComp(){
     _ph('Herramientas · Comparador','Comparador de Activos','// Performance normalizado · Correlación · Sharpe ratio',liveBadge())+
     '<div class="resp2" style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start">'+
     '<div>'+
-    '<div class="cb" style="margin-bottom:10px">'+
+    '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Tickers</div>'+
     tickerInputs+
     (COMP.tickers.length<4?'<button onclick="compAddTicker()" class="btn" style="width:100%;margin-top:4px">+ Agregar ticker</button>':'')+
@@ -9131,7 +9134,7 @@ function renderDivs(){
     kpi('Con dividendos',divRows.length+' de '+port.length+'','n')+
     '</div>'+
     (divRows.length>0||DIVS.loading?
-      '<div class="cb" style="margin-bottom:14px"><div class="st"><div class="stbar"></div>Proyección mensual — próximos 12 meses</div>'+
+      '<div class="cb"><div class="st"><div class="stbar"></div>Proyección mensual — próximos 12 meses</div>'+
       '<div style="display:flex;align-items:flex-end;height:100px;gap:4px;padding:0 4px">'+calBars+'</div></div>'+
       '<div class="tw"><table><thead><tr><th>Ticker</th><th>Unidades</th><th>Dividendo</th><th>Ingreso anual</th><th>Yield</th><th>Frecuencia</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>'
     :'<div style="text-align:center;padding:40px;color:var(--text3)"><div style="font-size:36px;margin-bottom:10px">💰</div>'+
@@ -9585,7 +9588,7 @@ function renderRebal(){
     '<button onclick="rebalReset()" class="btn" style="margin-top:10px;width:100%">↺ Restaurar pesos actuales</button>'+
     '</div>'+
     '<div>'+
-    '<div class="cb" style="margin-bottom:12px">'+
+    '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Capital a rebalancear</div>'+
     '<div style="font-size:26px;font-weight:700;color:var(--bright);font-family:\'JetBrains Mono\',monospace">$'+fmt(totM)+'</div>'+
     '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:3px">'+port.length+' posiciones · Suma pesos: '+sumTargets+'%</div>'+
