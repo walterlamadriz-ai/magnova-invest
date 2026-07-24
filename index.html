@@ -6211,6 +6211,7 @@ function mAlert(mr){
       '<label class="lb" for="al-pr" style="margin-top:14px">Precio objetivo (USD)</label>'+
       '<input id="al-pr" class="inp" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" enterkeyhint="done" onkeydown="if(event.key===\'Enter\')alSave()"/>'+
       '<div id="al-hint" style="font-size:11px;color:var(--text3);margin-top:7px;font-family:\'JetBrains Mono\',monospace;line-height:1.5">Escribe un activo para ver su precio actual.</div>'+
+      '<div id="al-sug" style="margin-top:9px"></div>'+
       '<div id="al-err" class="wv3-err" role="alert" aria-live="polite" style="margin-top:8px"></div>'+
     '</div>'+
     '<div class="mf"><button class="btn" onclick="closeModal()">Cancelar</button>'+
@@ -6228,6 +6229,46 @@ function alSync(){
   var cur=getLivePrice(tk);
   if(!isFinite(cur)||cur<=0){ h.textContent='Sin precio de mercado para '+tk+'. Puedes crear la alerta igual.'; return; }
   h.textContent=tk+' cotiza ahora a $'+fmtD(cur)+'. Se avisará cuando '+(ty==='Max'?'suba a':'baje a')+' tu objetivo.';
+  alSugerencias(tk,ty,cur);
+}
+
+// Niveles propuestos a partir de datos que la app YA tiene del usuario, para no
+// fijar el objetivo a ciegas. Cada chip dice de donde sale el numero: sin la
+// razon visible seria un numero magico y el usuario no podria juzgarlo.
+// Solo se ofrecen niveles coherentes con la direccion elegida: un objetivo por
+// encima del precio actual no tiene sentido en una alerta de bajada.
+function alSugerencias(tk,ty,cur){
+  var cont=document.getElementById('al-sug'); if(!cont) return;
+  var sug=[];
+  try{
+    var pos=(S.portfolio||[]).find(function(h){return h.t===tk;});
+    if(pos&&pos.cost>0) sug.push({v:pos.cost, txt:'tu coste medio'});
+    var lq=(typeof LIVE==='object')?LIVE[tk]:null;
+    if(lq&&lq.low52>0) sug.push({v:lq.low52, txt:'mínimo 52 semanas'});
+    if(cur>0){
+      sug.push({v:cur*0.9,  txt:'−10% desde hoy'});
+      sug.push({v:cur*1.1,  txt:'+10% desde hoy'});
+    }
+  }catch(e){}
+  // Max = avisar al subir -> solo niveles por encima. Min = al bajar -> por debajo.
+  sug=sug.filter(function(s){
+    return isFinite(s.v)&&s.v>0&&(ty==='Max'? s.v>cur : s.v<cur);
+  });
+  // Quitar duplicados muy proximos entre si (mismo nivel por dos motivos)
+  var vistos=[];
+  sug=sug.filter(function(s){
+    var dup=vistos.some(function(v){return Math.abs(v-s.v)/s.v<0.005;});
+    if(!dup) vistos.push(s.v);
+    return !dup;
+  });
+  if(!sug.length){ cont.innerHTML=''; return; }
+  cont.innerHTML='<div style="font-size:10px;color:var(--text3);margin-bottom:5px">Niveles sugeridos según tus datos</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:5px">'+
+    sug.map(function(s){
+      return '<button type="button" class="btn" style="padding:3px 9px;font-size:10px" '+
+        'onclick="document.getElementById(\'al-pr\').value='+s.v.toFixed(2)+';alSync()">'+
+        '$'+fmtD(s.v)+' <span style="color:var(--text3)">· '+s.txt+'</span></button>';
+    }).join('')+'</div>';
 }
 function alSave(){
   var tk=(document.getElementById('al-tk')||{}).value||'';
