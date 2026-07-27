@@ -5957,49 +5957,11 @@ function renderNews(){
 }
 // El indice de sentimiento se muestra en dos sitios: como seccion de Contexto
 // y como pagina propia. Se extrae aqui para no duplicar 36 lineas de logica.
-function sentimentSection(){
-  return     (function(){
-      var d=calcSentiment();
-      var buy=ALL_SIG.filter(function(s){return s.sig==='BUY';}).length;
-      var sell=ALL_SIG.filter(function(s){return s.sig==='SELL';}).length;
-      var t=ALL_SIG.length||1;
-      var sentColor=d.score<=30?'var(--red)':d.score<=55?'var(--amber)':'var(--grn)';
-      var compRows=d.components.map(function(c){
-        var cw=Math.max(0,Math.min(100,Math.round(c.score)));
-        var cc=cw>=60?'var(--grn)':cw>=40?'var(--amber)':'var(--red)';
-        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">'+
-          '<span style="font-size:11px;color:var(--text2);font-family:\'JetBrains Mono\',monospace;white-space:nowrap">'+c.icon+' '+c.name+'</span>'+
-          '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'+
-          '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;width:60px;text-align:right;white-space:nowrap">'+c.value+'</span>'+
-          '<div style="width:60px;height:5px;background:var(--card3);border-radius:3px;flex-shrink:0">'+
-          '<div style="height:100%;width:'+cw+'%;background:'+cc+';border-radius:3px"></div></div>'+
-          '<span style="font-size:11px;font-weight:700;color:'+cc+';font-family:\'JetBrains Mono\',monospace;width:24px;text-align:right">'+cw+'</span>'+
-          '</div></div>';
-      }).join('');
-      return '<div class="resp2" style="display:grid;grid-template-columns:200px 1fr;gap:14px">'+
-        '<div class="fos-card" style="padding:20px 16px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center">'+
-          '<div style="width:88px;height:88px;border-radius:50%;background:conic-gradient('+sentColor+' '+d.score+'%, rgba(255,255,255,.06) '+d.score+'%);display:flex;align-items:center;justify-content:center;margin-bottom:12px">'+
-            '<div style="width:68px;height:68px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center">'+
-              '<span style="font-size:26px;font-weight:800;color:'+sentColor+';font-family:\'JetBrains Mono\',monospace">'+d.score+'</span>'+
-            '</div>'+
-          '</div>'+
-          '<div style="font-size:14px;font-weight:700;color:'+sentColor+';margin-bottom:6px">'+d.label+'</div>'+
-          '<div style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.8">'+
-            '<span style="color:var(--grn)">▲ '+buy+'</span> · '+(t-buy-sell)+' · <span style="color:var(--red)">▼ '+sell+'</span>'+
-          '</div>'+
-        '</div>'+
-        '<div class="fos-card" style="padding:16px">'+
-          '<div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;font-family:\'JetBrains Mono\',monospace;margin-bottom:12px">Componentes del Score</div>'+
-          compRows+
-        '</div>'+
-        '</div>';
-    })();
-}
 
-// La pagina de Sentimiento la sirve renderSentimentWidget(), que ya tenia dial,
-// historico de 14 dias, distribucion y top-6 pero estaba inalcanzable. Aqui
-// habia un envoltorio de 7 lineas sobre sentimentSection() que mostraba mucho
-// menos; se elimina. sentimentSection() se conserva: la usa Contexto.
+// La pagina de Sentimiento la sirve renderSentimentWidget() (dial, historico de
+// 14 dias, distribucion y top-6). El indice de sentimiento se retiro de Contexto
+// y del Dashboard por duplicar esa pagina; sentimentSection() y
+// renderSentimentCompact() se eliminaron por quedar sin uso.
 
 function setNewsF(f){S.newsFilter=f;renderMain();}
 
@@ -8008,15 +7970,6 @@ function buildDial(score,color,size){
     '</svg>';
 }
 
-function renderSentimentCompact(){
-  var d=calcSentiment();
-  return '<div role="button" tabindex="0" class="cb" style="cursor:pointer;text-align:center" onclick="setPage(\'sentiment\')">'+
-    '<div class="st"><div class="stbar"></div>Market Sentiment</div>'+
-    buildDial(d.score,d.color,180)+
-    '<div style="font-size:14px;font-weight:700;color:'+d.color+';margin-top:4px">'+d.emoji+' '+d.label+'</div>'+
-    '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:3px">Click para análisis completo →</div>'+
-    '</div>';
-}
 
 function renderSentimentWidget(){
   var d=calcSentiment();
