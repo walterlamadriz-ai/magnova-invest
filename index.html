@@ -255,7 +255,7 @@
      eso no es un refactor, es un rediseno. Con base 2 se elimina la
      arbitrariedad real (los 32 valores impares) sin tocar la composicion. */
   --suite-h: 0px;    /* la franja de suite se elimino; se conserva el token porque .sb y #topbar lo descuentan */
-  --topbar-h: 52px;  /* alto de la banda de mercado (#topbar, fixed): el nav superior lo reserva */
+  --topbar-h: 60px;  /* alto de la banda de mercado (#topbar, fixed): el nav superior lo reserva */
   --sp-1:  2px;
   --sp-2:  4px;
   --sp-3:  6px;
@@ -1424,6 +1424,9 @@ tr:last-child td { border-bottom: none; }
   .main { margin-top: 0; }
 }
 #topbar { display: none; }
+/* La banda de mercado crece con --topbar-h y centra su contenido: antes su alto
+   lo fijaba solo el contenido (~52px) y dejaba un hueco bajo la reserva. */
+body:not(.no-auth) #topbar { min-height: var(--topbar-h); box-sizing: border-box; }
 /* Banda de mercado: scroll horizontal sin barra visible — es una franja de 52px
    y una scrollbar nativa se comeria un tercio de su alto. */
 .mkt-strip { scrollbar-width: none; -ms-overflow-style: none; }
@@ -3135,12 +3138,11 @@ function render(){renderSidebar();renderTopbar();renderMainNav();renderMain();re
 // Ningun modulo se reescribe: cambia la navegacion, no las paginas.
 var NAV_C=[
   {id:'dash',     label:'Dashboard',  pages:['dash','news']},
-  {id:'port',     label:'Portfolio',  pages:['port','rebal','bitacora']},
+  {id:'port',     label:'Portfolio',  pages:['port','rebal','bitacora','divs']},
   {id:'watch',    label:'Watchlist',  pages:['watch','alert']},
   {id:'decision', label:'Análisis',   pages:['decision','sig','ind','radar','sentiment']},
   {id:'screener', label:'Explorar',   pages:['screener','comp']},
-  {id:'risk',     label:'Decidir',    pages:['risk','capital','back']},
-  {id:'divs',     label:'Dividendos', pages:['divs']}
+  {id:'risk',     label:'Decidir',    pages:['risk','capital','back']}
 ];
 function navGrupoDe(pageId){
   for(var i=0;i<NAV_C.length;i++) if(NAV_C[i].pages.indexOf(pageId)>=0) return NAV_C[i];
