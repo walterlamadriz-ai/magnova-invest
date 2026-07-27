@@ -9468,7 +9468,12 @@ function renderDivs(){
   }).filter(Boolean);
 
   var totalAnnual=divRows.reduce(function(s,r){return s+r.annualIncome;},0);
-  var totalCLP=totalAnnual*fx;
+  // Valor de la cartera para el yield medio, cuando la moneda es USD y no hay
+  // segunda tarjeta de conversion.
+  var totalPortValue=port.reduce(function(s,h){return s+(h.sh||0)*(getLivePrice(h.t)||h.cur||0);},0);
+  // La segunda tarjeta mostraba SIEMPRE CLP aunque el usuario tuviera USD u otra
+  // moneda seleccionada. Ahora usa USER_CURRENCY: si es USD no hay segunda
+  // tarjeta (seria el mismo dato dos veces).
 
   var months=[];
   var now=new Date();
@@ -9508,9 +9513,11 @@ function renderDivs(){
     '<button onclick="loadDivData()" class="btn-big" style="padding:8px 18px;font-size:12px;flex-shrink:0">'+
     (DIVS.loading?'<span style="display:inline-flex;align-items:center;gap:7px"><span class="spin-sm"></span>Cargando...</span>':'💰 Cargar dividendos')+'</button></div>'+
     '<div class="krow">'+
-    kpi('Ingreso anual USD','$'+fmtD(totalAnnual),'Proyectado','g')+
-    kpi('Ingreso mensual','$'+fmtD(totalAnnual/12),'Promedio','b')+
-    kpi('Ingreso anual CLP','$'+fmt(Math.round(totalCLP/1e6))+'M','A tipo de cambio','a')+
+    kpi('Ingreso anual'+(USER_CURRENCY!=='USD'?' USD':''),'$'+fmtD(totalAnnual),'Proyectado','g')+
+    kpi('Ingreso mensual'+(USER_CURRENCY!=='USD'?' USD':''),'$'+fmtD(totalAnnual/12),'Promedio','b')+
+    (USER_CURRENCY!=='USD'
+      ? kpi('Ingreso anual '+(FX_LABELS[USER_CURRENCY]||''),fxConvert(totalAnnual),'A tipo de cambio','a')
+      : kpi('Rendimiento medio',(totalPortValue>0?fmtD(totalAnnual/totalPortValue*100)+'%':'—'),'Yield de cartera','a'))+
     kpi('Con dividendos',divRows.length+' de '+port.length+'','n')+
     '</div>'+
     (divRows.length>0||DIVS.loading?
