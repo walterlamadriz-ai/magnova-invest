@@ -1345,6 +1345,7 @@ tr:last-child td { border-bottom: none; }
   /* responsive collapse for inline 2-col grids with a fixed px sidebar */
   .resp2 { grid-template-columns: 1fr !important; }
   .resp2 > div[style*="border-right"] { border-right: none !important; }
+  .grid2 { grid-template-columns: 1fr !important; }
   .krow { grid-template-columns: repeat(2,1fr); }
   table { font-size: 11px; }
   td, th { padding:8px 10px; }
@@ -1457,6 +1458,12 @@ body:not(.no-auth) #mainnav {
 .mn-item:hover { background:var(--card2); color:var(--bright); }
 .mn-item.act { color:var(--bright); font-weight:600; background:var(--grn-bg); }
 .mn-cfg { flex-shrink:0; font-size:15px; }
+/* Dos columnas para pares de cajas (Escenarios / R:R en Riesgo). Se usaba
+   class="grid2" sin ninguna regla, asi que las cajas caian apiladas a lo ancho;
+   el usuario lo veia como scroll innecesario. Colapsa a 1 columna en el media
+   query de <=900px. */
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+
 /* Enlace de vuelta a la suite, junto al engranaje: agrupa "salir de la app" y
    "configuracion", que es donde el usuario los busca. */
 .mn-suite { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.4px; text-decoration:none; }
