@@ -4933,7 +4933,7 @@ function renderDash(){
 
   // ── Mini-news widget ──
   var miniNews=(function(){
-    var news=getNewsData().slice(0,3);
+    var news=getNewsData().slice(0,10);  // maximo 10 noticias, pedido del usuario
     var impColor={'critical':'var(--red)','bullish':'var(--grn)','bearish':'var(--red)','neutral':'var(--amber)'};
     var items=news.map(function(n){
       var c=impColor[n.impact]||'var(--text3)';
@@ -4945,21 +4945,20 @@ function renderDash(){
         '<div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+n.cat+' · '+ago+'</div>'+
         '</div></div>';
     }).join('');
-    return '<div class="fos-card" style="margin-top:16px">'+
+    return '<div class="fos-card">'+
       '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px">'+
-      '<div class="fos-card-title">Noticias</div>'+
+      '<div class="fos-card-title">Noticias del mercado</div>'+
       '<button onclick="setPage(\'news\')" style="font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Ver todo →</button>'+
       '</div>'+
       '<div style="padding:0 20px 10px">'+items+'</div>'+
       '</div>';
   })();
 
-  // ── Right: Market context + Quick actions ──
-  var rightCol=
-    '<div id="de-regime-banner" class="dash-ctx-card" style="margin-bottom:16px"><div class="dash-ctx-loading">// Cargando contexto…</div></div>'+
-    // Market Movers llega desde Contexto al consolidar esa pantalla aqui.
-    '<div style="margin-top:14px">'+moversCard()+'</div>'+
-    '<div style="margin-top:14px">'+renderSentimentCompact()+'</div>';
+  // ── Contexto de mercado (régimen), full width sobre las dos columnas ──
+  // El sentimiento se retira del Dashboard: se repite tal cual en la pagina
+  // Sentimiento dentro de Analisis. Market Movers baja a la fila de noticias.
+  var regimeBanner=
+    '<div id="de-regime-banner" class="dash-ctx-card" style="margin-bottom:16px"><div class="dash-ctx-loading">// Cargando contexto…</div></div>';
 
   var now=new Date();
   var pageHeader=
@@ -4986,10 +4985,12 @@ function renderDash(){
     pageHeader+
     demoBanner('renderDash')+
     '<div class="dash-kpi">'+kpiCards+'</div>'+
-    '<div class="dash-body">'+
-    '<div>'+sigCard+portCard+miniNews+'</div>'+
-    '<div>'+rightCol+'</div>'+
-    '</div></div>';
+    regimeBanner+
+    // Fila 1: Top Senales y Portafolio, equilibradas lado a lado.
+    '<div class="grid2">'+sigCard+portCard+'</div>'+
+    // Fila 2: noticias del mercado (max 10) y Market Movers, debajo de las dos.
+    '<div class="grid2" style="margin-top:16px">'+miniNews+moversCard()+'</div>'+
+    '</div>';
 
   // Saved indicator (invisible, keeps backward compat)
   var savedEl=document.createElement('span');
@@ -5949,13 +5950,10 @@ function renderNews(){
 
     '</div>'+ // end right
     '</div>'+ // end grid
-
-    // ── SENTIMIENTO ── (destino del item "Sentimiento" del sidebar)
-    '<div id="sec-sentimiento" style="padding:20px;border-top:1px solid var(--border);scroll-margin-top:20px">'+
-    '<h2 class="fos-section-label" style="margin-bottom:14px">Índice de Sentimiento del Mercado</h2>'+
-    sentimentSection()+
-    newsUpdStr+
-    '</div>'; // cierre wrapper sentimiento
+    // El indice de sentimiento se retira de Contexto: se repite identico en la
+    // pagina Sentimiento dentro de Analisis. Se conserva la marca de ultima
+    // actualizacion de los datos.
+    newsUpdStr;
 }
 // El indice de sentimiento se muestra en dos sitios: como seccion de Contexto
 // y como pagina propia. Se extrae aqui para no duplicar 36 lineas de logica.
