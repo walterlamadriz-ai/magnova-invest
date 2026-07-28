@@ -5099,7 +5099,7 @@ function renderPort(){
   var isProPort=planOf().locked.indexOf('decision')<0;
   document.getElementById("main").innerHTML=
     '<div class="fos-module-header">'+
-    '<div><div class="fos-module-crumb">Principal · Portfolio</div><div class="fos-module-title">Portfolio Manager</div><div class="fos-module-sub">Editable · <span id="saved">✓ Guardado</span></div></div>'+
+    '<div><div class="fos-module-crumb">Principal · Portfolio</div><h1 class="fos-module-title">Portfolio Manager</h1><div class="fos-module-sub">Editable · <span id="saved">✓ Guardado</span></div></div>'+
     '<div class="ph-right">'+liveBadge()+(isProPort?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">🎯 Motor →</button>':'')+
     // Currency selector
     '<div style="display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm);padding:2px">'+
@@ -5414,7 +5414,7 @@ function renderWatch(){
     :'<th style="color:var(--text3)">🎯 DE</th>';
 
   document.getElementById("main").innerHTML=
-    '<div class="fos-module-header"><div><div class="fos-module-crumb">Principal · Watchlist</div><div class="fos-module-title">Watchlist</div><div class="fos-module-sub">'+wl.length+' tickers · <span id="saved">✓ Guardado</span></div></div><div class="ph-right">'+liveBadge()+(isPro?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">🎯 Motor →</button>':'')+' <button class="btn" style="border-color:var(--border);color:var(--text3);font-size:10px" onclick="resetWatch()">↺ Default</button></div></div>'+
+    '<div class="fos-module-header"><div><div class="fos-module-crumb">Principal · Watchlist</div><h1 class="fos-module-title">Watchlist</h1><div class="fos-module-sub">'+wl.length+' tickers · <span id="saved">✓ Guardado</span></div></div><div class="ph-right">'+liveBadge()+(isPro?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">🎯 Motor →</button>':'')+' <button class="btn" style="border-color:var(--border);color:var(--text3);font-size:10px" onclick="resetWatch()">↺ Default</button></div></div>'+
     '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Agregar ticker</div>'+
     '<div class="wtag-grid">'+quickTags+'</div>'+
@@ -5891,7 +5891,7 @@ function renderNews(){
     '<div class="fos-module-header">'+
       '<div>'+
         '<div class="fos-module-crumb">Principal · Noticias</div>'+
-        '<div class="fos-module-title">Noticias de Mercado</div>'+
+        '<h1 class="fos-module-title">Noticias de Mercado</h1>'+
         '<div class="fos-module-sub">'+new Date().toLocaleDateString("es-CL",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+'</div>'+
       '</div>'+
       '<div style="display:flex;align-items:center;gap:8px">'+
@@ -6034,7 +6034,7 @@ function renderInd(){
   }).join("");
 
   document.getElementById("main").innerHTML=
-    '<div class="fos-module-header"><div><div class="fos-module-crumb">Análisis · Indicadores</div><div class="fos-module-title">Indicadores Técnicos</div><div class="fos-module-sub">Click en cualquier ticker para análisis completo en el gráfico</div></div></div>'+
+    '<div class="fos-module-header"><div><div class="fos-module-crumb">Análisis · Indicadores</div><h1 class="fos-module-title">Indicadores Técnicos</h1><div class="fos-module-sub">Click en cualquier ticker para análisis completo en el gráfico</div></div></div>'+
     '<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">'+
     '<input class="inp" id="ind-in" placeholder="Buscar ticker..." style="width:150px;text-transform:uppercase" maxlength="6" onkeydown="if(event.key===\'Enter\'){var t=this.value.toUpperCase().trim();if(t){var s=ALL_SIG.find(function(x){return x.t===t;});openDrawer(t,s&&s.p?s.p:100);}}"/>'+
     '<button class="btn" onclick="var t=document.getElementById(\'ind-in\').value.toUpperCase().trim();if(t){var s=ALL_SIG.find(function(x){return x.t===t;});openDrawer(t,s&&s.p?s.p:100);}">📊 Analizar</button>'+
@@ -6165,7 +6165,7 @@ function renderRiskBody(){
   }
 
   document.getElementById("main").innerHTML=
-    '<div class="fos-module-header"><div><div class="fos-module-crumb">Decidir · Riesgo y Sizing</div><div class="fos-module-title">Riesgo y Sizing</div><div class="fos-module-sub">Cuánto arriesgar en cada posición · '+S.portfolio.length+' posiciones abiertas</div></div></div>'+
+    '<div class="fos-module-header"><div><div class="fos-module-crumb">Decidir · Riesgo y Sizing</div><h1 class="fos-module-title">Riesgo y Sizing</h1><div class="fos-module-sub">Cuánto arriesgar en cada posición · '+S.portfolio.length+' posiciones abiertas</div></div></div>'+
     riskTabs()+
     allocHtml+
     '<div class="krow">'+
@@ -9500,7 +9500,7 @@ function renderDivs(){
   }).join('');
 
   document.getElementById('main').innerHTML=
-    '<div class="fos-module-header"><div><div class="fos-module-crumb">Seguimiento · Dividendos</div><div class="fos-module-title">Dividendos</div>'+
+    '<div class="fos-module-header"><div><div class="fos-module-crumb">Seguimiento · Dividendos</div><h1 class="fos-module-title">Dividendos</h1>'+
     '<div class="fos-module-sub">Proyección de ingresos · 12 meses</div></div>'+
     '<button onclick="loadDivData()" class="btn-big" style="padding:8px 18px;font-size:12px;flex-shrink:0">'+
     (DIVS.loading?'<span style="display:inline-flex;align-items:center;gap:7px"><span class="spin-sm"></span>Cargando...</span>':'💰 Cargar dividendos')+'</button></div>'+
@@ -9660,7 +9660,7 @@ function renderCapital(){
   var plan=planOf();
   if(plan.locked&&plan.locked.indexOf('capital')>=0){
     document.getElementById('main').innerHTML=
-      '<div class="fos-module-header"><div><div class="fos-module-crumb">Pro · Plan de Capital</div><div class="fos-module-title">Plan de Capital</div><div class="fos-module-sub">Guía de distribución de capital mensual por condiciones de mercado</div></div></div>'+
+      '<div class="fos-module-header"><div><div class="fos-module-crumb">Pro · Plan de Capital</div><h1 class="fos-module-title">Plan de Capital</h1><div class="fos-module-sub">Guía de distribución de capital mensual por condiciones de mercado</div></div></div>'+
       lockedBanner('Plan de Capital','Reparte tu capital mensual en un portafolio de ETFs diversificado con una escalera de tramos según la distancia del precio a sus medias móviles (SMA20/50/100/200) y el RSI. Una guía lógica de distribución educativa.');
     return;
   }
@@ -9809,7 +9809,7 @@ function renderCapital(){
   }
 
   document.getElementById('main').innerHTML=
-    '<div class="fos-module-header"><div><div class="fos-module-crumb">Pro · Plan de Capital</div><div class="fos-module-title">Plan de Capital</div>'+
+    '<div class="fos-module-header"><div><div class="fos-module-crumb">Pro · Plan de Capital</div><h1 class="fos-module-title">Plan de Capital</h1>'+
     '<div class="fos-module-sub">Distribución referencial del capital mensual según condiciones de mercado (SMA + RSI)</div></div>'+'<button onclick="abrirComoCalcula(\'escalera\')" style="background:none;border:1px solid var(--border);border-radius:var(--r-md);color:var(--blue);font-size:10px;cursor:pointer;padding:5px 10px;font-family:\'JetBrains Mono\',monospace;align-self:flex-start">\u00bfC\u00f3mo se reparte? \u2192</button></div>'+
 
     '<div class="fos-card" style="padding:16px;margin-bottom:16px">'+
@@ -9986,7 +9986,7 @@ function renderRebal(){
   }).join('');
 
   document.getElementById('main').innerHTML=
-    '<div class="fos-module-header"><div><div class="fos-module-crumb">Seguimiento · Rebalanceo</div><div class="fos-module-title">Rebalanceo</div>'+
+    '<div class="fos-module-header"><div><div class="fos-module-crumb">Seguimiento · Rebalanceo</div><h1 class="fos-module-title">Rebalanceo</h1>'+
     '<div class="fos-module-sub">Define pesos objetivo · Calcula ajustes exactos</div></div>'+
     '<div class="ph-right">'+liveBadge()+'</div></div>'+
     '<div class="resp2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+
