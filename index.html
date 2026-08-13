@@ -1995,8 +1995,10 @@ div:has(>.dtab), div:has(>.rtab) {
          y como hermano directo el nav se colocaba al lado del contenido en vez
          de encima, partiendo la pantalla en dos. -->
     <nav id="mainnav"></nav>
+    <!-- El hamburguesa se retiro: abria el sidebar #sb, que ya no existe como
+         navegacion (la top-nav agrupada se muestra tambien en movil, mas la
+         barra de tabs inferior). Queda solo el label de la pagina actual. -->
     <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg)" id="mobile-header">
-      <button class="hbg-btn" onclick="toggleMobileMenu()" title="Menú" aria-label="Abrir menú"><span aria-hidden="true">☰</span></button>
       <span id="mobile-page-label" style="font-size:13px;font-weight:600;color:var(--bright);letter-spacing:.2px"></span>
     </div>
     <main class="main" id="main" style="flex:1;padding:0"></main>
@@ -3102,13 +3104,19 @@ function render(){renderSidebar();renderTopbar();renderMainNav();renderMain();re
 // en horizontal. Se consolidan en 7 grupos y los destinos absorbidos pasan a una
 // segunda fila que solo aparece cuando el grupo activo tiene mas de uno.
 // Ningun modulo se reescribe: cambia la navegacion, no las paginas.
+// Agrupada por el VIAJE DE DECISION del inversor, no por tipo de dato: cada
+// grupo responde una pregunta distinta (¿cómo estoy? → ¿qué miro? → ¿qué dice
+// el análisis? → ¿cuánto pongo? → ¿cómo va lo mío?). Fuente unica de la nav:
+// el sidebar quedo obsoleto. 'radar' (salud financiera personal) sale de
+// Análisis a su propio grupo Planificación; screener/comp dejan de estar en un
+// "Explorar" separado y entran a Investigar junto a la watchlist.
 var NAV_C=[
-  {id:'dash',     label:'Dashboard',  pages:['dash','news']},
-  {id:'port',     label:'Portfolio',  pages:['port','rebal','bitacora','divs']},
-  {id:'watch',    label:'Watchlist',  pages:['watch','alert']},
-  {id:'decision', label:'Análisis',   pages:['decision','sig','ind','radar','sentiment']},
-  {id:'screener', label:'Explorar',   pages:['screener','comp']},
-  {id:'risk',     label:'Decidir',    pages:['risk','capital','back']}
+  {id:'panorama',  label:'Panorama',      pages:['dash','news']},
+  {id:'investigar',label:'Investigar',    pages:['watch','screener','comp']},
+  {id:'analizar',  label:'Analizar',      pages:['decision','sig','ind','sentiment']},
+  {id:'decidir',   label:'Decidir',       pages:['risk','capital','back']},
+  {id:'seguir',    label:'Seguir',        pages:['port','bitacora','divs','rebal','alert']},
+  {id:'plan',      label:'Planificación', pages:['radar']}
 ];
 function navGrupoDe(pageId){
   for(var i=0;i<NAV_C.length;i++) if(NAV_C[i].pages.indexOf(pageId)>=0) return NAV_C[i];
@@ -3271,14 +3279,6 @@ function setPage(p){
   track('module_view',{module:p});
   closeDrawer();
   toggleMobileMenu(false);
-  // Update active state without full sidebar re-render
-  document.querySelectorAll(".nb").forEach(function(btn){
-    btn.classList.remove("act");
-    var onclick=btn.getAttribute("onclick")||"";
-    if(onclick.indexOf("'"+p+"'")>-1||onclick.indexOf('"'+p+'"')>-1){
-      btn.classList.add("act");
-    }
-  });
   renderTopbar();
   // La barra superior se repinta entera: al cambiar de grupo cambia tambien la
   // segunda fila, asi que no basta con mover la clase 'act' como en el sidebar.
@@ -3296,111 +3296,15 @@ function closeModal(){
 
 // ── SIDEBAR ────────────────────────────────────────────────────
 function renderSidebar(){
-  var u=S.user;
-  if(!u){
-    document.getElementById("sb").innerHTML="";
-    document.body.classList.add("no-auth");
-    return;
-  }
+  // El sidebar quedo obsoleto: era una SEGUNDA navegacion (agrupada distinto
+  // que la top-nav) que ya no se muestra en ningun ancho (.sb{display:none}).
+  // Se conserva SOLO el toggle de la clase no-auth, que es load-bearing para
+  // el layout (controla #mainnav, bandas fijas y padding). La unica fuente de
+  // navegacion es ahora NAV_C / renderMainNav.
+  var sb=document.getElementById("sb");
+  if(!S.user){ if(sb) sb.innerHTML=""; document.body.classList.add("no-auth"); return; }
   document.body.classList.remove("no-auth");
-  var plan=u?PLANS[u.plan]:null;
-
-  // Logo
-  var html=
-    '<div class="logo">'+
-    '<div class="logo-icon"><img src="/icon-192.png" alt="" width="26" height="26" style="display:block;width:100%;height:100%;object-fit:contain"/></div>'+
-    '<div class="logo-name"><span>FinanceOS</span> <span class="logo-name-invest">Invest</span></div>'+
-    '</div>';
-
-  // Nav wrapper (scrollable flex-1)
-  html+='<div style="flex:1;overflow-y:auto;padding:0 8px 8px">';
-
-  // helper to build a nav button
-  function _nb(p, locked){
-    var act=S.page===p.id?' act':'';
-    var lk=locked?' lk':'';
-    var action=locked?"openModal('upgrade')":'setPage(\''+p.id+'\')';
-    return '<button class="nb'+act+lk+'" onclick="'+action+'">'+
-      '<span class="nb-icon">'+(pageIcon(p.id)||p.icon)+'</span>'+
-      '<span class="nb-label">'+p.label+'</span>'+
-      (locked?'<span class="fos-pro-badge">PRO</span>':'')+
-      '</button>';
-  }
-
-  // PRINCIPAL
-  html+='<div class="sb-section"><div class="sb-section-label">Principal</div>';
-  ["dash","port","watch","news","alert"].forEach(function(id){
-    var p=PAGES.find(function(x){return x.id===id&&!x.hidden;});
-    if(p) html+=_nb(p,false);
-  });
-  html+='</div>';
-
-  // El sidebar se agrupaba por tipo de dato, que es justo lo que hacia
-  // indistinguibles a Senales / Indicadores / Screener: todas eran "Análisis".
-  // Ahora se agrupa por momento del flujo — analizo, decido cuanto, registro —
-  // asi cada grupo responde a una pregunta distinta del usuario.
-  // 'pb' desaparece como entrada: es la pestana "Nueva posicion" de Riesgo.
-  var _grupo=function(titulo,ids){
-    html+='<div class="sb-section"><div class="sb-section-label">'+titulo+'</div>';
-    ids.forEach(function(id){
-      var p=PAGES.find(function(x){return x.id===id&&!x.hidden;});
-      if(!p) return;
-      html+=_nb(p, !!(plan&&plan.locked.indexOf(id)>=0));
-    });
-    html+='</div>';
-  };
-  _grupo('Analizar', ["decision","sig","ind","comp","radar","sentiment","screener"]);
-  _grupo('Decidir',  ["risk","capital","back"]);
-
-  // SEGUIMIENTO
-  html+='<div class="sb-section"><div class="sb-section-label">Seguimiento</div>';
-  ["divs","rebal","bitacora"].forEach(function(id){
-    var p=PAGES.find(function(x){return x.id===id;});
-    if(p) html+=_nb(p,false);
-  });
-  html+='</div>';
-
-  // Config + AI
-  var setAct=S.page==='settings'?' act':'';
-  html+='<div style="margin-top:4px">'+
-    '<button class="nb'+setAct+'" onclick="setPage(\'settings\')">'+
-    '<span class="nb-icon">'+icon('settings')+'</span><span class="nb-label">Configuración</span></button></div>';
-  if(FOS_AI_HABILITADA) html+='<div style="margin-top:8px"><button onclick="toggleAI()" style="width:100%;display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r-md);border:1px solid var(--orange-bd);background:var(--orange-bg);color:var(--amber);cursor:pointer;font-size:12px;font-weight:600">&#129302; <span class="nb-label">Análisis IA</span><span style="margin-left:auto;font-size:8px;background:var(--amber);color:#fff;padding:1px 5px;border-radius:4px">Beta</span></button></div>';
-
-  html+='</div>'; // end nav wrapper
-
-  // Footer: user + upgrade
-  var initials=(u.name||'U').split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2)||'U';
-  var email=u.email||u.name||'';
-  var trialDays=getTrialDaysLeft();
-  html+='<div style="padding:12px 12px 10px;border-top:1px solid var(--border)">';
-
-  // Trial countdown
-  if(trialDays!==null){
-    var trialColor=trialDays<=3?'var(--red)':trialDays<=7?'var(--amber)':'var(--blue)';
-    html+='<div style="margin-bottom:10px;padding:7px 9px;border-radius:var(--r-sm);border:1px solid '+trialColor+';background:rgba(0,0,0,.15);font-size:9px;font-family:\'JetBrains Mono\',monospace;color:'+trialColor+'">'+
-      '⏰ Trial: '+trialDays+' día'+(trialDays!==1?'s':'')+' restante'+(trialDays!==1?'s':'')+
-      '<button onclick="openModal(\'upgrade\')" style="display:block;margin-top:4px;width:100%;background:'+trialColor+';border:none;border-radius:var(--r-sm);padding:3px 0;color:#fff;font-size:9px;cursor:pointer;font-family:\'JetBrains Mono\',monospace">Activar Pro →</button></div>';
-  }
-
-  // User row
-  html+='<div role="button" tabindex="0" style="display:flex;align-items:center;gap:9px;margin-bottom:9px;cursor:pointer" onclick="logout()" title="Cerrar sesión">'+
-    '<div style="width:28px;height:28px;border-radius:50%;background:var(--grn-bg);border:1px solid var(--grn-lt);display:flex;align-items:center;justify-content:center;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--grn);flex-shrink:0">'+initials+'</div>'+
-    '<div style="flex:1;min-width:0">'+
-    '<div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+email+'">'+email+'</div>'+
-    '<span style="font-family:\'JetBrains Mono\',monospace;font-size:9px;padding:1px 6px;border-radius:4px;border:1px solid var(--border2);color:var(--text3)">'+plan.label.toUpperCase()+'</span>'+
-    '</div>'+
-    '<span style="font-size:11px;color:var(--text3);flex-shrink:0">⏻</span>'+
-    '</div>';
-
-  // Upgrade button (only if has locked modules)
-  if(plan&&plan.locked&&plan.locked.length>0){
-    html+='<button onclick="openModal(\'upgrade\')" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--grn);border:none;border-radius:var(--r-md);padding:7px 12px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">⚡ Upgrade a Pro</button>';
-  }
-
-  html+='</div>'; // end footer
-
-  document.getElementById("sb").innerHTML=html;
+  if(sb) sb.innerHTML="";
 }
 
 // ── DECISION ENGINE ────────────────────────────────────────────
@@ -6484,7 +6388,7 @@ function mAlert(mr){
     '<button class="mx" onclick="closeModal()" aria-label="Cerrar">✕</button></div>'+
     '<div class="mb">'+
       '<label class="lb" for="al-tk">Activo</label>'+
-      '<input id="al-tk" class="inp" placeholder="Ej: AAPL" maxlength="15" autocomplete="off" spellcheck="false" autocapitalize="characters" enterkeyhint="next" style="text-transform:uppercase"/>'+
+      '<input id="al-tk" class="inp" placeholder="Ej: AAPL" maxlength="15" autocomplete="off" spellcheck="false" autocapitalize="characters" enterkeyhint="next" style="text-transform:uppercase" value="'+(S.editPos&&S.editPos.t?esc(S.editPos.t):'')+'"/>'+
       (sug.length?'<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px">'+sug.map(function(t){
         return '<button type="button" class="btn" style="padding:3px 9px;font-size:10px" onclick="document.getElementById(\'al-tk\').value=\''+esc(t)+'\';alSync()">'+esc(t)+'</button>';
       }).join('')+'</div>':'')+
@@ -6720,7 +6624,7 @@ function mTrade(mr){
 
     '<div id="tr_ticker_row">'+
     '<label class="fl">Ticker</label>'+
-    '<input id="tr_ticker" class="inp ifu" placeholder="AAPL" style="text-transform:uppercase" list="tr_tklist"/>'+
+    '<input id="tr_ticker" class="inp ifu" placeholder="AAPL" style="text-transform:uppercase" list="tr_tklist" value="'+(S.editPos&&S.editPos.t?esc(S.editPos.t):'')+'"/>'+
     '<datalist id="tr_tklist">'+tickers.map(function(t){return '<option value="'+t+'"/>';}).join("")+'</datalist>'+
     '</div>'+
 
@@ -7433,9 +7337,16 @@ function renderDrawerBody(){
     '<div style="margin-bottom:10px">'+rangeBtns+'</div>'+
     (isSynthetic?'<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:var(--r-md);padding:8px 12px;margin-bottom:10px;font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--amber);display:flex;gap:8px;align-items:center"><span>⚠️</span><span>Histórico no disponible para este activo — gráfico ilustrativo referencial, no son precios reales.</span></div>':'')+
     content+
+    // El drawer es el hub de decision: ademas de encolar (Watchlist/Portfolio),
+    // enlaza a los siguientes pasos llevando el ticker actual, para no cerrar y
+    // re-tipearlo en Riesgo / Comparador / Bitacora / Alertas.
     '<div style="display:flex;gap:7px;margin-top:12px;flex-wrap:wrap">'+
     '<button class="btn" onclick="addWatch(\''+ticker+'\');closeDrawer()">+ Watchlist</button>'+
     '<button class="btn" onclick="openModal(\'addpos\');closeDrawer()">+ Portfolio</button>'+
+    '<button class="btn" onclick="PB.ticker=\''+ticker+'\';setPage(\'pb\');pbFetchPrice()">Calcular tamaño</button>'+
+    '<button class="btn" onclick="compSet(\''+ticker+'\',\'SPY\');setPage(\'comp\')">Comparar</button>'+
+    '<button class="btn" onclick="openModal(\'addtrade\',{t:\''+ticker+'\'})">Registrar</button>'+
+    '<button class="btn" onclick="openModal(\'addalert\',{t:\''+ticker+'\'})">Alerta</button>'+
     '<button class="btn" style="border-color:var(--border);color:var(--text3)" onclick="closeDrawer()">Cerrar</button>'+
     '</div>';
 
