@@ -2014,7 +2014,7 @@ div:has(>.dtab), div:has(>.rtab) {
   </div>
 </div>
 <div id="mroot"></div>
-<div id="toast-container"></div>
+<div id="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
 <div class="dov" id="dov" onclick="closeDrawer()"></div>
 <div class="drw" id="drw">
   <div class="drwh" id="drwh"></div>
@@ -2760,6 +2760,7 @@ var _lwLoaded=false;
 var _lwLoadPromise=null;
 var _lwChartMain=null;
 var _lwChartVol=null;
+var _lwResizeObs=null;
 
 function loadLWScript(){
   if(_lwLoaded) return Promise.resolve();
@@ -2858,6 +2859,20 @@ function renderLWCharts(hist,sma20,sma50,bbArr,sma200){
 
     // Sync x-axis scroll between both charts
     chart.timeScale().subscribeVisibleLogicalRangeChange(function(r){if(r)volChart.timeScale().setVisibleLogicalRange(r);});
+
+    // Reflow al cambiar el ancho (resize/rotacion): los charts se crean con
+    // ancho fijo. Un observer sobre el contenedor reajusta ambos; se desconecta
+    // en closeDrawer para no quedar observando un drawer cerrado.
+    if(_lwResizeObs){try{_lwResizeObs.disconnect();}catch(e){}}
+    if(window.ResizeObserver){
+      _lwResizeObs=new ResizeObserver(function(){
+        var w=mainEl.clientWidth||mainEl.offsetWidth;
+        if(!w) return;
+        try{if(_lwChartMain)_lwChartMain.applyOptions({width:w});}catch(e){}
+        try{if(_lwChartVol)_lwChartVol.applyOptions({width:volEl.clientWidth||w});}catch(e){}
+      });
+      _lwResizeObs.observe(mainEl);
+    }
   }).catch(function(){});
 }
 
@@ -3004,7 +3019,7 @@ function liveBadge(){
     var minAgo=Math.round((Date.now()-liveUpdated)/60000);
     staleWarn='<div style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:var(--r-xl);font-size:10px;font-family:monospace;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);margin-left:6px">⚠ Precios hace '+minAgo+' min</div>';
   }
-  return "<div class=\""+c.cls+"\" style=\"display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:var(--r-xl);font-size:10px;font-family:monospace\">"+
+  return "<div class=\""+c.cls+"\" role=\"status\" aria-live=\"polite\" style=\"display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:var(--r-xl);font-size:10px;font-family:monospace\">"+
     (c.dot?"<span class=\"live-dot\"></span>":"")+c.txt+"</div>"+staleWarn;
 }
 function updateLiveBadge(){
@@ -3314,12 +3329,44 @@ function setPage(p){
   renderMain();
 }
 
-function openModal(t,data){closeDrawer();S.modal=t;S.editPos=data||null;if(t==='upgrade')track('paywall_view');renderModal();}
+var _modalLastFocus=null;
+function openModal(t,data){
+  // Guarda el foco previo para restaurarlo al cerrar (a11y: el foco no debe
+  // perderse al abrir/cerrar un dialogo).
+  _modalLastFocus=document.activeElement;
+  closeDrawer();S.modal=t;S.editPos=data||null;if(t==='upgrade')track('paywall_view');renderModal();
+}
 function closeModal(){
   S.modal=null;S.editPos=null;
   document.getElementById("mroot").innerHTML="";
+  // Restaura el foco al elemento que abrio el modal.
+  if(_modalLastFocus&&typeof _modalLastFocus.focus==='function'){try{_modalLastFocus.focus();}catch(e){}}
+  _modalLastFocus=null;
   // Only re-render the current page content, not sidebar
   renderMain();
+}
+// Foco inicial + trap de Tab dentro del modal (role=dialog aria-modal sin trap
+// es un defecto conocido: Tab se escapaba al fondo). Se llama tras renderizar.
+function _setupModalFocus(){
+  var mr=document.getElementById("mroot");
+  var modal=mr&&mr.querySelector(".modal, .modal-box");
+  if(!modal) return;
+  var SEL='a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+  function focusables(){
+    return Array.prototype.slice.call(modal.querySelectorAll(SEL)).filter(function(el){return el.offsetParent!==null;});
+  }
+  setTimeout(function(){
+    if(modal.contains(document.activeElement)) return; // re-render con foco ya dentro
+    var first=modal.querySelector("input:not([type=hidden]),textarea,select")||focusables()[0];
+    if(first){try{first.focus();}catch(e){}}
+  },30);
+  modal.addEventListener("keydown",function(e){
+    if(e.key!=="Tab") return;
+    var f=focusables(); if(!f.length) return;
+    var first=f[0], last=f[f.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  });
 }
 
 // ── SIDEBAR ────────────────────────────────────────────────────
@@ -6399,6 +6446,7 @@ function renderModal(){
   else if(S.modal==="score-info") mScoreInfo(mr);
   else if(S.modal==="como-calcula") mComoCalcula(mr);
   else if(S.modal==="addalert") mAlert(mr);
+  _setupModalFocus();
 }
 
 // Modal de creacion de alerta. Sustituye a la lista de ejemplos hardcodeada:
@@ -7038,6 +7086,12 @@ function closeDrawer(){
   document.getElementById("dov").classList.remove("open");
   document.getElementById("drw").classList.remove("open");
   document.body.style.overflow="";
+  // Libera los charts de lightweight-charts al cerrar: si no, las instancias,
+  // sus canvas y la suscripcion de rango (subscribeVisibleLogicalRangeChange)
+  // quedaban vivas hasta el proximo openDrawer -> fuga en cada cierre.
+  if(_lwChartMain){try{_lwChartMain.remove();}catch(e){} _lwChartMain=null;}
+  if(_lwChartVol){try{_lwChartVol.remove();}catch(e){} _lwChartVol=null;}
+  if(_lwResizeObs){try{_lwResizeObs.disconnect();}catch(e){} _lwResizeObs=null;}
 }
 
 function prefetchFund(ticker){
