@@ -1978,6 +1978,11 @@ div:has(>.dtab), div:has(>.rtab) {
 <g id="i-bitacora"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M9 10h6M9 14h6M9 18h3"/></g>
 <g id="i-settings"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7.5 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 14.6a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 8.5l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.6V4a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></g>
 <g id="i-help"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.6 2.6 0 1 1 3.4 2.5c-.6.2-.9.8-.9 1.4v.6"/><circle cx="12" cy="17.2" r=".9"/></g>
+<!-- Genericos de accion (mismo estilo stroke): reemplazan emoji en botones -->
+<g id="i-plus"><path d="M12 5v14M5 12h14"/></g>
+<g id="i-check"><path d="M20 6L9 17l-5-5"/></g>
+<g id="i-download"><path d="M12 3v12M8 11l4 4 4-4M5 20h14"/></g>
+<g id="i-bolt"><path d="M13 3L5 13h6l-1 8 8-11h-6z"/></g>
 </defs></svg>
 
 <!-- Suite nav — franja de vuelta a la suite.
@@ -3163,7 +3168,7 @@ function renderMainNav(){
     '<div class="mn-brand"><span class="mn-brand-i"><img src="/icon-192.png" alt="" width="26" height="26" style="display:block;width:100%;height:100%;object-fit:contain"/></span><span>FinanceOS <b>Invest</b></span></div>'+
     '<div class="mn-items">'+fila1+'</div>'+
     '<a class="mn-item mn-cfg mn-suite" href="https://financeospro.com" title="Volver a FinanceOS">←<span> FinanceOS</span></a>'+
-    '<button class="mn-item mn-cfg" onclick="setPage(\'settings\')" aria-label="Configuración">⚙</button>'+
+    '<button class="mn-item mn-cfg" onclick="setPage(\'settings\')" aria-label="Configuración">'+icon('settings')+'</button>'+
     '</div>'+fila2;
 }
 
@@ -3993,7 +3998,7 @@ function renderDecisionEngineBody(){
         '<div style="position:absolute;bottom:40px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:20px">'+
           '<div style="font-size:13px;font-weight:700;color:var(--bright)">Análisis completo de '+scores.length+' activos disponible en Pro</div>'+
           '<div style="font-size:11px;color:var(--text2)">Estás viendo el régimen de mercado. Activa Pro para el scoring de cada activo con Entry, Stop y Target.</div>'+
-          '<button onclick="openModal(\'upgrade\')" class="btn-big" style="padding:10px 28px">⚡ Activar Pro — desde $16.58/mes →</button>'+
+          '<button onclick="openModal(\'upgrade\')" class="btn-big" style="padding:10px 28px">'+icon('bolt')+'Activar Pro — desde $16.58/mes →</button>'+
         '</div>'+
         '</div>';
     }
@@ -4077,7 +4082,7 @@ function renderScreenerBody(){
         filtered.length+' resultados'+' de '+results.length+' analizados'+
         (errors.length?' · <span style="color:var(--red)">'+errors.length+' error(es)</span>':'')+
       '</span>'+
-      '<button onclick="exportScreenerCSV()" class="btn" style="margin-left:auto;font-size:10px;padding:4px 10px">⬇ Export CSV</button>'+
+      '<button onclick="exportScreenerCSV()" class="btn" style="margin-left:auto;font-size:10px;padding:4px 10px">'+icon('download')+'Export CSV</button>'+
       '</div>'+
       '<div class="tw"><table>'+
       '<thead><tr>'+
@@ -4249,7 +4254,7 @@ function renderSettings(){
     '<div style="font-size:13px;color:var(--bright);font-weight:500">'+plan.label+(plan.price>0?' — $'+plan.price+'/mes':'')+'</div></div>'+
     '</div>'+
     (trialInfo?'<div style="margin-top:12px">'+trialInfo+'</div>':'')+
-    (u&&u.plan==='free'?'<div style="margin-top:12px"><button class="btn-big" onclick="openModal(\'upgrade\')" style="padding:10px 24px">⚡ Actualizar a Pro — $29.99/mes</button></div>':'')+
+    (u&&u.plan==='free'?'<div style="margin-top:12px"><button class="btn-big" onclick="openModal(\'upgrade\')" style="padding:10px 24px">'+icon('bolt')+'Actualizar a Pro — $29.99/mes</button></div>':'')+
     // Gestionar/cancelar suscripcion via el Billing Portal de Stripe. Solo se
     // ofrece a quien tiene una suscripcion de pago (pro/teams), no en trial ni free.
     ((u&&(u.plan==='pro'||u.plan==='teams'))?'<div style="margin-top:12px"><button class="btn" id="btn-portal" onclick="abrirPortalPago()">Gestionar o cancelar suscripción</button><div style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:6px">Cambiar tarjeta, ver facturas o cancelar. Se abre el portal seguro de Stripe.</div></div>':'')+
@@ -4277,7 +4282,7 @@ function renderSettings(){
     '<div style="font-size:13px;font-weight:500;color:var(--bright)">Instalar app</div>'+
     '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:2px">Acceso directo en tu pantalla de inicio · funciona offline</div>'+
     '</div>'+
-    '<button class="btn" onclick="installPWA()" style="flex-shrink:0">⬇ Instalar</button>'+
+    '<button class="btn" onclick="installPWA()" style="flex-shrink:0">'+icon('download')+'Instalar</button>'+
     '</div>'+
     '</div>'+
 
@@ -4299,17 +4304,17 @@ function renderSettings(){
     '<div style="display:flex;align-items:center;justify-content:space-between">'+
     '<div><div style="font-size:13px;font-weight:500;color:var(--bright)">Exportar portfolio</div>'+
     '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">CSV con todas las posiciones</div></div>'+
-    '<button class="btn" onclick="exportCSV()">⬇ Exportar</button>'+
+    '<button class="btn" onclick="exportCSV()">'+icon('download')+'Exportar</button>'+
     '</div>'+
     '<div style="display:flex;align-items:center;justify-content:space-between">'+
     '<div><div style="font-size:13px;font-weight:500;color:var(--bright)">Exportar Bitácora</div>'+
     '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">CSV con historial de operaciones</div></div>'+
-    '<button class="btn" onclick="exportTradesCSV()">⬇ Exportar</button>'+
+    '<button class="btn" onclick="exportTradesCSV()">'+icon('download')+'Exportar</button>'+
     '</div>'+
     '<div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:10px">'+
     '<div><div style="font-size:13px;font-weight:500;color:var(--bright)">Copia de seguridad completa</div>'+
     '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Todo en un archivo .json — restaurable</div></div>'+
-    '<div style="display:flex;gap:6px"><button class="btn" onclick="exportBackup()">⬇ Exportar</button>'+
+    '<div style="display:flex;gap:6px"><button class="btn" onclick="exportBackup()">'+icon('download')+'Exportar</button>'+
     '<button class="btn" onclick="document.getElementById(\'backup-file\').click()">⬆ Importar</button>'+
     '<input type="file" id="backup-file" accept="application/json,.json" style="display:none" onchange="importBackup(this.files[0])"></div>'+
     '</div>'+
@@ -4630,7 +4635,7 @@ function renderPaywall(){
     '<div class="pw"><div style="font-size:36px;margin-bottom:12px">🔒</div>'+
     '<h2 style="margin-bottom:6px">'+m.t+'</h2>'+
     '<div style="margin-bottom:20px">'+feats+'</div>'+
-    '<button class="btn-big" onclick="openModal(\'upgrade\')">⚡ Ver planes Pro →</button></div>';
+    '<button class="btn-big" onclick="openModal(\'upgrade\')">'+icon('bolt')+'Ver planes Pro →</button></div>';
 }
 
 // ── DASHBOARD ──────────────────────────────────────────────────
@@ -4976,7 +4981,7 @@ function renderPort(){
   document.getElementById("main").innerHTML=
     '<div class="fos-module-header">'+
     '<div><div class="fos-module-crumb">Principal · Portfolio</div><h1 class="fos-module-title">Portfolio Manager</h1><div class="fos-module-sub">Editable · <span id="saved">✓ Guardado</span></div></div>'+
-    '<div class="ph-right">'+liveBadge()+(isProPort?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">🎯 Motor →</button>':'')+
+    '<div class="ph-right">'+liveBadge()+(isProPort?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">'+icon('decision')+' Motor →</button>':'')+
     // Currency selector
     '<div style="display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm);padding:2px">'+
     ['USD','CLP','MXN','COP','ARS','PEN'].map(function(c){
@@ -5021,7 +5026,7 @@ function renderPort(){
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
     '<button class="btn" onclick="openModal(\'addpos\')">+ Nueva posición</button>'+
     '<button class="btn" onclick="openModal(\'addtrade\')">📋 Registrar operación</button>'+
-    '<button class="btn" onclick="exportCSV()">⬇ Export CSV</button>'+
+    '<button class="btn" onclick="exportCSV()">'+icon('download')+'Export CSV</button>'+
     '<button class="btn-r" onclick="resetPort()">↺ Restaurar demo</button>'+
     '</div>'+
     (port.length>=2?renderCorrelationMatrix(port):'');
@@ -5092,7 +5097,7 @@ function renderBitacora(){
   }).join(""):'<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text3)">Sin operaciones registradas todavía.<br><span style="font-size:11px">Usá el botón "Registrar operación" en Portfolio.</span></td></tr>';
 
   document.getElementById("main").innerHTML=
-    _ph('Seguimiento · Bitácora','Bitácora','// Historial completo de operaciones · P&L realizado','<button class="btn" onclick="openModal(\'addtrade\')">+ Registrar operación</button><button class="btn" style="margin-left:6px" onclick="exportTradesCSV()">⬇ CSV</button>')+
+    _ph('Seguimiento · Bitácora','Bitácora','// Historial completo de operaciones · P&L realizado','<button class="btn" onclick="openModal(\'addtrade\')">+ Registrar operación</button><button class="btn" style="margin-left:6px" onclick="exportTradesCSV()">'+icon('download')+'CSV</button>')+
 
     // KPI summary
     // 1 respuesta (¿gano con lo que ya cerre?) + 3 apoyos. El conteo de
@@ -5290,7 +5295,7 @@ function renderWatch(){
     :'<th style="color:var(--text3)">🎯 DE</th>';
 
   document.getElementById("main").innerHTML=
-    '<div class="fos-module-header"><div><div class="fos-module-crumb">Principal · Watchlist</div><h1 class="fos-module-title">Watchlist</h1><div class="fos-module-sub">'+wl.length+' tickers · <span id="saved">✓ Guardado</span></div></div><div class="ph-right">'+liveBadge()+(isPro?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">🎯 Motor →</button>':'')+' <button class="btn" style="border-color:var(--border);color:var(--text3);font-size:10px" onclick="resetWatch()">↺ Default</button></div></div>'+
+    '<div class="fos-module-header"><div><div class="fos-module-crumb">Principal · Watchlist</div><h1 class="fos-module-title">Watchlist</h1><div class="fos-module-sub">'+wl.length+' tickers · <span id="saved">✓ Guardado</span></div></div><div class="ph-right">'+liveBadge()+(isPro?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">'+icon('decision')+' Motor →</button>':'')+' <button class="btn" style="border-color:var(--border);color:var(--text3);font-size:10px" onclick="resetWatch()">↺ Default</button></div></div>'+
     '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Agregar ticker</div>'+
     '<div class="wtag-grid">'+quickTags+'</div>'+
@@ -8607,7 +8612,7 @@ function renderRadar(){
 
   document.getElementById('main').innerHTML=
     _ph('Análisis · Radar','Radar Financiero','// Diagnóstico semanal · 7 secciones · Personalizado para tu portfolio',profileBadge+
-    (hasReport?'<button onclick="radarExportPDF()" class="btn">⬇ PDF</button>':'')+
+    (hasReport?'<button onclick="radarExportPDF()" class="btn">'+icon('download')+'PDF</button>':'')+
     (hasReport?'<button onclick="radarShare()" class="btn">🔗 Compartir</button>':'')+
     '<button onclick="generateRadarReport()" class="btn-big" style="padding:8px 18px;font-size:12px"'+(RADAR.loading?' disabled':'')+'>'+(RADAR.loading?'<span style="display:inline-flex;align-items:center;gap:6px"><span class="spin-sm"></span>Analizando...</span>':'📡 '+(hasReport?'Actualizar Radar':'Generar Radar'))+'</button>')+
 
@@ -8952,7 +8957,7 @@ function mUpgrade(mr){
 
     // CTA
     '<div style="padding:20px 28px 24px">'+
-    '<button onclick="doUpgrade()" class="btn-big" style="width:100%;padding:13px;font-size:14px;margin-bottom:10px">⚡ Activar Pro ahora — $199/año</button>'+
+    '<button onclick="doUpgrade()" class="btn-big" style="width:100%;padding:13px;font-size:14px;margin-bottom:10px">'+icon('bolt')+'Activar Pro ahora — $199/año</button>'+
     '<button onclick="startTrial()" class="btn" style="width:100%;padding:11px;font-size:13px;margin-bottom:10px;border:1px solid var(--border);background:transparent;color:var(--text2)">Iniciar prueba gratuita — 14 días sin tarjeta</button>'+
     '<p id="pro-cta-sub" style="font-size:10px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">Cancela en 1 click · Sin compromisos</p>'+
     '<div style="margin-top:14px;padding:10px 14px;background:var(--card2);border-radius:var(--r-md);font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);text-align:center;line-height:1.6">'+
