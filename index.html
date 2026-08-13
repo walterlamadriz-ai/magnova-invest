@@ -199,6 +199,14 @@
   --amber:     #b45309;
   --amber-bg:  #fef3c7;
 
+  /* Alias de fondos/bordes de estado usados en .sigb/.rtab y badges inline.
+     Antes se referenciaban sin definir (--gbg/--gborder/--ambg/--amborder)
+     y caian a `initial` -> cajas sin fondo ni borde. */
+  --gbg:       var(--grn-bg);
+  --gborder:   var(--grn-lt);
+  --ambg:      var(--amber-bg);
+  --amborder:  var(--amber);
+
   /* ── Semantica de resultado ──────────────────────────────────────────
      Ganancia y perdida. Se separan de --grn/--red (que son color de MARCA)
      aunque hoy arranquen con el mismo hex: mientras compartan token, cambiar
@@ -2130,64 +2138,10 @@ const PAGES=[
   {id:"settings", icon:"⚙️",label:"Configuración"},
   {id:"help",     icon:"❓",label:"Ayuda"}
 ];
-const NEWS_DATA=[
-  {id:1,cat:"Fed",impact:"critical",breaking:true,
-   title:"Fed mantiene tasas 3.5%–3.75% con 4 disidencias — sin recortes en 2026",
-   body:"FOMC votó 8–4 el 29 abril. División sin precedentes. Kevin Warsh asumirá como Fed Chair en junio. Mercados descuentan tasas estables todo el año.",
-   tickers:[{t:"TLT",d:"dn"},{t:"SPY",d:"ne"},{t:"GLD",d:"up"}],
-   dec:"⚠️ Cautela",decColor:"var(--amber)",
-   key:"Tasas en rango 3.5%–3.75%. Sector growth y REITs bajo presión. Contexto favorable para value y activos de corta duración.",
-   source:"CNBC · Fed Reserve",hoursAgo:92},
-  {id:2,cat:"Earnings",impact:"bullish",breaking:false,
-   title:"Apple supera Q2: ingresos y guidance por encima del consenso — acciones +3.1%",
-   body:"Beat en ingresos y EPS. Guidance Q3 mejor de lo esperado. Servicios con récord. Margen bruto 47.1%.",
-   tickers:[{t:"AAPL",d:"up"},{t:"SPY",d:"up"},{t:"QQQ",d:"up"}],
-   dec:"✅ Positivo",decColor:"var(--grn)",
-   key:"Servicios = 25% de ingresos. WWDC junio como catalizador adicional.",
-   source:"Apple IR",hoursAgo:48},
-  {id:3,cat:"Geopolítica",impact:"bearish",breaking:true,
-   title:"Conflicto EE.UU.–Irán: petróleo sobre $94 WTI — Estrecho de Ormuz bloqueado",
-   body:"WTI subió 76% desde febrero. El 20% del petróleo mundial pasa por Ormuz. Presiona inflación y limita recortes de tasas.",
-   tickers:[{t:"XLE",d:"up"},{t:"DAL",d:"dn"},{t:"USO",d:"up"}],
-   dec:"⚠️ Riesgo",decColor:"var(--amber)",
-   key:"Sector energía (XLE) con correlación positiva al conflicto. DVN, OXY entre los más impactados al alza. Aerolíneas con presión por costo de combustible.",
-   source:"CNN · Reuters",hoursAgo:2},
-  {id:4,cat:"IA & Tech",impact:"bullish",breaking:false,
-   title:"Big Tech gastará $700B en AI capex 2026 — mercado premia monetización inmediata",
-   body:"Alphabet +5.4%, Amazon +3.8% post-earnings. Meta –4.1% sin ROI claro. NVDA reporta el 20 mayo con estimados récord.",
-   tickers:[{t:"NVDA",d:"up"},{t:"GOOGL",d:"up"},{t:"AMZN",d:"up"},{t:"META",d:"dn"}],
-   dec:"✅ Sesgo alcista",decColor:"var(--grn)",
-   key:"NVDA reporta el 20 mayo. Estimados de consenso: $78.5B revenues (+78% YoY). Evento de alta relevancia para el sector.",
-   source:"Schwab Research",hoursAgo:36},
-  {id:5,cat:"Macro",impact:"neutral",breaking:false,
-   title:"GDP Q1 creció 2% anualizado — mejor que Q4 pero bajo estimado de 2.2%",
-   body:"Economía aguanta sin entrar en recesión. Dato benigno para mercados. Sin sorpresas negativas.",
-   tickers:[{t:"SPY",d:"up"},{t:"IEF",d:"ne"}],
-   dec:"📊 Neutral",decColor:"var(--text2)",
-   key:"Nonfarm Payrolls viernes 9 mayo será el próximo driver macro clave.",
-   source:"Commerce Dept",hoursAgo:72},
-  {id:6,cat:"Macro",impact:"bullish",breaking:false,
-   title:"S&P 500 y Nasdaq en máximos históricos — Abril fue el mejor mes en 5 años (+10%)",
-   body:"Nasdaq superó 25,000 puntos por primera vez. Russell 2000 también aceleró. Amplitud de mercado mejora.",
-   tickers:[{t:"SPY",d:"up"},{t:"QQQ",d:"up"},{t:"IWM",d:"up"}],
-   dec:"✅ Momentum",decColor:"var(--grn)",
-   key:"Amplitud de mercado mejorando. Momentum en índices principales. Históricamente mayo no ha sido un mes negativo de forma consistente.",
-   source:"TheStreet",hoursAgo:48},
-  {id:7,cat:"Earnings",impact:"bearish",breaking:true,
-   title:"Roblox -24% tras recortar guidance 2026 — mayor caída de la temporada earnings",
-   body:"Outlook de bookings recortado a $6.14B. Mayor reacción negativa de la temporada. Alta intolerancia del mercado a decepcionar.",
-   tickers:[{t:"RBLX",d:"dn"},{t:"SNAP",d:"dn"},{t:"MTCH",d:"dn"}],
-   dec:"❌ Presión bajista",decColor:"var(--red)",
-   key:"Selectividad alta en earnings. El mercado en agregado positivo pero con reacciones asimétricas ante resultados débiles.",
-   source:"WSJ · Bloomberg",hoursAgo:14},
-  {id:8,cat:"Fed",impact:"neutral",breaking:false,
-   title:"Kevin Warsh confirmado como próximo Fed Chair — postura más dovish esperada",
-   body:"Senate Banking Committee aprobó la nominación. Asumirá en reunión FOMC del 17 junio. UBS proyecta 2 recortes entre junio y septiembre.",
-   tickers:[{t:"TLT",d:"up"},{t:"GLD",d:"up"},{t:"XLF",d:"ne"}],
-   dec:"👁 Monitorear",decColor:"var(--amber)",
-   key:"Primera conferencia de Warsh el 17 junio es el evento macro del verano. TLT y GLD con correlación histórica positiva a postura dovish.",
-   source:"Fortune · J.P. Morgan",hoursAgo:48}
-];
+// Antes aqui habia titulares hardcodeados (Fed/Warsh/Iran/NVDA...) que se
+// mostraban como actuales y se mezclaban con el feed vivo. Se retiran: la app
+// muestra SOLO noticias en vivo y un empty state honesto cuando el feed falla.
+const NEWS_DATA=[];
 const CAL_DATA=[
   {date:"Lun 5 Mayo",event:"ISM Services PMI (Abril)",imp:"alto"},
   {date:"Mar 6 Mayo",event:"Earnings: AMD, Palantir, Airbnb",imp:"alto"},
@@ -2422,12 +2376,12 @@ async function fetchQuote(ticker){
       if(!m||!m.regularMarketPrice) throw new Error('no meta');
       var price=m.regularMarketPrice; var prev=m.chartPreviousClose||m.previousClose||price;
       q={ticker:ticker,price:price,prevClose:prev,change:price-prev,changePct:prev?(price-prev)/prev:0,
-         volume:m.regularMarketVolume||0,marketCap:0,high52:m.fiftyTwoWeekHigh||price*1.2,
+         volume:m.regularMarketVolume||0,marketCap:0,high52:m.fiftyTwoWeekHigh||null,
          low52:m.fiftyTwoWeekLow||0,currency:m.currency||'USD'};
     }
     var out={ticker:ticker,price:q.price,prevClose:q.prevClose,
              change:q.change,changePct:q.changePct,volume:q.volume||0,
-             marketCap:q.marketCap||0,high52:q.high52||q.price*1.2,
+             marketCap:q.marketCap||0,high52:q.high52||null,
              low52:q.low52||0,exchange:'',marketState:'REGULAR'};
     _cacheSet(ckey,out);fetchStats.ok++;fetchStats.lastOk=Date.now();
     return out;
@@ -5558,12 +5512,9 @@ async function fetchLiveNews(){
 }
 
 function getNewsData(){
-  // Merge: live news first, then static NEWS_DATA as fallback/supplement
-  if(LIVE_NEWS.length){
-    var liveIds=LIVE_NEWS.map(function(n){return n.id;});
-    return LIVE_NEWS.concat(NEWS_DATA.filter(function(n){return liveIds.indexOf(n.id)<0;}));
-  }
-  return NEWS_DATA;
+  // Solo noticias en vivo. Ya no se anexa NEWS_DATA (era ficticio): si el feed
+  // no responde se devuelve [] y la vista muestra un empty state honesto.
+  return LIVE_NEWS.length?LIVE_NEWS.slice():[];
 }
 
 // ── TIMESTAMP HELPERS ──────────────────────────────────────────
@@ -5826,18 +5777,22 @@ function renderNews(){
   var newsUpdStr=cached&&cached.savedAt?'<div style="margin-top:8px;padding:6px 10px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">NewsAPI · actualizado '+timeAgo(cached.savedAt)+'</div>':'';
 
   // ── Ticker strip (Yahoo Finance style) ───────────────────────
+  // Placeholders SOLO de estructura (simbolo+label). SIN precios ni cambios:
+  // price/change/changePct van null a proposito para renderizar "—" en vez de
+  // inventar niveles de indice. La cinta muestra los nombres pero nunca cifras
+  // fabricadas como si fueran en vivo. Se reemplazan al llegar MARKET_BAR.
   var STATIC_STRIPS=[
-    {sym:'^GSPC',label:'S&P 500',   price:5308, change:12.4,  changePct:0.23, spark:null},
-    {sym:'^DJI', label:'Dow 30',    price:42100,change:-80,   changePct:-0.19,spark:null},
-    {sym:'^IXIC',label:'Nasdaq',    price:18900,change:168,   changePct:0.89, spark:null},
-    {sym:'^RUT', label:'Russell 2K',price:2080, change:-5,    changePct:-0.24,spark:null},
-    {sym:'CL=F', label:'Crude Oil', price:72.4, change:-1.2,  changePct:-1.63,spark:null},
-    {sym:'GC=F', label:'Gold',      price:2340, change:8.4,   changePct:0.36, spark:null},
-    {sym:'SI=F', label:'Silver',    price:29.8, change:0.3,   changePct:1.02, spark:null},
-    {sym:'EURUSD=X',label:'EUR/USD',price:1.085,change:0.001, changePct:0.09, spark:null},
-    {sym:'^TNX', label:'10-Yr Bond',price:4.41, change:0.06,  changePct:1.38, spark:null},
-    {sym:'BTC-USD',label:'Bitcoin', price:97400,change:2100,  changePct:2.20, spark:null},
-    {sym:'^VIX', label:'VIX',       price:16.8, change:-0.7,  changePct:-4.00,spark:null},
+    {sym:'^GSPC',label:'S&P 500',   price:null,change:null,changePct:null,spark:null},
+    {sym:'^DJI', label:'Dow 30',    price:null,change:null,changePct:null,spark:null},
+    {sym:'^IXIC',label:'Nasdaq',    price:null,change:null,changePct:null,spark:null},
+    {sym:'^RUT', label:'Russell 2K',price:null,change:null,changePct:null,spark:null},
+    {sym:'CL=F', label:'Crude Oil', price:null,change:null,changePct:null,spark:null},
+    {sym:'GC=F', label:'Gold',      price:null,change:null,changePct:null,spark:null},
+    {sym:'SI=F', label:'Silver',    price:null,change:null,changePct:null,spark:null},
+    {sym:'EURUSD=X',label:'EUR/USD',price:null,change:null,changePct:null,spark:null},
+    {sym:'^TNX', label:'10-Yr Bond',price:null,change:null,changePct:null,spark:null},
+    {sym:'BTC-USD',label:'Bitcoin', price:null,change:null,changePct:null,spark:null},
+    {sym:'^VIX', label:'VIX',       price:null,change:null,changePct:null,spark:null},
   ];
   var barItems=MARKET_BAR.length?MARKET_BAR:STATIC_STRIPS;
 
@@ -5896,7 +5851,7 @@ function renderNews(){
       '</div>'+
       '<div style="display:flex;align-items:center;gap:8px">'+
         (usingStaticNews
-          ?'<span style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);padding:3px 8px;border-radius:var(--r-sm)">'+(_newsFetched?'⚠ Titulares de ejemplo · sin conexión':'⏳ Cargando titulares reales…')+'</span>'
+          ?'<span style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--amber);background:var(--amber-bg);border:1px solid rgba(245,158,11,.25);padding:3px 8px;border-radius:var(--r-sm)">'+(_newsFetched?'⚠ Sin titulares en vivo · reintentando':'⏳ Cargando titulares reales…')+'</span>'
           :'<div class="live"><div class="livd"></div>LIVE</div>')+
       '</div>'+
     '</div>'+
@@ -5932,8 +5887,9 @@ function renderNews(){
       '</div>'+
       '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;background:var(--card2);border:1px solid var(--border);border-radius:4px;padding:2px 7px">'+filtered.length+' artículos</span>'+
     '</div>'+
-    featCard+
-    '<div style="margin-top:10px">'+newsListHtml+'</div>'+
+    (filtered.length===0
+      ?'<div style="text-align:center;color:var(--text3);padding:48px 20px;font-family:\'JetBrains Mono\',monospace;font-size:11px">'+(f!=='Todo'?'Sin noticias en la categoría “'+esc(f)+'”.':(_newsFetched?'Sin titulares en vivo ahora mismo. Reintentando…':'Cargando titulares…'))+'</div>'
+      :featCard+'<div style="margin-top:10px">'+newsListHtml+'</div>')+
     '</div>'+
 
     // RIGHT: sidebar
