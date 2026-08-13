@@ -2895,6 +2895,25 @@ function demoBanner(volverA){
 function icon(id,cls){
   return '<svg class="ico'+(cls?' '+cls:'')+'" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-'+id+'"/></svg>';
 }
+// Marca un boton "＋ Watch" como ya agregado. Se hace en JS (no en el atributo
+// onclick) porque el SVG de icon() lleva comillas dobles que romperian el
+// onclick="..." si se inyectara como innerHTML dentro del atributo.
+function markWatched(btn){
+  btn.innerHTML=icon('check')+' Watch';
+  btn.disabled=true;
+  btn.style.color='var(--blue)';
+  btn.style.borderColor='rgba(59,130,246,.4)';
+}
+// Punto de estado (regimen/VIX) como circulo con color semantico + halo, en
+// vez de emoji 🟢🔴🟡 (que ignora el tema y varia por plataforma). Se pasa el
+// mismo emoji que se usaba y se traduce a color SEMANTICO (--pos/--neg/--amber)
+// para conservar el semaforo — no el color de MARCA (--grn es dorado). color-mix
+// acepta var(), asi que el halo sigue al color.
+function statusDot(emoji,size){
+  size=size||14;
+  var color=({'🟢':'var(--pos)','🔴':'var(--neg)','🟡':'var(--amber)','🟠':'var(--amber)','🔵':'var(--blue)','⚪':'var(--text3)'})[emoji]||'var(--text3)';
+  return '<span style="display:inline-block;width:'+size+'px;height:'+size+'px;border-radius:50%;background:'+color+';box-shadow:0 0 0 4px color-mix(in srgb,'+color+' 18%,transparent);vertical-align:middle;flex-shrink:0"></span>';
+}
 function pageIcon(pid,cls){
   var conocidos={news:1,dash:1,port:1,watch:1,sig:1,pb:1,comp:1,sentiment:1,radar:1,
     decision:1,ind:1,risk:1,back:1,screener:1,capital:1,divs:1,rebal:1,alert:1,
@@ -3806,7 +3825,7 @@ function renderDecisionEngineBody(){
         '<div>'+
           '<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">RÉGIMEN DE MERCADO</div>'+
           '<div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">'+
-            '<span style="font-size:44px;line-height:1">'+regime.emoji+'</span>'+
+            statusDot(regime.emoji,22)+
             '<div style="font-size:30px;font-weight:800;color:'+regime.color+';letter-spacing:-1px;line-height:1.1">'+regime.label+'</div>'+
           '</div>'+
           '<div style="font-size:12px;color:var(--text2);line-height:1.6;max-width:380px">'+regime.desc+'</div>'+
@@ -3836,7 +3855,7 @@ function renderDecisionEngineBody(){
         '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px">'+
           '<div style="font-size:9px;font-family:\'JetBrains Mono\',monospace;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">VIX — Volatilidad</div>'+
           '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'+
-            '<span style="font-size:24px">'+vix.emoji+'</span>'+
+            statusDot(vix.emoji,15)+
             '<span style="font-size:24px;font-weight:800;color:'+vix.color+';font-family:\'JetBrains Mono\',monospace">'+(vix.vix?vix.vix.toFixed(1):'—')+'</span>'+
           '</div>'+
           '<div style="font-size:11px;font-weight:600;color:'+vix.color+';margin-bottom:4px">'+vix.label+'</div>'+
@@ -3966,8 +3985,8 @@ function renderDecisionEngineBody(){
             '<div style="padding:0 16px 14px;display:flex;gap:6px">'+
               '<button class="btn" style="font-size:10px;flex:1" onclick="openDrawer(\''+s.ticker+'\','+s.last+')">↗ Gráfico</button>'+
               (inWatch
-                ?'<button class="btn" style="font-size:10px;border-color:rgba(59,130,246,.4);color:var(--blue)" disabled>✓ Watch</button>'
-                :'<button class="btn" style="font-size:10px" onclick="addWatch(\''+s.ticker+'\');this.textContent=\'✓ Watch\';this.disabled=true;this.style.color=\'var(--blue)\'">＋ Watch</button>')+
+                ?'<button class="btn" style="font-size:10px;border-color:rgba(59,130,246,.4);color:var(--blue)" disabled>'+icon('check')+' Watch</button>'
+                :'<button class="btn" style="font-size:10px" onclick="addWatch(\''+s.ticker+'\');markWatched(this)">'+icon('plus')+' Watch</button>')+
               (inPort?'<span style="font-size:9px;padding:3px 7px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:var(--r-sm);color:var(--blue);align-self:center;font-family:\'JetBrains Mono\',monospace">✓ Port</span>':'')+
             '</div>'+
           '</div>';
