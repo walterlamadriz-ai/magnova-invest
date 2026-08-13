@@ -2241,6 +2241,7 @@ function addAlert(ticker,tipo,trigger){
   }
   S.alerts.push({id:S.alertNextId++,asset:ticker,type:tipo,trigger:t,createdAt:Date.now()});
   persistAlerts();
+  ensureNotifyPermission();
   showToast('Alerta creada para '+ticker);
   return true;
 }
@@ -2249,6 +2250,51 @@ function delAlert(id){
   persistAlerts();
   showToast('Alerta eliminada','warning');
   renderAlert();
+}
+
+// Evalua TODAS las alertas contra el precio vivo actual y notifica las que se
+// disparan. Antes las alertas solo se evaluaban al abrir su pestaña, asi que la
+// funcion nunca cumplia su proposito. Ahora corre en el loop de quotes (cada 5
+// min y en el arranque). Debounce: una alerta disparada marca a.notified y no
+// vuelve a avisar hasta que el precio se despeja (deja de cumplir la condicion),
+// evitando spam en cada tick. Devuelve cuantas se dispararon en esta pasada.
+function checkAlerts(){
+  if(!S.alerts||!S.alerts.length) return 0;
+  var fired=0, changed=false;
+  S.alerts.forEach(function(a){
+    var cur=getLivePrice(a.asset);
+    if(!(isFinite(cur)&&cur>0)) return;
+    var hit=a.type==='Max'?cur>=a.trigger:cur<=a.trigger;
+    if(hit&&!a.notified){
+      a.notified=true; a.triggeredAt=Date.now(); a.triggeredPrice=cur; changed=true; fired++;
+      notifyAlert(a,cur);
+    }else if(!hit&&a.notified){
+      a.notified=false; changed=true; // condicion despejada: se re-arma
+    }
+  });
+  if(changed){ persistAlerts(); if(S.page==='alert'){ try{renderMain();}catch(e){} } }
+  return fired;
+}
+function notifyAlert(a,cur){
+  var dir=a.type==='Max'?'subió a':'bajó a';
+  var msg=a.asset+' '+dir+' $'+cur.toFixed(2)+' · objetivo '+a.type+' $'+a.trigger;
+  try{ if(typeof showToast==='function') showToast('🔔 '+msg); }catch(e){}
+  try{
+    if('Notification' in window && Notification.permission==='granted'){
+      new Notification('Alerta · '+a.asset, {body:msg, tag:'alert-'+a.id, icon:'/icon-192.png'});
+    }
+  }catch(e){}
+  try{ if(typeof track==='function') track('alert_triggered',{asset:a.asset,type:a.type}); }catch(e){}
+}
+// Pide permiso de notificacion una vez, dentro de un gesto del usuario (al crear
+// una alerta). Si lo niega, las alertas siguen avisando por toast in-app.
+function ensureNotifyPermission(){
+  try{
+    if('Notification' in window && Notification.permission==='default'){
+      var p=Notification.requestPermission();
+      if(p&&p.then) p.then(function(){ if(S.page==='alert'){ try{renderMain();}catch(e){} } });
+    }
+  }catch(e){}
 }
 
 // ── COST BASIS — weighted average per ticker from trade log ──
@@ -6412,12 +6458,23 @@ function renderAlert(){
 
   document.getElementById("main").innerHTML=
     _ph('Principal · Alertas','Alertas de Precio','// Vigila cuándo un activo cruza el nivel que definas')+
-    '<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start">'+
-    '<span style="font-size:16px;flex-shrink:0" aria-hidden="true">⚠️</span>'+
-    '<div style="font-size:11px;color:var(--amber);line-height:1.6">'+
-    '<b>Las alertas se evalúan mientras esta pestaña esté abierta.</b> '+
-    'No envían notificaciones ni funcionan con la app cerrada. Para avisos permanentes, configura niveles en tu bróker.'+
-    '</div></div>'+
+    (function(){
+      var perm=('Notification' in window)?Notification.permission:'unsupported';
+      var base='Las alertas se evalúan cada 5 min mientras la app esté abierta (en cualquier sección). No funcionan con la app completamente cerrada.';
+      if(perm==='granted'){
+        return '<div style="background:var(--grn-bg);border:1px solid var(--grn-lt);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start">'+
+          statusDot('🟢',12)+'<div style="font-size:11px;color:var(--text2);line-height:1.6"><b style="color:var(--grn)">Notificaciones activadas.</b> Recibirás un aviso del navegador al cruzar un nivel. '+base+'</div></div>';
+      }
+      if(perm==='default'){
+        return '<div style="background:var(--amber-bg);border:1px solid rgba(245,158,11,.25);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">'+
+          '<div style="font-size:11px;color:var(--text2);line-height:1.6;flex:1;min-width:200px"><b style="color:var(--amber)">Activa las notificaciones</b> para recibir avisos aunque estés en otra pestaña. '+base+'</div>'+
+          '<button class="btn" style="border-color:var(--amber);color:var(--amber)" onclick="ensureNotifyPermission()">'+icon('alert')+' Activar notificaciones</button></div>';
+      }
+      if(perm==='denied'){
+        return '<div style="background:var(--amber-bg);border:1px solid rgba(245,158,11,.25);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px;font-size:11px;color:var(--text2);line-height:1.6"><b style="color:var(--amber)">Notificaciones bloqueadas.</b> Verás los avisos dentro de la app (toast). '+base+' Puedes habilitarlas en los ajustes del navegador.</div>';
+      }
+      return '<div style="background:var(--amber-bg);border:1px solid rgba(245,158,11,.25);border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px;font-size:11px;color:var(--text2);line-height:1.6">'+base+'</div>';
+    })()+
     (S.alerts.length===0? vacio :
       (disparadas.length>0?'<div style="background:var(--rbg);border:1px solid var(--rborder);border-radius:var(--r-md);padding:12px;margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px;font-family:\'JetBrains Mono\'">'+disparadas.length+' alerta(s) alcanzada(s)</div>'+disparadas.map(function(r){return '<div style="font-size:11px;color:var(--text);font-family:\'JetBrains Mono\';margin-top:3px">'+esc(r.asset)+' · '+(r.type==="Max"?"↑":"↓")+' $'+fmtD(r.trigger)+' · Actual: $'+fmtD(r.cur)+'</div>';}).join("")+'</div>':'')+
       '<div class="krow">'+
@@ -10057,6 +10114,7 @@ async function bootLiveData(){
   refreshLive(tickers).then(function(){
     updateLiveBadge();
     updateLivePricesInDOM();
+    checkAlerts();
     // El dashboard arma sus tablas en render-time (sin data-live-*), así que
     // necesita un re-render completo para mostrar precios y Δ% live.
     if(S.user&&(S.page==='dash'||S.page==='port'||S.page==='watch')){
@@ -10077,6 +10135,7 @@ async function bootLiveData(){
     refreshLive(t2).then(function(){
       updateLiveBadge();
       updateLivePricesInDOM();
+      checkAlerts();
     }).catch(function(){});
   },LIVE_REFRESH_MS);
 }
