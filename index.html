@@ -4784,6 +4784,55 @@ function moversCard(){
     '</div>'+filas+'</div>';
 }
 
+// "Foco de hoy": tarjeta decision-first al tope del dashboard. Surface, desde
+// datos REALES (ALL_SIG del motor + watchlist + portafolio), 1-2 cosas concretas
+// para revisar hoy. Solo usa señales cuando el scoring real ya corrio
+// (ALL_SIG_REAL); si no, muestra un estado de carga. Encuadre educativo: son
+// señales técnicas "para revisar", no recomendaciones de compra/venta.
+function dashFocoCard(port){
+  var inPort={}; (port||[]).forEach(function(h){inPort[h.t]=true;});
+  var wl=S.watchlist||[];
+  var buyC=[], sellC=[];
+  if(ALL_SIG_REAL){
+    ALL_SIG.forEach(function(s){
+      if(s.sig==='BUY' && wl.indexOf(s.t)>=0 && !inPort[s.t]) buyC.push(s);
+      else if(s.sig==='SELL' && inPort[s.t]) sellC.push(s);
+    });
+    buyC.sort(function(a,b){return (b.sc||0)-(a.sc||0);});
+    sellC.sort(function(a,b){return (a.sc||0)-(b.sc||0);});
+  }
+  function tkChips(arr){
+    return arr.slice(0,5).map(function(s){
+      return '<button class="btn" style="font-size:10px;padding:3px 9px" onclick="openDrawer(\''+s.t+'\','+(s.p||100)+')">'+s.t+' · '+(s.sc||0)+'</button>';
+    }).join('');
+  }
+  var rows='';
+  if(!ALL_SIG_REAL){
+    rows='<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Calculando señales técnicas…</div>';
+  }else if(!buyC.length && !sellC.length){
+    rows='<div style="font-size:11px;color:var(--text2);line-height:1.6">Sin señales técnicas destacadas en tu watchlist ni portafolio ahora mismo. Revisa tu P&amp;L y el contexto de mercado abajo.</div>';
+  }else{
+    if(buyC.length){
+      rows+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:'+(sellC.length?'10px':'0')+'">'+
+        statusDot('🟢',12)+'<span style="font-size:12px;color:var(--text);font-weight:600">'+buyC.length+' en tu watchlist con señal alcista</span>'+
+        '<span style="font-size:10px;color:var(--text3)">para revisar:</span>'+tkChips(buyC)+'</div>';
+    }
+    if(sellC.length){
+      rows+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+        statusDot('🔴',12)+'<span style="font-size:12px;color:var(--text);font-weight:600">'+sellC.length+' de tus posiciones con señal bajista</span>'+
+        '<span style="font-size:10px;color:var(--text3)">para revisar:</span>'+tkChips(sellC)+'</div>';
+    }
+  }
+  return '<div class="fos-card" style="padding:16px 18px;margin-bottom:16px">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">'+
+      '<div class="fos-section-label" style="margin:0;display:flex;align-items:center;gap:8px">'+icon('decision')+' Foco de hoy</div>'+
+      '<button class="btn" style="font-size:10px" onclick="setPage(\'decision\')">'+icon('decision')+' Motor completo →</button>'+
+    '</div>'+
+    rows+
+    '<div style="margin-top:12px;font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.5">Señales técnicas educativas para revisar — no son recomendaciones de compra o venta.</div>'+
+  '</div>';
+}
+
 function renderDash(){
   var plan=planOf();
   var port=S.portfolio.slice(0,plan.maxT);
@@ -4978,6 +5027,7 @@ function renderDash(){
     pageHeader+
     demoBanner('renderDash')+
     '<div class="dash-hero-row">'+kpiCards+'</div>'+
+    dashFocoCard(port)+
     regimeBanner+
     // Fila 1: Top Senales y Portafolio, equilibradas lado a lado.
     '<div class="grid2">'+sigCard+portCard+'</div>'+
