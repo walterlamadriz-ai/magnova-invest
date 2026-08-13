@@ -470,11 +470,15 @@ body.no-auth .main { margin-left:0 !important; margin-top:0 !important; }
   margin-bottom:6px;
 }
 .ph h1 {
-  font-size: 24px;
-  font-weight: 700;
+  /* Mismo titulo de pagina que .fos-module-title (Fraunces serif): antes eran
+     3 estilos distintos (Inter 24, Inter 26, Fraunces 27) y el H1 cambiaba de
+     familia/tamano al moverse entre modulos. */
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 27px;
+  font-weight: 600;
   color: var(--bright);
-  letter-spacing: -.5px;
-  line-height: 1.1;
+  letter-spacing: -.01em;
+  line-height: 1.12;
   margin:0 0 4px;
 }
 .sub-txt {
@@ -1661,7 +1665,7 @@ body:not(.no-auth) #mainnav {
 /* Page module header */
 .dash-page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom:24px; }
 .dash-page-breadcrumb { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); margin-bottom:6px; }
-.dash-page-title { font-size: 26px; font-weight: 700; color: var(--bright); margin:0; line-height: 1.1; }
+.dash-page-title { font-family: 'Fraunces', Georgia, serif; font-size: 27px; font-weight: 600; color: var(--bright); margin:0; line-height: 1.12; letter-spacing: -.01em; }
 .dash-page-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); background: var(--card); border: 1px solid var(--border); border-radius:var(--r-md); padding:6px 14px; flex-shrink:0; }
 /* Accesos rapidos a la altura del titulo. Antes ocupaban una tarjeta entera en
    la columna derecha para cuatro enlaces; aqui van en linea y sin expandirse. */
@@ -3886,7 +3890,7 @@ function renderDecisionEngineBody(){
       '</div>'+
       '</div>';
     if(usingDefaults){
-      scoresHtml+='<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:12px;padding:8px 12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r-md)">'+
+      scoresHtml+='<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:12px;padding:8px 12px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md)">'+
         '⚡ Activos de referencia. <span onclick="setPage(\'watch\')" style="color:var(--grn);cursor:pointer">Agrega tu Watchlist →</span></div>';
     }
     if(!scores.length){
@@ -3951,7 +3955,7 @@ function renderDecisionEngineBody(){
               '<button onclick="var el=document.getElementById(\''+nid+'\');var open=el.style.display!==\'none\';el.style.display=open?\'none\':\'block\';this.querySelector(\'.arr\').textContent=open?\'▸\':\'▾\'" '+
                 'style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text3);font-size:9px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;padding:4px 10px;width:100%;text-align:left;display:flex;justify-content:space-between">'+
                 '<span>Lectura técnica</span><span class="arr">▸</span></button>'+
-              '<div id="'+nid+'" style="display:none;margin-top:6px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--r-md);font-size:10px;line-height:1.7;color:var(--text2)">'+narr+'</div>'+
+              '<div id="'+nid+'" style="display:none;margin-top:6px;padding:10px 12px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md);font-size:10px;line-height:1.7;color:var(--text2)">'+narr+'</div>'+
             '</div>'+
             // Action buttons
             '<div style="padding:0 16px 14px;display:flex;gap:6px">'+
@@ -3966,7 +3970,7 @@ function renderDecisionEngineBody(){
       scoresHtml+='</div>';
     }
 
-    var disclaimer='<div style="margin-top:20px;padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:var(--r-md);font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);line-height:1.8">'+
+    var disclaimer='<div style="margin-top:20px;padding:12px 16px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md);font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);line-height:1.8">'+
       '<b style="color:var(--text2)">⚠ Análisis técnico educativo.</b> '+
       'Los niveles de precio (Entry, Stop, Target) son zonas referenciales basadas en ATR(14). No constituye asesoría financiera ni señal de compra o venta. La decisión de operar es exclusiva del usuario.'+
       '</div>';
@@ -6677,7 +6681,7 @@ function mComoCalcula(mr){
         '</div>';
     }).join('')+
     '</div>'+
-    '<div style="padding:10px 14px;background:rgba(255,255,255,.03);border-radius:var(--r-sm);font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);line-height:1.6">'+cfg.nota+'</div>'+
+    '<div style="padding:10px 14px;background:var(--card2);border-radius:var(--r-sm);font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);line-height:1.6">'+cfg.nota+'</div>'+
     '</div></div>';
 }
 var COMO_CALCULA={
@@ -6735,7 +6739,7 @@ function mScoreInfo(mr){
         '</div>';
     }).join('')+
     '</div>'+
-    '<div style="padding:10px 14px;background:rgba(255,255,255,.03);border-radius:var(--r-sm);font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);line-height:1.6">'+
+    '<div style="padding:10px 14px;background:var(--card2);border-radius:var(--r-sm);font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);line-height:1.6">'+
     'Score 75–100: condiciones técnicas favorables · 55–74: moderadas · 35–54: mixtas · 0–34: desfavorables.<br>'+
     'Los niveles de precio son referenciales. La decisión de operar es exclusiva del usuario.'+
     '</div>'+
@@ -8951,7 +8955,7 @@ function mUpgrade(mr){
     '<button onclick="doUpgrade()" class="btn-big" style="width:100%;padding:13px;font-size:14px;margin-bottom:10px">⚡ Activar Pro ahora — $199/año</button>'+
     '<button onclick="startTrial()" class="btn" style="width:100%;padding:11px;font-size:13px;margin-bottom:10px;border:1px solid var(--border);background:transparent;color:var(--text2)">Iniciar prueba gratuita — 14 días sin tarjeta</button>'+
     '<p id="pro-cta-sub" style="font-size:10px;color:var(--text3);text-align:center;font-family:\'JetBrains Mono\',monospace">Cancela en 1 click · Sin compromisos</p>'+
-    '<div style="margin-top:14px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:var(--r-md);font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);text-align:center;line-height:1.6">'+
+    '<div style="margin-top:14px;padding:10px 14px;background:var(--card2);border-radius:var(--r-md);font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);text-align:center;line-height:1.6">'+
     '¿Preguntas? <a href="mailto:invest@financeospro.com" style="color:var(--blue);text-decoration:none">invest@financeospro.com</a>'+
     '</div>'+
     '</div>'+
@@ -9733,7 +9737,7 @@ function renderCapital(){
       '<div style="font-size:12px">Presiona <b>Calcular distribución</b> para analizar los tickers.</div>'+
       '</div>'))+
 
-    '<div style="margin-top:20px;padding:12px 16px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:var(--r-md);font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);line-height:1.8">'+
+    '<div style="margin-top:20px;padding:12px 16px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md);font-size:10px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);line-height:1.8">'+
     '<b style="color:var(--text2)">⚠ Guía educativa de distribución de capital.</b> '+
     'Los tramos por SMA y la condición de RSI son referencias técnicas educativas, no instrucciones de compra ni recomendación de inversión. La decisión de asignar capital es exclusiva del usuario. Datos con posible retraso.'+
     '</div>';
