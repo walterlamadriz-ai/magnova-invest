@@ -1581,9 +1581,9 @@ body:not(.no-auth) #mainnav {
   transition: background .12s, color .12s;
   margin-bottom:2px;
 }
-.nb:hover { background: rgba(255,255,255,.05); color: var(--bright); }
+.nb:hover { background: var(--card3); color: var(--bright); }
 .nb.act {
-  background: rgba(34,197,94,.1);
+  background: var(--grn-bg);
   color: var(--grn);
   font-weight: 600;
   border-left-color: var(--grn);
@@ -1682,7 +1682,7 @@ body:not(.no-auth) #mainnav {
 }
 .fos-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .fos-table th { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); padding:8px 12px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
-.fos-table td { padding:12px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text); vertical-align: middle; }
+.fos-table td { padding:12px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
 .fos-table tr:last-child td { border-bottom: none; }
 .fos-table tr:hover td { background: var(--card3); }
 .fos-score { display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;flex-shrink:0; }
@@ -4785,7 +4785,7 @@ function renderDash(){
   var sigRows=top.map(function(s){
     var lp=getLivePrice(s.t);
     var lqd=LIVE[s.t];
-    return '<tr style="cursor:pointer" onclick="openDrawer(\''+s.t+'\','+lp+')" onmouseenter="this.style.background=\'rgba(255,255,255,.025)\'" onmouseleave="this.style.background=\'\'" onmouseenter="prefetchFund(\''+s.t+'\');this.style.background=\'rgba(255,255,255,.025)\'" onmouseleave="this.style.background=\'\'">'+
+    return '<tr style="cursor:pointer" onclick="openDrawer(\''+s.t+'\','+lp+')" onmouseenter="prefetchFund(\''+s.t+'\');this.style.background=\'var(--card3)\'" onmouseleave="this.style.background=\'\'">'+
       '<td style="font-weight:600;color:var(--bright);font-family:\'JetBrains Mono\',monospace">'+s.t+'</td>'+
       '<td>'+scoreCircle(s.sc)+'</td>'+
       '<td style="font-family:\'JetBrains Mono\',monospace;color:var(--text)">'+fmtMoney(lp)+'</td>'+
@@ -4807,7 +4807,7 @@ function renderDash(){
     var chgColor=chgV===null?'var(--text3)':chgV>=0?'var(--pos)':'var(--neg)';
     var chgStr=chgV===null?'—':(chgV>=0?'+':'')+chgV.toFixed(2)+'%';
     var wt=totM>0?Math.round(h.sh*h.cur/totM*100):0;
-    return '<tr style="cursor:pointer" onclick="openDrawer(\''+h.t+'\','+h.cur+')" onmouseenter="this.style.background=\'rgba(255,255,255,.025)\'" onmouseleave="this.style.background=\'\'">'+
+    return '<tr style="cursor:pointer" onclick="openDrawer(\''+h.t+'\','+h.cur+')" onmouseenter="this.style.background=\'var(--card3)\'" onmouseleave="this.style.background=\'\'">'+
       '<td style="font-weight:700;color:var(--bright);font-family:\'JetBrains Mono\',monospace">'+h.t+'</td>'+
       '<td style="color:var(--text2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+_tname(h.t)+'</td>'+
       '<td style="font-family:\'JetBrains Mono\',monospace;color:var(--text)">'+fmtMoney(h.cur)+'</td>'+
@@ -9287,7 +9287,7 @@ function renderComp(){
           if(m.k==='sharpe') col=typeof v==='number'?(v>=1?'var(--grn)':v>=0.5?'var(--amber)':'var(--red)'):'var(--text)';
           return '<td style="color:'+col+';font-weight:'+(isBest?'700':'400')+'">'+fmt+'</td>';
         }).join('');
-        var bestCell=best?'<td><span style="font-size:9px;padding:2px 7px;border-radius:3px;background:rgba(34,197,94,.1);color:var(--grn);font-family:\'JetBrains Mono\',monospace">'+best+' 🏆</span></td>':'<td style="color:var(--text3)">—</td>';
+        var bestCell=best?'<td><span style="font-size:9px;padding:2px 7px;border-radius:3px;background:var(--grn-bg);color:var(--grn);font-family:\'JetBrains Mono\',monospace">'+best+' 🏆</span></td>':'<td style="color:var(--text3)">—</td>';
         return '<tr class="trow"><td style="font-size:11px;color:var(--text2)">'+m.label+'</td>'+cells+bestCell+'</tr>';
       }).join('');
 
