@@ -5106,6 +5106,38 @@ var FOS_AI_HABILITADA = false;
 // Revertir al layout anterior: localStorage.setItem('fos_port_kpi_v1','1')
 var FOS_PORT_KPI_V2 = (function(){ try{ return localStorage.getItem('fos_port_kpi_v1')!=='1'; }catch(e){ return true; } })();
 
+// Superficie asesora embebida: sugerencia de rebalanceo dentro de la vista de
+// Portfolio (no en una pagina estatica aparte). Solo aparece si el usuario fijo
+// objetivos de verdad — sin objetivos guardados el rebalanceo por defecto iguala
+// el peso actual (desvio cero) y la sugerencia seria ruido. Umbral 2% para no
+// alertar por micro-desvios.
+function portRebalHint(port,totM){
+  if(!port||!port.length||!(totM>0)) return '';
+  if(!Object.keys((REBAL&&REBAL.targets)||{}).length){ try{rebalLoadTargets();}catch(e){} }
+  var targets=(REBAL&&REBAL.targets)||{};
+  if(!Object.keys(targets).length) return '';
+  var drifts=[];
+  port.forEach(function(h){
+    var t=targets[h.t]; if(t==null) return;
+    var cur=getLivePrice(h.t)||h.cur||0;
+    var curW=h.sh*cur/totM*100;
+    var diff=curW-t; // + sobreponderado, - subponderado vs objetivo
+    if(Math.abs(diff)>=2) drifts.push({t:h.t,diff:diff});
+  });
+  if(!drifts.length) return ''; // alineado con los objetivos
+  drifts.sort(function(a,b){return Math.abs(b.diff)-Math.abs(a.diff);});
+  var top=drifts[0];
+  var dir=top.diff>0?'sobreponderado':'subponderado';
+  return '<div class="fos-card" style="padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-left:3px solid var(--amber)">'+
+    statusDot('🟡',12)+
+    '<div style="flex:1;min-width:200px;font-size:12px;color:var(--text);line-height:1.5">'+
+      '<b>Rebalanceo sugerido:</b> '+drifts.length+' posición'+(drifts.length!==1?'es se desviaron':' se desvió')+' de tus objetivos'+
+      ' <span style="color:var(--text3)">(mayor: '+top.t+' '+(top.diff>0?'+':'')+top.diff.toFixed(1)+'%, '+dir+')</span>.'+
+    '</div>'+
+    '<button class="btn" style="border-color:var(--amber);color:var(--amber)" onclick="setPage(\'rebal\')">'+icon('rebal')+' Ver ajustes →</button>'+
+  '</div>';
+}
+
 function renderPort(){
   var plan=planOf();
   var port=S.portfolio.slice(0,plan.maxT);
@@ -5174,6 +5206,7 @@ function renderPort(){
       kpi("Posiciones",port.length+(plan.maxT<999?"/"+plan.maxT:""),"","b")+
       '</div>'
     )+
+    portRebalHint(port,totM)+
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'+
     '<span style="font-size:12px;color:var(--text3)">Capital:</span>'+
     '<input class="inp" type="number" value="'+S.capital+'" onchange="updateCap(this.value)" style="width:130px"/>'+
