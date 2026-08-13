@@ -1714,6 +1714,11 @@ body:not(.no-auth) #mainnav {
 .dash-action-btn { background: var(--card2); border: 1px solid var(--border); border-radius:var(--r-md); padding:12px; cursor: pointer; text-align: left; transition: border-color .15s; }
 .dash-action-btn:hover { border-color: var(--grn-lt); }
 @media (max-width: 1100px) { .dash-kpi { grid-template-columns: repeat(3,1fr); } }
+/* Fila heroe del dashboard: P&L Total domina (1.7fr, 34px) + 4 apoyos. */
+.dash-hero-row { display:grid; grid-template-columns:1.7fr 1fr 1fr 1fr 1fr; gap:12px; margin-bottom:20px; align-items:stretch; }
+.dash-hero-row > .kpi { margin-bottom:0; }
+@media (max-width: 1100px) { .dash-hero-row { grid-template-columns:1fr 1fr 1fr; } .dash-hero-row > .kpi.hero { grid-column:1 / -1; } }
+@media (max-width: 560px) { .dash-hero-row { grid-template-columns:1fr 1fr; } .dash-hero-row > .kpi.hero { grid-column:1 / -1; } }
 @media (max-width: 900px) { .dash-body { grid-template-columns: 1fr; } }
 @media (max-width: 768px) {
   .dash-kpi { grid-template-columns: 1fr 1fr; }
@@ -4856,12 +4861,21 @@ function renderDash(){
     if(chg!==null&&(!bestDay||chg>bestDay.chg)) bestDay={t:h.t,chg:chg};
   });
 
+  // Jerarquia 1 respuesta -> 4 apoyos: el P&L Total (la respuesta a "¿voy bien?")
+  // pasa a heroe (34px, valor coloreado + flecha), el resto quedan de apoyo.
+  // Reutiliza el componente kpi()/.kpi.hero (mismo que renderPort) en vez de las
+  // 5 dash-kpi-card iguales que aplanaban la jerarquia.
+  var heroV='<span style="color:'+pnlColor+'">'+(pnl>=0?'▲ +':'▼ ')+fmtMoney(pnl)+'</span>';
   var kpiCards=
-    '<div class="dash-kpi-card '+_kc+'"><div class="dash-kpi-label">Portfolio Total</div><div class="dash-kpi-val">'+fmtMoney(totM)+'</div><div class="dash-kpi-sub" style="color:'+pnlColor+'">'+(pnl>=0?'▲':'▼')+' '+(pnl>=0?'+':'')+pnlPct.toFixed(2)+'% total</div></div>'+
-    '<div class="dash-kpi-card '+_kc+'"><div class="dash-kpi-label">P&amp;L Total</div><div class="dash-kpi-val" style="color:'+pnlColor+'">'+(pnl>=0?'+':'')+fmtMoney(pnl)+'</div><div class="dash-kpi-sub" style="color:'+pnlColor+'">'+(pnlPct>=0?'+':'')+pnlPct.toFixed(2)+'% retorno</div></div>'+
-    '<div class="dash-kpi-card kpi-neu"><div class="dash-kpi-label">Posiciones</div><div class="dash-kpi-val">'+port.length+'</div><div class="dash-kpi-sub"><span style="color:var(--pos)">'+winners+' positivas</span> · <span style="color:var(--neg)">'+losers+' neg.</span></div></div>'+
-    (bestPos?'<div class="dash-kpi-card kpi-pos"><div class="dash-kpi-label">Mejor Activo</div><div class="dash-kpi-val" style="color:'+(bestPos.pct>=0?'var(--pos)':'var(--neg)')+';font-size:18px">'+bestPos.t+'</div><div class="dash-kpi-sub" style="color:'+(bestPos.pct>=0?'var(--pos)':'var(--neg)')+'">'+(bestPos.pct>=0?'+':'')+bestPos.pct.toFixed(1)+'%</div></div>':'<div class="dash-kpi-card kpi-neu"><div class="dash-kpi-label">Mejor Activo</div><div class="dash-kpi-val">—</div></div>')+
-    (bestDay?'<div class="dash-kpi-card '+(bestDay.chg>=0?'kpi-pos':'kpi-neg')+'"><div class="dash-kpi-label">Mejor Hoy</div><div class="dash-kpi-val" style="color:'+(bestDay.chg>=0?'var(--pos)':'var(--neg)')+';font-size:18px">'+bestDay.t+'</div><div class="dash-kpi-sub" style="color:'+(bestDay.chg>=0?'var(--pos)':'var(--neg)')+'">'+(bestDay.chg>=0?'+':'')+bestDay.chg.toFixed(2)+'% hoy</div></div>':'<div class="dash-kpi-card kpi-neu"><div class="dash-kpi-label">Mejor Hoy</div><div class="dash-kpi-val">—</div></div>');
+    kpi('P&L Total',heroV,(pnlPct>=0?'+':'')+pnlPct.toFixed(2)+'% retorno',pnl>=0?'g':'r','hero')+
+    kpi('Portfolio Total',fmtMoney(totM),(pnl>=0?'+':'')+pnlPct.toFixed(2)+'% total','n')+
+    kpi('Posiciones',String(port.length),'<span style="color:var(--pos)">'+winners+' positivas</span> · <span style="color:var(--neg)">'+losers+' neg.</span>','n')+
+    (bestPos
+      ?kpi('Mejor Activo','<span style="color:'+(bestPos.pct>=0?'var(--pos)':'var(--neg)')+'">'+bestPos.t+'</span>',(bestPos.pct>=0?'+':'')+bestPos.pct.toFixed(1)+'%',bestPos.pct>=0?'g':'r')
+      :kpi('Mejor Activo','—','','n'))+
+    (bestDay
+      ?kpi('Mejor Hoy','<span style="color:'+(bestDay.chg>=0?'var(--pos)':'var(--neg)')+'">'+bestDay.t+'</span>',(bestDay.chg>=0?'+':'')+bestDay.chg.toFixed(2)+'% hoy',bestDay.chg>=0?'g':'r')
+      :kpi('Mejor Hoy','—','','n'));
 
   // ── Top Señales card ──
   var sigCard=
@@ -4938,7 +4952,7 @@ function renderDash(){
     '<div class="dash-wrap">'+
     pageHeader+
     demoBanner('renderDash')+
-    '<div class="dash-kpi">'+kpiCards+'</div>'+
+    '<div class="dash-hero-row">'+kpiCards+'</div>'+
     regimeBanner+
     // Fila 1: Top Senales y Portafolio, equilibradas lado a lado.
     '<div class="grid2">'+sigCard+portCard+'</div>'+
