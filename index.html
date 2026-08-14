@@ -10613,11 +10613,30 @@ async function doLogin(){
   var res=await sb.auth.signInWithPassword({email:e,password:p});
   if(btn){btn.disabled=false;btn.textContent="Entrar";}
   if(res.error){
+    // Antes se ocultaba TODO error como "Credenciales incorrectas", asi que el
+    // usuario no distinguia contrasena mala de email sin confirmar o cuenta
+    // deshabilitada. Ahora se mapea el motivo real de Supabase.
+    var m=(res.error&&res.error.message)||'';
+    var friendly='Email o contraseña incorrectos.';
+    if(/email not confirmed/i.test(m)) friendly='Tu email aún no está confirmado. Revisa tu correo (incluida la carpeta de spam) por el enlace de confirmación.';
+    else if(/invalid login credentials/i.test(m)) friendly='Email o contraseña incorrectos.';
+    else if(/banned|disabled|blocked|user.*not.*allowed/i.test(m)) friendly='Esta cuenta está deshabilitada. Escríbenos a soporte para reactivarla.';
+    else if(/rate limit|too many/i.test(m)) friendly='Demasiados intentos. Espera un minuto y reintenta.';
+    else if(/network|fetch|timeout/i.test(m)) friendly='Sin conexión con el servidor. Revisa tu internet y reintenta.';
+    else if(m) friendly=m; // motivo real en vez de ocultarlo
     err.style.display="block";
-    err.textContent="Credenciales incorrectas.";
+    err.textContent=friendly;
     return;
   }
-  await sbLoadUserData(res.data.user);
+  try{
+    await sbLoadUserData(res.data.user);
+  }catch(le){
+    // El login fue OK pero cargar el perfil fallo (p.ej. RLS/permisos o perfil
+    // faltante). Se informa en vez de dejar una pantalla rota.
+    err.style.display="block";
+    err.textContent='Entraste, pero no se pudo cargar tu perfil ('+((le&&le.message)||'error')+'). Reintenta o contacta soporte.';
+    return;
+  }
   trackIdentify(S.user); track('login');
   document.getElementById("mroot").innerHTML="";
   render();
