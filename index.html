@@ -5006,11 +5006,9 @@ function renderDash(){
       '</div>';
   })();
 
-  // ── Contexto de mercado (régimen), full width sobre las dos columnas ──
-  // El sentimiento se retira del Dashboard: se repite tal cual en la pagina
-  // Sentimiento dentro de Analisis. Market Movers baja a la fila de noticias.
-  var regimeBanner=
-    '<div id="de-regime-banner" class="dash-ctx-card" style="margin-bottom:16px"><div class="dash-ctx-loading">// Cargando contexto…</div></div>';
+  // El banner de Régimen ya NO va full-width aqui: se movio al lateral derecho
+  // de "Mercado hoy" (debajo de Índices), dentro de mercadoHoyBody(). El
+  // elemento #de-regime-banner vive alli y dashLoadContext() lo llena async.
 
   var now=new Date();
   var pageHeader=
@@ -5038,21 +5036,18 @@ function renderDash(){
     demoBanner('renderDash')+
     '<div class="dash-hero-row">'+kpiCards+'</div>'+
     dashFocoCard(port)+
-    regimeBanner+
     // Fila 1: Top Senales y Portafolio, equilibradas lado a lado.
     '<div class="grid2">'+sigCard+portCard+'</div>'+
     // ── BANDA "MERCADO HOY" ──
-    // Contexto/Noticias se fusiono aqui (decision de producto): en vez de una
-    // pagina Contexto aparte + una mini-noticia duplicada en el dashboard, una
-    // sola pantalla Panorama que fluye de "mi cartera" (arriba) a "el mercado".
-    // El cuerpo (feed con filtros + indices) lo sirve mercadoHoyBody(); los
-    // movers quedan como tarjeta de contexto encima.
+    // Contexto/Noticias fusionado en el Dashboard. El contexto de mercado ya NO
+    // va en bandas full-width que cruzan la pantalla: el feed de noticias queda a
+    // la izquierda y el LATERAL derecho apila Índices → Régimen → Movers
+    // (todo dentro de mercadoHoyBody).
     '<div style="margin-top:30px;padding-top:22px;border-top:1px solid var(--border)">'+
       '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:16px;flex-wrap:wrap">'+
         '<h2 style="font-family:\'Fraunces\',Georgia,serif;font-size:20px;font-weight:600;color:var(--bright);margin:0;letter-spacing:-.01em">Mercado hoy</h2>'+
-        '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Contexto · noticias · índices</span>'+
+        '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Noticias · índices · régimen</span>'+
       '</div>'+
-      '<div style="margin-bottom:16px">'+moversCard()+'</div>'+
       '<div class="fos-card" style="overflow:hidden;padding:0">'+mercadoHoyBody()+'</div>'+
     '</div>'+
     '</div>';
@@ -6036,6 +6031,14 @@ function mercadoHoyBody(){
       '</div>'+
       '<div style="padding:4px 14px 8px">'+idxRows+'</div>'+
     '</div>'+
+
+    // Régimen de Mercado: movido al lateral (debajo de Índices) en vez de una
+    // banda full-width que cruzaba toda la pantalla. dashLoadContext() lo llena
+    // async buscando este id. Es una tarjeta compacta, cabe en el lateral.
+    '<div id="de-regime-banner" class="fos-card" style="padding:12px 14px"><div class="dash-ctx-loading" style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">// Cargando contexto…</div></div>'+
+
+    // Market Movers, tambien en el lateral de contexto.
+    moversCard()+
 
     '</div>'+ // end right
     '</div>'+ // end grid
