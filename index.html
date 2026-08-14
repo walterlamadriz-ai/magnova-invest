@@ -2020,7 +2020,12 @@ div:has(>.dtab), div:has(>.rtab) {
   <div class="drwh" id="drwh"></div>
   <div class="drwb" id="drwb"></div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<!-- Supabase auto-hospedado (same-origin). Antes venia de cdn.jsdelivr.net: si el
+     CDN estaba bloqueado (adblocker/ISP) o un SW rompia el <script> cross-origin,
+     window.supabase quedaba undefined y el login se colgaba. Same-origin es tan
+     fiable como el propio index.html. Actualizar: descargar de nuevo el UMD de
+     @supabase/supabase-js@2 a vendor-supabase.js. -->
+<script src="/vendor-supabase.js"></script>
 <script>
 
 // ═══════════════════════════════════════════════════════════════
@@ -2813,7 +2818,9 @@ function loadLWScript(){
   if(_lwLoadPromise) return _lwLoadPromise;
   _lwLoadPromise=new Promise(function(resolve,reject){
     var s=document.createElement('script');
-    s.src='https://cdn.jsdelivr.net/npm/lightweight-charts@4/dist/lightweight-charts.standalone.production.js';
+    // Same-origin (auto-hospedado) en vez de cdn.jsdelivr.net: mismo motivo que
+    // Supabase — un CDN bloqueado dejaba los charts sin cargar.
+    s.src='/vendor-lightweight-charts.js';
     s.onload=function(){_lwLoaded=true;resolve();};
     s.onerror=reject;
     document.head.appendChild(s);
