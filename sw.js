@@ -1,28 +1,26 @@
 // MAGNOVA Service Worker
-// Estrategia:
-//  - HTML de la app (/app, /index.html, navegaciones): NETWORK-FIRST. Antes era
-//    stale-while-revalidate con un CACHE nunca versionado, asi que el usuario
-//    corria el build viejo una recarga extra. Network-first sirve siempre la
-//    version fresca cuando hay red y cae al cache solo offline.
-//  - Dependencias versionadas (Supabase/lightweight-charts por CDN, Google
-//    Fonts, iconos): CACHE-FIRST. Antes NO se cacheaban, asi que offline la
-//    shell cargaba pero supabase/charts/fuentes fallaban. Sus URLs son
-//    inmutables/versionadas, asi que cachearlas es seguro y acelera repeticiones.
-//  - Todo lo demas (incluido /api/*): passthrough — no se intercepta, va directo
-//    a la red con sus parametros.
-const CACHE = 'magnova-v2';
+// REGLA DE ORO: solo se interceptan peticiones SAME-ORIGIN. Interceptar un
+// <script> cross-origin (p.ej. el UMD de Supabase en cdn.jsdelivr.net) rompia su
+// carga con "unknown error fetching the script" -> window.supabase quedaba
+// undefined -> el cliente sb era null -> el login se colgaba en "Entrando...".
+// Las CDNs y fuentes las maneja el navegador directamente (passthrough).
+//
+// Estrategia same-origin:
+//  - HTML de la app (/app, /index.html, navegaciones): NETWORK-FIRST (fresco
+//    online, cache offline; evita servir el build viejo una recarga extra).
+//  - Iconos same-origin: CACHE-FIRST con revalidacion.
+//  - Todo lo demas same-origin (incl. /api/*): passthrough.
+const CACHE = 'magnova-v3';
 const CORE = ['/app', '/index.html'];
 
-function isAppHtml(url) {
-  return url.includes('/app') || url.endsWith('/index.html') || url.endsWith('/');
+function isAppHtml(path) {
+  return path === '/' || path === '/app' || path.endsWith('/index.html');
 }
-function isCacheableDep(url) {
-  return url.includes('cdn.jsdelivr.net') ||
-         url.includes('fonts.googleapis.com') ||
-         url.includes('fonts.gstatic.com') ||
-         /\/icon-\d+\.png(\?|$)/.test(url) ||
-         url.endsWith('/apple-touch-icon.png') ||
-         url.endsWith('/favicon.svg');
+function isCacheableAsset(path) {
+  return /\/icon-\d+\.png$/.test(path) ||
+         path === '/apple-touch-icon.png' ||
+         path === '/favicon.svg' ||
+         path === '/manifest.webmanifest';
 }
 
 self.addEventListener('install', function(e) {
@@ -41,10 +39,18 @@ self.addEventListener('activate', function(e) {
 
 self.addEventListener('fetch', function(e) {
   if(e.request.method !== 'GET') return;
-  var url = e.request.url;
+
+  var u;
+  try { u = new URL(e.request.url); } catch(err) { return; }
+
+  // NUNCA interceptar cross-origin: CDNs (supabase, lightweight-charts), Google
+  // Fonts, etc. las resuelve el navegador. Esto es lo que rompia el login.
+  if(u.origin !== self.location.origin) return;
+
+  var path = u.pathname;
 
   // App HTML: network-first (fresco online, cache offline).
-  if(isAppHtml(url)) {
+  if(isAppHtml(path)) {
     e.respondWith(
       fetch(e.request).then(function(response) {
         if(response && response.status === 200) {
@@ -59,8 +65,8 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
-  // Dependencias versionadas: cache-first con revalidacion en segundo plano.
-  if(isCacheableDep(url)) {
+  // Iconos same-origin: cache-first con revalidacion en segundo plano.
+  if(isCacheableAsset(path)) {
     e.respondWith(
       caches.match(e.request).then(function(cached) {
         var fetchPromise = fetch(e.request).then(function(response) {
@@ -75,5 +81,5 @@ self.addEventListener('fetch', function(e) {
     );
     return;
   }
-  // Resto (incl. /api/*): sin interceptar.
+  // Resto same-origin (incl. /api/*): passthrough.
 });

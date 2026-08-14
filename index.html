@@ -10613,8 +10613,30 @@ async function doLogin(){
   var err=document.getElementById("lerr");
   var btn=document.getElementById("lbtn");
   if(!e||!p){err.style.display="block";err.textContent="Ingresa email y contraseña.";return;}
+  // Defensa: si la libreria de Supabase no cargo (p.ej. CDN bloqueado o un SW
+  // que rompio el <script>), sb es null y signInWithPassword lanzaria y el boton
+  // se quedaria colgado. Avisar claro en vez de colgar.
+  if(typeof sb==='undefined'||!sb||!sb.auth){
+    err.style.display="block";
+    err.textContent="No se pudo cargar el servicio de autenticación. Recarga la página (Cmd/Ctrl+Shift+R). Si persiste, desactiva extensiones que bloqueen CDNs.";
+    return;
+  }
   if(btn){btn.disabled=true;btn.textContent="Entrando...";}
-  var res=await sb.auth.signInWithPassword({email:e,password:p});
+  // Timeout de 15s: si signInWithPassword se cuelga (p.ej. proyecto Supabase
+  // pausado o sin red), el boton se quedaba en "Entrando..." para siempre sin
+  // mensaje. Ahora siempre se resuelve y avisa.
+  var res;
+  try{
+    res=await Promise.race([
+      sb.auth.signInWithPassword({email:e,password:p}),
+      new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},15000);})
+    ]);
+  }catch(netErr){
+    if(btn){btn.disabled=false;btn.textContent="Entrar";}
+    err.style.display="block";
+    err.textContent='No se pudo conectar con el servidor de autenticación (se agotó el tiempo). Puede que el proyecto Supabase esté pausado o sin conexión. Reintenta en un momento.';
+    return;
+  }
   if(btn){btn.disabled=false;btn.textContent="Entrar";}
   if(res.error){
     // Antes se ocultaba TODO error como "Credenciales incorrectas", asi que el
