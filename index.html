@@ -2179,7 +2179,7 @@ const fmtV=n=>!n?"—":n>=1e9?(n/1e9).toFixed(1)+"B":n>=1e6?(n/1e6).toFixed(1)+"
 // ── STATE ───────────────────────────────────────────────────────
 const S={
   user:null,
-  page:"news",
+  page:"dash",
   capital:100000,
   portfolio:JSON.parse(JSON.stringify(DEF_PORT)),
   watchlist:[...DEF_WATCH],
@@ -3200,7 +3200,7 @@ function render(){renderSidebar();renderTopbar();renderMainNav();renderMain();re
 // Análisis a su propio grupo Planificación; screener/comp dejan de estar en un
 // "Explorar" separado y entran a Investigar junto a la watchlist.
 var NAV_C=[
-  {id:'panorama',  label:'Panorama',      pages:['dash','news']},
+  {id:'panorama',  label:'Panorama',      pages:['dash']},
   {id:'investigar',label:'Investigar',    pages:['watch','screener','comp']},
   {id:'analizar',  label:'Analizar',      pages:['decision','sig','ind','sentiment']},
   {id:'decidir',   label:'Decidir',       pages:['risk','capital','back']},
@@ -3364,6 +3364,9 @@ function setPage(p){
   // 'pb' si sigue redirigiendo, porque ahora es una pestana de Riesgo, pero
   // fijando antes la pestana: el redirect a secas la dejaba en 'mis posiciones'.
   if(p==='pb'){ RISK_TAB='nueva'; p='risk'; }
+  // Contexto/Noticias se fusiono dentro del Dashboard (banda "Mercado hoy").
+  // Cualquier enlace antiguo a 'news' aterriza en el Dashboard.
+  if(p==='news') p='dash';
   S.page=p;
   track('module_view',{module:p});
   closeDrawer();
@@ -4453,7 +4456,7 @@ function renderMain(){
   if(!S.user){renderWelcome();return;}
   var plan=planOf();
   if(plan.locked.indexOf(S.page)>=0){renderPaywall();return;}
-  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderNews,pb:function(){RISK_TAB='nueva';renderRisk();},comp:renderComp,sentiment:renderSentimentWidget,radar:renderRadar,decision:function(){ANALISIS_TAB='universo';renderAnalisis();},ind:renderInd,risk:function(){RISK_TAB='mis';renderRisk();},back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:function(){ANALISIS_TAB='buscar';renderAnalisis();},capital:renderCapital,settings:renderSettings,help:renderHelp};
+  var pages={dash:renderDash,port:renderPort,watch:renderWatch,sig:renderSig,news:renderDash,pb:function(){RISK_TAB='nueva';renderRisk();},comp:renderComp,sentiment:renderSentimentWidget,radar:renderRadar,decision:function(){ANALISIS_TAB='universo';renderAnalisis();},ind:renderInd,risk:function(){RISK_TAB='mis';renderRisk();},back:renderBack,divs:renderDivs,rebal:renderRebal,alert:renderAlert,bitacora:renderBitacora,screener:function(){ANALISIS_TAB='buscar';renderAnalisis();},capital:renderCapital,settings:renderSettings,help:renderHelp};
   (pages[S.page]||renderDash)();
   var curPage=PAGES.find(function(p){return p.id===S.page;});
   var mLabel=document.getElementById('mobile-page-label');
@@ -5031,8 +5034,20 @@ function renderDash(){
     regimeBanner+
     // Fila 1: Top Senales y Portafolio, equilibradas lado a lado.
     '<div class="grid2">'+sigCard+portCard+'</div>'+
-    // Fila 2: noticias del mercado (max 10) y Market Movers, debajo de las dos.
-    '<div class="grid2" style="margin-top:16px">'+miniNews+moversCard()+'</div>'+
+    // ── BANDA "MERCADO HOY" ──
+    // Contexto/Noticias se fusiono aqui (decision de producto): en vez de una
+    // pagina Contexto aparte + una mini-noticia duplicada en el dashboard, una
+    // sola pantalla Panorama que fluye de "mi cartera" (arriba) a "el mercado".
+    // El cuerpo (feed con filtros + indices) lo sirve mercadoHoyBody(); los
+    // movers quedan como tarjeta de contexto encima.
+    '<div style="margin-top:30px;padding-top:22px;border-top:1px solid var(--border)">'+
+      '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:16px;flex-wrap:wrap">'+
+        '<h2 style="font-family:\'Fraunces\',Georgia,serif;font-size:20px;font-weight:600;color:var(--bright);margin:0;letter-spacing:-.01em">Mercado hoy</h2>'+
+        '<span style="font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Contexto · noticias · índices</span>'+
+      '</div>'+
+      '<div style="margin-bottom:16px">'+moversCard()+'</div>'+
+      '<div class="fos-card" style="overflow:hidden;padding:0">'+mercadoHoyBody()+'</div>'+
+    '</div>'+
     '</div>';
 
   // Saved indicator (invisible, keeps backward compat)
@@ -5661,7 +5676,11 @@ function loadNewsCache(){
   return null;
 }
 
-function renderNews(){
+// Antes era renderNews() (pagina Contexto propia). Ahora Contexto vive DENTRO
+// del Dashboard como banda "Mercado hoy": esta funcion devuelve solo el cuerpo
+// (filtros + feed + indices), sin el header de pagina, para que renderDash lo
+// incruste. Sigue disparando la carga de noticias en la primera visita.
+function mercadoHoyBody(){
   // Fetch live news + market bar on first visit, re-render when done
   if(!_newsFetched){
     Promise.all([
@@ -5962,22 +5981,7 @@ function renderNews(){
   }).join('');
 
   // ── Assemble ──────────────────────────────────────────────────
-  document.getElementById("main").innerHTML=
-
-    // ── HEADER ──
-    '<div class="fos-module-header">'+
-      '<div>'+
-        '<div class="fos-module-crumb">Principal · Noticias</div>'+
-        '<h1 class="fos-module-title">Noticias de Mercado</h1>'+
-        '<div class="fos-module-sub">'+new Date().toLocaleDateString("es-CL",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+'</div>'+
-      '</div>'+
-      '<div style="display:flex;align-items:center;gap:8px">'+
-        (usingStaticNews
-          ?'<span style="font-size:9px;font-family:\'JetBrains Mono\',monospace;color:var(--amber);background:var(--amber-bg);border:1px solid rgba(245,158,11,.25);padding:3px 8px;border-radius:var(--r-sm)">'+(_newsFetched?'⚠ Sin titulares en vivo · reintentando':'⏳ Cargando titulares reales…')+'</span>'
-          :'<div class="live"><div class="livd"></div>LIVE</div>')+
-      '</div>'+
-    '</div>'+
-
+  return ''+
     // La tira de mercado vivia aqui: ahora es la banda global del topbar y se
     // ve en todas las pantallas, asi que duplicarla en Contexto sobraba.
     offlineNotice+
@@ -10677,7 +10681,7 @@ async function doRegister(){
 async function logout(){
   if(typeof stopBoot==="function") stopBoot();
   await sb.auth.signOut();
-  S.user=null;S.page="news";
+  S.user=null;S.page="dash";
   LIVE={};REBAL.targets={};DIVS.data={};
   S.portfolio=JSON.parse(JSON.stringify(DEF_PORT));
   S.watchlist=[...DEF_WATCH];
@@ -10764,7 +10768,7 @@ renderDisclaimer();
 
 sb.auth.onAuthStateChange(function(event,session){
   if(event==="SIGNED_OUT"){
-    S.user=null;S.page="news";
+    S.user=null;S.page="dash";
     render();
   } else if(event==="SIGNED_IN"&&session&&session.user){
     sbLoadUserData(session.user).then(function(){ render(); bootLiveData(); });
@@ -10793,14 +10797,14 @@ sb.auth.onAuthStateChange(function(event,session){
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
     Portfolio
   </button>
-  <button class="mob-tab" id="mbt-news" onclick="setPage('news');updateMobTabs()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><path d="M4 11h8"/><path d="M4 7h4"/><path d="M4 15h4"/><rect x="2" y="7" width="6" height="13" rx="1"/></svg>
-    Contexto
+  <button class="mob-tab" id="mbt-alert" onclick="setPage('alert');updateMobTabs()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7z"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg>
+    Alertas
   </button>
 </nav>
 <script>
 function updateMobTabs(){
-  ['dash','watch','decision','port','news'].forEach(function(p){
+  ['dash','watch','decision','port','alert'].forEach(function(p){
     var el=document.getElementById('mbt-'+p);
     if(el) el.classList.toggle('act',S.page===p);
   });
