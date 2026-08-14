@@ -2094,7 +2094,7 @@ const PLANS={
   trial:{label:"Trial",maxT:999,maxA:999,maxS:999,locked:[],
     price:0,desc:"Acceso completo · Todo incluido",trialDays:14},
   pro:{label:"Pro",maxT:999,maxA:999,maxS:999,locked:[],
-    price:29.99,desc:"Todo ilimitado · Análisis IA · Soporte prioritario"},
+    price:29.99,desc:"Todo ilimitado · Motor de Análisis · Soporte prioritario"},
   teams:{label:"Teams",maxT:999,maxA:999,maxS:999,locked:[],
     price:99,desc:"Multi-usuario · API access · SLA 99.9%"},
 };
@@ -8539,7 +8539,9 @@ async function generateRadarReport(){
     '}';
 
   try{
-    await new Promise(function(r){setTimeout(r,600);});
+    // Sin delay artificial: antes un setTimeout(600) fingia que la IA
+    // "analizaba". El diagnostico es local e instantaneo; el analisis
+    // narrativo con IA todavia no esta conectado (ver banner en el reporte).
     var reportObj={
       date:new Date().toISOString(),
       dateLabel:new Date().toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),
@@ -8794,8 +8796,7 @@ function renderRadar(){
   if(RADAR.loading){
     mainContent='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:320px;gap:16px">'+
       '<div class="spin" style="width:28px;height:28px;border-width:3px"></div>'+
-      '<div style="font-size:13px;color:var(--text2);font-family:\'JetBrains Mono\',monospace">Analizando tu portfolio...</div>'+
-      '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Procesando 12 inputs de contexto · ~15 segundos</div>'+
+      '<div style="font-size:13px;color:var(--text2);font-family:\'JetBrains Mono\',monospace">Calculando tu diagnóstico de salud...</div>'+
       '</div>';
   } else if(RADAR.view!=='current'&&RADAR.history[RADAR.view]){
     mainContent=radarReportHTML(RADAR.history[RADAR.view],false);
@@ -8806,10 +8807,11 @@ function renderRadar(){
     mainContent='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:360px;text-align:center">'+
       '<div style="font-size:56px;margin-bottom:16px">📡</div>'+
       '<div style="font-size:18px;font-weight:700;color:var(--bright);margin-bottom:10px">Radar Financiero FinanceOS Invest</div>'+
-      '<div style="font-size:13px;color:var(--text2);line-height:1.7;max-width:440px;margin-bottom:28px">'+
-      'Diagnóstico semanal personalizado con 7 secciones: Score de salud, Contexto macro, Diagnóstico del portfolio, Entradas y salidas con precios concretos, Práctica de la semana y Plan de acción.'+
+      '<div style="font-size:13px;color:var(--text2);line-height:1.7;max-width:460px;margin-bottom:14px">'+
+      'Diagnóstico local de la <b>salud de tu portafolio</b>: score real con sub-scores de diversificación, momentum, riesgo, correlación y valoración, calculados con tus datos y precios en vivo.'+
       '</div>'+
-      '<button onclick="generateRadarReport()" class="btn-big" style="padding:13px 28px;font-size:14px">📡 Generar Radar de esta semana</button>'+
+      '<div style="font-size:11px;color:var(--text3);line-height:1.6;max-width:440px;margin-bottom:24px;font-family:\'JetBrains Mono\',monospace">El análisis narrativo con IA (recomendaciones en lenguaje natural) todavía no está disponible — se conectará pronto.</div>'+
+      '<button onclick="generateRadarReport()" class="btn-big" style="padding:13px 28px;font-size:14px">'+icon('radar')+' Ver diagnóstico de salud</button>'+
       (RADAR.profile?'<div style="font-size:11px;color:var(--text3);margin-top:12px;font-family:\'JetBrains Mono\',monospace">Perfil guardado: '+(['','Muy conservador','Conservador','Moderado','Agresivo','Muy agresivo'][RADAR.profile.risk]||'')+'</div>':
         '<div style="font-size:11px;color:var(--text3);margin-top:12px;font-family:\'JetBrains Mono\',monospace">Se te preguntará por tu perfil de inversor la primera vez</div>')+
       '</div>';
@@ -8824,10 +8826,10 @@ function renderRadar(){
     '</div>':'';
 
   document.getElementById('main').innerHTML=
-    _ph('Análisis · Radar','Radar Financiero','// Diagnóstico semanal · 7 secciones · Personalizado para tu portfolio',profileBadge+
+    _ph('Planificación · Radar','Radar Financiero','// Diagnóstico local de salud del portafolio · análisis narrativo con IA próximamente',profileBadge+
     (hasReport?'<button onclick="radarExportPDF()" class="btn">'+icon('download')+'PDF</button>':'')+
     (hasReport?'<button onclick="radarShare()" class="btn">🔗 Compartir</button>':'')+
-    '<button onclick="generateRadarReport()" class="btn-big" style="padding:8px 18px;font-size:12px"'+(RADAR.loading?' disabled':'')+'>'+(RADAR.loading?'<span style="display:inline-flex;align-items:center;gap:6px"><span class="spin-sm"></span>Analizando...</span>':'📡 '+(hasReport?'Actualizar Radar':'Generar Radar'))+'</button>')+
+    '<button onclick="generateRadarReport()" class="btn-big" style="padding:8px 18px;font-size:12px"'+(RADAR.loading?' disabled':'')+'>'+(RADAR.loading?'<span style="display:inline-flex;align-items:center;gap:6px"><span class="spin-sm"></span>Calculando...</span>':(hasReport?'Recalcular diagnóstico':'Ver diagnóstico'))+'</button>')+
 
     // KPIs
     '<div class="krow">'+
