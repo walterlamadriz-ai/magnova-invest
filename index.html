@@ -10241,15 +10241,20 @@ function renderRebal(){
   // porque no todos los brokers admiten fraccionarios.
   function rebalUds(n){
     if(!isFinite(n)) return '—';
-    if(n<1) return '<span style="white-space:nowrap">'+n.toFixed(2)+' acc. '+
-      '<span style="color:var(--text3);font-weight:400" title="Menos de una accion: requiere un broker que admita fraccionarios">(fracción)</span></span>';
+    // Antes forzaba white-space:nowrap: "0.02 acc. (fracción)" no podia
+    // partirse en dos lineas y en movil eso solo ensanchaba la columna
+    // "Cantidad" mas alla del ancho disponible.
+    if(n<1) return n.toFixed(2)+' acc. '+
+      '<span style="color:var(--text3);font-weight:400" title="Menos de una accion: requiere un broker que admita fraccionarios">(fracción)</span>';
     return (n>=100?n.toFixed(0):n>=10?n.toFixed(1):n.toFixed(2))+' acc.';
   }
 
   var tradeRows=trades.map(function(tr){
     return '<tr style="background:'+(tr.buy?'rgba(34,197,94,.04)':'rgba(239,68,68,.04)')+'">'+
       '<td style="font-weight:700;color:var(--bright)">'+tr.t+'</td>'+
-      '<td><span class="badge '+(tr.buy?'buy':'sell')+'">'+(tr.buy?'Aumentar':'Reducir')+'</span></td>'+
+      // El signo y color de Monto USD ya dicen si es aumentar o reducir; en
+      // movil la etiqueta queda de detalle, no hace falta para leer la fila.
+      '<td class="col-sec"><span class="badge '+(tr.buy?'buy':'sell')+'">'+(tr.buy?'Aumentar':'Reducir')+'</span></td>'+
       '<td style="font-weight:600;color:'+(tr.buy?'var(--pos)':'var(--neg)')+'" title="Cantidad = monto ÷ precio actual = $'+fmt(Math.abs(tr.diff))+' ÷ $'+fmtD(tr.cur)+'">'+
         rebalUds(Math.abs(tr.shares))+'</td>'+
       '<td style="font-weight:600;color:'+(tr.buy?'var(--pos)':'var(--neg)')+'">'+(tr.buy?'+':'-')+'$'+fmt(Math.abs(tr.diff))+'</td>'+
@@ -10279,7 +10284,7 @@ function renderRebal(){
     '</div>'+
     (trades.length>0?
       '<div class="cb"><div class="st"><div class="stbar"></div>Ajustes de referencia para rebalancear</div>'+
-      '<div class="tw"><table><thead><tr><th>Ticker</th><th>Ajuste</th>'+
+      '<div class="tw"><table><thead><tr><th>Ticker</th><th class="col-sec">Ajuste</th>'+
       '<th title="Acciones a comprar o vender = monto ÷ precio actual">Cantidad</th>'+
       '<th title="Diferencia entre el valor objetivo y el valor actual de la posición">Monto USD</th>'+
       '</tr></thead><tbody>'+tradeRows+'</tbody></table></div>'+
