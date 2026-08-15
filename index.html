@@ -2,7 +2,7 @@
 <html lang="es" data-theme="light">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,interactive-widget=resizes-content"/>
 <title>FinanceOS Invest — Análisis Técnico de Inversiones</title>
 <meta name="description" content="Motor de análisis técnico para invertir en acciones de EE. UU. (NYSE/NASDAQ): régimen SPY/SMA200, scoring RSI/MACD/ATR, screener y portafolio con P&amp;L. Desde $29.99 USD/mes."/>
 <!-- Preconnect for critical origins -->
@@ -173,6 +173,24 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 /* Fonts loaded async via <link> in <head> — no render-blocking @import */
+
+/* ── NATIVE FEEL: CHASIS ──────────────────────────────────────────────
+   Elimina los "tells" que delatan pagina web en vez de app instalada.
+   Ver skill native-feel / references/tells.md. */
+* { -webkit-tap-highlight-color: transparent; }
+html, body { overscroll-behavior: none; }
+button, a, label, summary, [role="button"], [role="tab"] {
+  touch-action: manipulation;
+}
+nav, header, footer, button, .btn, [role="button"], [role="tab"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+img { -webkit-user-drag: none; user-select: none; }
+input, select, textarea { font-size: 16px; }
+@media (prefers-reduced-motion: no-preference) {
+  .btn:active, [role="button"]:active { transform: scale(.97); transition: transform .06s; }
+}
 
 /* ── TOKENS ── */
 :root {
@@ -1022,7 +1040,7 @@ tr:last-child td { border-bottom: none; }
 /* ── DISCLAIMER LEGAL ── */
 .disclaimer-bar {
   position: fixed;
-  bottom: 0;
+  bottom: env(safe-area-inset-bottom, 0px);
   left: var(--sb-w);
   right: 0;
   z-index: 200;
@@ -1306,6 +1324,13 @@ tr:last-child td { border-bottom: none; }
   transition: background .2s;
   flex-shrink: 0;
 }
+/* Area de toque real de 44x44: el switch visual queda en 32x18, el hit-area
+   invisible lo rodea (native-feel: area-de-toque). */
+.theme-toggle::before {
+  content: '';
+  position: absolute;
+  inset: -13px -6px;
+}
 .theme-toggle.on { background: var(--grn); }
 .theme-toggle::after {
   content: '';
@@ -1547,6 +1572,13 @@ body:not(.no-auth) #mainnav {
   font-size: 18px;
   color: var(--text);
   flex-shrink: 0;
+  position: relative;
+}
+/* Area de toque real de 44x44 (visual se mantiene en 36x36). */
+.hbg-btn::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
 }
 .sb-backdrop {
   display: none;

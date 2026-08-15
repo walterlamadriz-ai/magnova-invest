@@ -2,6 +2,7 @@
   "name": "FinanceOS Invest",
   "short_name": "Invest",
   "description": "Análisis técnico educativo para inversores de LATAM — Motor de Análisis, screener, portafolio y contexto de mercado en tiempo real.",
+  "id": "/",
   "start_url": "/app",
   "scope": "/",
   "display": "standalone",
