@@ -376,6 +376,10 @@ body {
 body.no-auth .sb { display: none !important; }
 body.no-auth #topbar { display: none !important; }
 body.no-auth .main { margin-left:0 !important; margin-top:0 !important; }
+/* El tab bar mobile y el boton hamburguesa son navegacion de la app autenticada:
+   sin esto, tocar un tab en la pantalla de login lo ilumina y no hace nada. */
+body.no-auth #mob-tab-bar { display: none !important; }
+body.no-auth #mobile-header { display: none !important; }
 
 /* ── SIDEBAR ── */
 .sb {
@@ -563,6 +567,12 @@ body.no-auth .main { margin-left:0 !important; margin-top:0 !important; }
 .kg { border-left: 2px solid var(--grn); }
 .kr { border-left: 2px solid var(--red); }
 .ka { border-left: 2px solid var(--amber); }
+/* El valor tambien hereda el color semantico (--pos/--neg), no solo el borde.
+   Antes cada pantalla que queria el numero en verde/rojo tenia que envolverlo
+   a mano (asi lo hacia renderDash) y las que no lo hacian se quedaban en
+   negro — el mismo concepto (P&L) se leia distinto segun la pantalla. */
+.kg .kv { color: var(--pos); }
+.kr .kv { color: var(--neg); }
 .kb { border-left: 2px solid var(--blue); }
 /* Rail neutro: para datos sin estado semántico (una magnitud no es "positiva") */
 .kn { border-left: 2px solid var(--border2); }
@@ -1493,6 +1503,30 @@ body:not(.no-auth) #mainnav {
   margin-top:var(--topbar-h);
   background:var(--bg); border-bottom:1px solid var(--border);
 }
+/* Movil: el nav de grupos deja de ocupar la pantalla permanentemente (competia
+   con el tab bar inferior) y pasa a ser un drawer lateral, como en cualquier
+   app instalada. Se abre con el boton hamburguesa — antes controlaba un
+   sidebar (#sb) que ya no se muestra nunca (display:none!important mas
+   abajo), asi que tocarlo oscurecia la pantalla sin mostrar nada. */
+@media (max-width: 768px) {
+  body:not(.no-auth) #mainnav {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: min(300px, 84vw);
+    height: 100dvh;
+    margin-top: 0;
+    z-index: 401;
+    box-shadow: var(--shadow-md);
+    overflow-y: auto;
+    transform: translateX(-101%);
+    transition: transform .22s ease;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  body:not(.no-auth) #mainnav.mobile-open { transform: translateX(0); }
+  #mainnav .mn-row { flex-direction: column; align-items: stretch; padding: 16px; gap: var(--sp-4); }
+  #mainnav .mn-items { flex-direction: column; }
+  #mainnav .mn-sub { flex-direction: column; align-items: stretch; padding: 0 16px 16px; }
+}
 .mn-row { display:flex; align-items:center; gap:var(--sp-6); padding:var(--sp-5) 28px; }
 .mn-brand { display:flex; align-items:center; gap:var(--sp-4); font-size:13px; color:var(--text2); flex-shrink:0; }
 .mn-brand b { color:var(--bright); font-weight:600; }
@@ -2055,10 +2089,15 @@ div:has(>.dtab), div:has(>.rtab) {
          y como hermano directo el nav se colocaba al lado del contenido en vez
          de encima, partiendo la pantalla en dos. -->
     <nav id="mainnav"></nav>
-    <!-- El hamburguesa se retiro: abria el sidebar #sb, que ya no existe como
-         navegacion (la top-nav agrupada se muestra tambien en movil, mas la
-         barra de tabs inferior). Queda solo el label de la pagina actual. -->
+    <!-- El hamburguesa vuelve, pero apuntando a #mainnav (drawer) en vez del
+         viejo #sb muerto: antes el nav de grupos quedaba fijo y a la vista en
+         movil todo el tiempo, compitiendo con el tab bar inferior por el mismo
+         espacio. Ahora se abre bajo demanda, como el resto de la navegacion
+         secundaria de una app instalada. -->
     <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg)" id="mobile-header">
+      <button type="button" class="hbg-btn" onclick="toggleMobileMenu()" aria-label="Abrir menú" aria-haspopup="true">
+        <svg class="ico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+      </button>
       <span id="mobile-page-label" style="font-size:13px;font-weight:600;color:var(--bright);letter-spacing:.2px"></span>
     </div>
     <main class="main" id="main" style="flex:1;padding:0"></main>
@@ -3227,8 +3266,8 @@ function tblSortBy(tbl,col){
     th.querySelector('.sarrow').textContent=arrow;
   });
 }
-function sortTh(tbl,col,label){
-  return '<th data-sort="'+col+'" onclick="tblSortBy(\''+tbl+'\',\''+col+'\')" style="cursor:pointer;white-space:nowrap">'+label+' <span class="sarrow"></span></th>';
+function sortTh(tbl,col,label,tip){
+  return '<th data-sort="'+col+'" onclick="tblSortBy(\''+tbl+'\',\''+col+'\')" style="cursor:pointer;white-space:nowrap"'+(tip?' title="'+tip+'"':'')+'>'+label+' <span class="sarrow"></span></th>';
 }
 function showToast(msg,type){
   var c=document.getElementById('toast-container');
@@ -3408,10 +3447,14 @@ function renderTopbar(){
   }
 }
 function toggleMobileMenu(force){
-  var sb=document.getElementById('sb');
+  // El drawer movil es #mainnav (el nav de grupos). #sb es un sidebar retirado
+  // que ya no se muestra nunca (ver comentario en su regla CSS); tocar el
+  // boton hamburguesa solia abrir ese vacio.
+  var nav=document.getElementById('mainnav');
+  if(!nav) return;
   var bd=document.getElementById('sb-backdrop');
-  var open=typeof force==='boolean'?force:!sb.classList.contains('mobile-open');
-  sb.classList.toggle('mobile-open',open);
+  var open=typeof force==='boolean'?force:!nav.classList.contains('mobile-open');
+  nav.classList.toggle('mobile-open',open);
   if(bd) bd.style.display=open?'block':'none';
 }
 function setPage(p){
@@ -4260,7 +4303,7 @@ function renderScreenerBody(){
       '<div class="tw"><table>'+
       '<thead><tr>'+
         '<th>Ticker</th><th>Precio</th><th>Score DE</th><th>Acción</th>'+
-        '<th>RSI</th><th>PQ</th><th>Entrada</th><th>Stop</th><th>R:R</th><th>Sector RS</th>'+
+        '<th title="Fuerza Relativa (0-100): arriba de 70 se considera sobrecomprado, abajo de 30 sobrevendido">RSI</th><th>PQ</th><th>Entrada</th><th title="Basado en ATR(14): cuanto se mueve el precio en un dia tipico">Stop</th><th>R:R</th><th>Sector RS</th>'+
       '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
       (errors.length?'<div style="margin-top:8px;font-size:10px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">No disponibles: '+errors.map(function(e){return e.ticker;}).join(', ')+'</div>':'')+
       '</div>';
@@ -4286,11 +4329,11 @@ function renderScreenerBody(){
       '<input type="number" id="scr-scoreMin" min="0" max="100" value="'+f.scoreMin+'" style="width:70px;background:var(--card3);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--bright);font-family:\'JetBrains Mono\',monospace;font-size:12px;padding:5px 8px;outline:none">'+
     '</div>'+
     '<div>'+
-      '<label style="font-size:10px;font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:1px;color:var(--text3);display:block;margin-bottom:4px">RSI mín</label>'+
+      '<label title="Fuerza Relativa (0-100): mide si un activo esta sobrecomprado o sobrevendido" style="font-size:10px;font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:1px;color:var(--text3);display:block;margin-bottom:4px">RSI mín</label>'+
       '<input type="number" id="scr-rsiMin" min="0" max="100" value="'+f.rsiMin+'" style="width:60px;background:var(--card3);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--bright);font-family:\'JetBrains Mono\',monospace;font-size:12px;padding:5px 8px;outline:none">'+
     '</div>'+
     '<div>'+
-      '<label style="font-size:10px;font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:1px;color:var(--text3);display:block;margin-bottom:4px">RSI máx</label>'+
+      '<label title="Fuerza Relativa (0-100): mide si un activo esta sobrecomprado o sobrevendido" style="font-size:10px;font-family:\'JetBrains Mono\',monospace;text-transform:uppercase;letter-spacing:1px;color:var(--text3);display:block;margin-bottom:4px">RSI máx</label>'+
       '<input type="number" id="scr-rsiMax" min="0" max="100" value="'+f.rsiMax+'" style="width:60px;background:var(--card3);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--bright);font-family:\'JetBrains Mono\',monospace;font-size:12px;padding:5px 8px;outline:none">'+
     '</div>'+
     '<div>'+
@@ -4626,11 +4669,11 @@ function renderWelcome(){
     '<div class="wv3-ctx-label">// Contexto de mercado · Referencial · Tiempo real</div>'+
     '<div class="wv3-ctx-grid">'+
     '<div id="wlc-spy" class="wv3-ctx-card">'+
-    '<div class="wv3-ctx-ttl">RÉGIMEN SPY</div>'+
+    '<div class="wv3-ctx-ttl" title="Si el mercado en general esta en tendencia alcista (Risk On) o bajista (Risk Off), medido con el S&amp;P 500">RÉGIMEN SPY</div>'+
     '<div class="wv3-ctx-val" style="color:var(--text3)">Cargando…</div>'+
     '</div>'+
     '<div id="wlc-vix" class="wv3-ctx-card">'+
-    '<div class="wv3-ctx-ttl">VOLATILIDAD VIX</div>'+
+    '<div class="wv3-ctx-ttl" title="Indice de volatilidad: que tan nerviosa esta el mercado. Mas alto = mas movimiento esperado">VOLATILIDAD VIX</div>'+
     '<div class="wv3-ctx-val" style="color:var(--text3)">Cargando…</div>'+
     '</div>'+
     '</div></div>'+
@@ -4638,9 +4681,9 @@ function renderWelcome(){
     '<div>'+
     '<div class="wv3-ctx-label">// Scores técnicos · Muestra</div>'+
     '<div class="wv3-scores-grid">'+
-    '<div class="wv3-score-card"><div class="wv3-score-head"><span class="wv3-score-ticker">AAPL</span><div class="wv3-score-circle" style="background:var(--grn-bg);border-color:var(--grn);color:var(--grn)"><span id="wv3-s-aapl">0</span></div></div><div class="wv3-score-rsi">RSI 52</div><div class="wv3-score-smas"><span style="color:var(--grn)">SMA50 ✓</span><span style="color:var(--grn)">SMA200 ✓</span></div></div>'+
-    '<div class="wv3-score-card"><div class="wv3-score-head"><span class="wv3-score-ticker">NVDA</span><div class="wv3-score-circle" style="background:rgba(245,158,11,.10);border-color:var(--amber);color:var(--amber)"><span id="wv3-s-nvda">0</span></div></div><div class="wv3-score-rsi">RSI 48</div><div class="wv3-score-smas"><span style="color:var(--grn)">SMA50 ✓</span><span style="color:var(--red)">SMA200 ✗</span></div></div>'+
-    '<div class="wv3-score-card"><div class="wv3-score-head"><span class="wv3-score-ticker">MSFT</span><div class="wv3-score-circle" style="background:var(--grn-bg);border-color:var(--grn);color:var(--grn)"><span id="wv3-s-msft">0</span></div></div><div class="wv3-score-rsi">RSI 55</div><div class="wv3-score-smas"><span style="color:var(--grn)">SMA50 ✓</span><span style="color:var(--grn)">SMA200 ✓</span></div></div>'+
+    '<div class="wv3-score-card"><div class="wv3-score-head"><span class="wv3-score-ticker">AAPL</span><div class="wv3-score-circle" style="background:var(--grn-bg);border-color:var(--grn);color:var(--grn)"><span id="wv3-s-aapl">0</span></div></div><div class="wv3-score-rsi" title="Fuerza Relativa (0-100): arriba de 70 sobrecomprado, abajo de 30 sobrevendido">RSI 52</div><div class="wv3-score-smas" title="Si el precio esta arriba de su promedio movil de N dias (tendencia de mediano/largo plazo)"><span style="color:var(--grn)">SMA50 ✓</span><span style="color:var(--grn)">SMA200 ✓</span></div></div>'+
+    '<div class="wv3-score-card"><div class="wv3-score-head"><span class="wv3-score-ticker">NVDA</span><div class="wv3-score-circle" style="background:rgba(245,158,11,.10);border-color:var(--amber);color:var(--amber)"><span id="wv3-s-nvda">0</span></div></div><div class="wv3-score-rsi" title="Fuerza Relativa (0-100): arriba de 70 sobrecomprado, abajo de 30 sobrevendido">RSI 48</div><div class="wv3-score-smas" title="Si el precio esta arriba de su promedio movil de N dias (tendencia de mediano/largo plazo)"><span style="color:var(--grn)">SMA50 ✓</span><span style="color:var(--red)">SMA200 ✗</span></div></div>'+
+    '<div class="wv3-score-card"><div class="wv3-score-head"><span class="wv3-score-ticker">MSFT</span><div class="wv3-score-circle" style="background:var(--grn-bg);border-color:var(--grn);color:var(--grn)"><span id="wv3-s-msft">0</span></div></div><div class="wv3-score-rsi" title="Fuerza Relativa (0-100): arriba de 70 sobrecomprado, abajo de 30 sobrevendido">RSI 55</div><div class="wv3-score-smas" title="Si el precio esta arriba de su promedio movil de N dias (tendencia de mediano/largo plazo)"><span style="color:var(--grn)">SMA50 ✓</span><span style="color:var(--grn)">SMA200 ✓</span></div></div>'+
     '</div>'+
     '<div class="wv3-scores-note">Accede para ver scores en tiempo real de tu watchlist</div>'+
     '</div>'+
@@ -4700,7 +4743,7 @@ function renderWelcome(){
         var col=regime.color||'var(--text2)';
         var dot=regime.regime==='risk_on'?'<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--grn);margin-right:4px;vertical-align:middle;animation:wv3pulse 2s ease-in-out infinite"></span>':'';
         var hint=regime.spy?'SPY $'+regime.spy.toFixed(2):'SPY sobre SMA200';
-        spyEl.innerHTML='<div class="wv3-ctx-ttl">RÉGIMEN SPY</div>'+
+        spyEl.innerHTML='<div class="wv3-ctx-ttl" title="Si el mercado en general esta en tendencia alcista (Risk On) o bajista (Risk Off), medido con el S&amp;P 500">RÉGIMEN SPY</div>'+
           '<div class="wv3-ctx-val" style="color:'+col+'">'+dot+lbl+'</div>'+
           '<div class="wv3-ctx-hint">'+hint+'</div>';
       }
@@ -4709,7 +4752,7 @@ function renderWelcome(){
       var vix=await deGetVIX();
       var vixEl=document.getElementById('wlc-vix');
       if(vixEl&&vix&&vix.vix){
-        vixEl.innerHTML='<div class="wv3-ctx-ttl">VOLATILIDAD VIX</div>'+
+        vixEl.innerHTML='<div class="wv3-ctx-ttl" title="Indice de volatilidad: que tan nerviosa esta el mercado. Mas alto = mas movimiento esperado">VOLATILIDAD VIX</div>'+
           '<div class="wv3-ctx-val" style="color:'+vix.color+'">'+vix.vix.toFixed(1)+'</div>'+
           '<div class="wv3-ctx-hint">'+vix.label+'</div>';
       }
@@ -5569,7 +5612,7 @@ function renderWatch(){
     '<div style="display:flex;gap:8px">'+
     '<input class="inp" id="wc" placeholder="Custom..." maxlength="6" style="width:120px;text-transform:uppercase" onkeydown="if(event.key===\'Enter\')addCustomW()"/>'+
     '<button class="btn" onclick="addCustomW()">+ Agregar</button></div></div>'+
-    '<div class="tw"><table id="tbl-watch" class="fos-table"><thead><tr><th>Ticker</th><th>Señal</th>'+sortTh("watch","sc","Score")+'<th>Fuerza</th>'+sortTh("watch","price","Precio")+sortTh("watch","chg","Δ Hoy")+'<th title="Distancia sobre el mínimo de 52 semanas">vs mín 52s</th>'+deHeader+'<th>Quitar</th></tr></thead>'+
+    '<div class="tw"><table id="tbl-watch" class="fos-table"><thead><tr><th>Ticker</th><th>Señal</th>'+sortTh("watch","sc","Score","Score 0–100: combina SMA200, RSI, MACD y volumen en un solo número. Arriba de 70 es una señal técnica fuerte, abajo de 40 es débil.")+'<th>Fuerza</th>'+sortTh("watch","price","Precio")+sortTh("watch","chg","Δ Hoy")+'<th title="Distancia sobre el mínimo de 52 semanas">vs mín 52s</th>'+deHeader+'<th>Quitar</th></tr></thead>'+
     '<tbody>'+emptyMsg+wRows+'</tbody></table></div>'+
     '';
 
@@ -5644,7 +5687,7 @@ function renderSig(){
     kpi("Indicador Medio",sigs.filter(function(s){return s.sig==="HOLD";}).length,"de "+sigs.length,"a")+
     kpi("Indicador Bajo",sigs.filter(function(s){return s.sig==="SELL";}).length,"de "+sigs.length,"r")+
     '</div>'+
-    '<div class="tw"><table id="tbl-sig"><thead><tr><th>Ticker</th><th>Indicador</th>'+sortTh("sig","sc","Score")+'<th>Fuerza</th>'+sortTh("sig","price","Precio")+sortTh("sig","chg","Δ Hoy")+'<th title="Distancia sobre el mínimo de 52 semanas">vs mín 52s</th><th>Watch</th></tr></thead>'+
+    '<div class="tw"><table id="tbl-sig"><thead><tr><th>Ticker</th><th>Indicador</th>'+sortTh("sig","sc","Score","Score 0–100: combina SMA200, RSI, MACD y volumen en un solo número. Arriba de 70 es una señal técnica fuerte, abajo de 40 es débil.")+'<th>Fuerza</th>'+sortTh("sig","price","Precio")+sortTh("sig","chg","Δ Hoy")+'<th title="Distancia sobre el mínimo de 52 semanas">vs mín 52s</th><th>Watch</th></tr></thead>'+
     '<tbody>'+rows+'</tbody></table></div>'+
     '<div style="margin-top:12px;padding:8px 10px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">'+
     '⚠ Los sesgos mostrados resultan de modelos técnicos automatizados (Trend×30% · Vol×20% · RSI×25% · MACD×25%). '+
@@ -9131,6 +9174,8 @@ function showShortcuts(){
 // ── HELP CENTER ────────────────────────────────────────────────
 function renderHelp(){
   var topics=[
+    {icon:'📖',q:'¿Qué significan RSI, MACD, ATR, Régimen y Score?',
+     a:'RSI (Fuerza Relativa): 0–100, mide si un activo está sobrecomprado (&gt;70) o sobrevendido (&lt;30). MACD: compara dos promedios de precio para detectar cambios de tendencia. ATR: cuánto se mueve el precio en un día típico — se usa para calcular niveles de stop. Régimen: si el mercado en general está en tendencia alcista (Risk On) o bajista (Risk Off), medido con el S&amp;P 500. Score (0–100): combina estos indicadores en un solo número — arriba de 70 es una señal técnica fuerte, abajo de 40 es débil. Ninguno es una recomendación de compra o venta, solo datos técnicos.'},
     {icon:'📡',q:'¿Por qué los precios dicen "Caché"?',
      a:'Yahoo Finance limita las requests. Si ves el badge naranja "Caché", los precios son de la última actualización exitosa (máx 2h). Presiona ↻ para intentar actualizar.'},
     {icon:'📐',q:'¿Cómo funciona el Position Builder?',
