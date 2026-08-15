@@ -1679,7 +1679,9 @@ body:not(.no-auth) #mainnav {
 .fos-card-title::before { content: ''; display: block; width: 3px; height: 16px; background: var(--grn); border-radius: 2px; flex-shrink: 0; }
 /* Page module header */
 .dash-page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom:24px; }
-.dash-page-breadcrumb { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); margin-bottom:6px; }
+/* Igual que .fos-module-crumb (10px MAYUSCULA con letter-spacing): antes el
+   breadcrumb del dashboard era 11px minuscula y no matcheaba al resto. */
+.dash-page-breadcrumb { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); margin-bottom:var(--sp-3); }
 .dash-page-title { font-family: 'Fraunces', Georgia, serif; font-size: 27px; font-weight: 600; color: var(--bright); margin:0; line-height: 1.12; letter-spacing: -.01em; }
 .dash-page-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); background: var(--card); border: 1px solid var(--border); border-radius:var(--r-md); padding:6px 14px; flex-shrink:0; }
 /* Accesos rapidos a la altura del titulo. Antes ocupaban una tarjeta entera en
