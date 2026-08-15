@@ -5347,9 +5347,16 @@ function renderPort(){
     '<div class="tw"><table id="tbl-port" class="fos-table"><thead><tr>'+
     '<th>Activo</th><th class="col-sec">Tipo</th><th class="col-sec">Unidades</th><th class="col-sec">Entrada</th>'+sortTh("port","price","Precio")+sortTh("port","chg","Δ Hoy")+'<th class="col-sec">Valor</th>'+sortTh("port","pnl","P&L")+'<th class="col-sec">Retorno</th><th class="col-sec">Peso</th><th>Acc.</th>'+
     '</tr></thead><tbody>'+rows+
-    '<tr class="tot"><td colspan="5">TOTAL</td><td>$'+fmt(totM)+'</td>'+
+    // Antes usaba colspan=5 para el label: en desktop quedaba bien, pero el
+    // colspan no sabe que .col-sec esconde 6 columnas en movil, asi que la
+    // tabla seguia reservando el ancho completo de 11 columnas fantasma
+    // (~230px de scroll horizontal invisible). Un <td> por columna, con la
+    // misma clase .col-sec que el header, hace que fila y encabezado siempre
+    // coincidan en cuantas columnas hay realmente visibles.
+    '<tr class="tot"><td>TOTAL</td><td class="col-sec"></td><td class="col-sec"></td><td class="col-sec"></td><td></td><td></td>'+
+    '<td class="col-sec">$'+fmt(totM)+'</td>'+
     '<td style="color:'+(totP>=0?"var(--pos)":"var(--neg)")+'">'+(totP>=0?"+":"")+'$'+fmt(totP)+'</td>'+
-    '<td style="color:'+(totP>=0?'var(--pos)':'var(--neg)')+'">'+pct(totP/(totC||1))+'</td><td>100%</td><td></td></tr>'+
+    '<td class="col-sec" style="color:'+(totP>=0?'var(--pos)':'var(--neg)')+'">'+pct(totP/(totC||1))+'</td><td class="col-sec">100%</td><td></td></tr>'+
     '</tbody></table></div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
     '<button class="btn" onclick="openModal(\'addpos\')">+ Nueva posición</button>'+
@@ -5414,12 +5421,12 @@ function renderBitacora(){
       '<td style="color:var(--text2);font-size:11px">'+t.date+'</td>'+
       '<td style="font-weight:700;color:var(--bright)">'+(t.ticker||'—')+'</td>'+
       '<td><span style="font-size:11px;font-weight:600;color:'+tc+'">'+tl+'</span></td>'+
-      '<td>'+(t.price?'$'+fmtD(t.price):'—')+'</td>'+
-      '<td>'+(t.qty?fmtD(t.qty):'—')+'</td>'+
+      '<td class="col-sec">'+(t.price?'$'+fmtD(t.price):'—')+'</td>'+
+      '<td class="col-sec">'+(t.qty?fmtD(t.qty):'—')+'</td>'+
       '<td style="font-weight:600">$'+fmt(t.amount)+'</td>'+
-      '<td style="font-size:11px;color:var(--text3)">'+(t.rsi||'—')+'</td>'+
+      '<td class="col-sec" style="font-size:11px;color:var(--text3)">'+(t.rsi||'—')+'</td>'+
       '<td>'+pnlHtml+'</td>'+
-      '<td style="font-size:11px;color:var(--text2);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(t.note)+'</td>'+
+      '<td class="col-sec" style="font-size:11px;color:var(--text2);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(t.note)+'</td>'+
       '<td><button class="btn btn-r" style="padding:2px 6px;font-size:11px" onclick="deleteTrade('+t.id+')" aria-label="Eliminar"><span aria-hidden="true">🗑</span></button></td>'+
       '</tr>';
   }).join(""):'<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text3)">Sin operaciones registradas todavía.<br><span style="font-size:11px">Usá el botón "Registrar operación" en Portfolio.</span></td></tr>';
@@ -5483,8 +5490,10 @@ function renderBitacora(){
     '</div>'+
 
     // Table
+    // En movil se esconden Precio/Qty/RSI/Nota (detalle): quedan Fecha, Ticker,
+    // Tipo, Monto, P&L y la accion — lo que responde "que paso y como me fue".
     '<div class="tw"><table><thead><tr>'+
-    '<th>Fecha</th><th>Ticker</th><th>Tipo</th><th>Precio</th><th>Qty</th><th>Monto</th><th>RSI</th><th>P&L</th><th>Nota</th><th></th>'+
+    '<th>Fecha</th><th>Ticker</th><th>Tipo</th><th class="col-sec">Precio</th><th class="col-sec">Qty</th><th>Monto</th><th class="col-sec">RSI</th><th>P&L</th><th class="col-sec">Nota</th><th></th>'+
     '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
 
     // Per-ticker cost basis summary
@@ -5601,16 +5610,16 @@ function renderWatch(){
     var inPort=S.portfolio.some(function(h){return h.t===t;});
     var portBadge=inPort?'<span style="font-size:11px;padding:1px 5px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);border-radius:3px;color:var(--blue);margin-left:4px">PORT</span>':'';
     var deCell=isPro
-      ?'<td id="des-'+t+'" style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3)">…</td>'
-      :'<td style="color:var(--text3);font-size:11px">🔒</td>';
+      ?'<td class="col-sec" id="des-'+t+'" style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3)">…</td>'
+      :'<td class="col-sec" style="color:var(--text3);font-size:11px">🔒</td>';
     return '<tr class="trow" onmouseenter="prefetchFund(\''+t+'\')">'+
       '<td style="font-weight:600;color:var(--bright);cursor:pointer" role="button" tabindex="0" onclick="openDrawer(\''+t+'\','+lp+')">'+t+portBadge+' <span style="font-size:11px;color:var(--text3)">↗</span></td>'+
       '<td>'+badge(s.sig)+'</td>'+
       '<td style="font-weight:700;color:'+(s.sc>=72?"var(--grn)":s.sc>=52?"var(--amber)":"var(--red)")+'">'+s.sc+'</td>'+
-      '<td>'+sbar(s.sc)+'</td>'+
+      '<td class="col-sec">'+sbar(s.sc)+'</td>'+
       '<td style="font-weight:600">$'+fmtD(lp)+'</td>'+
       '<td>'+chgCell(lq)+'</td>'+
-      '<td>'+dist52wCell(lp,lq)+'</td>'+
+      '<td class="col-sec">'+dist52wCell(lp,lq)+'</td>'+
       deCell+
       '<td><button class="btn btn-r wl-rm-btn" style="padding:2px 7px;font-size:11px" onclick="event.stopPropagation();rmWatch(\''+t+'\')" aria-label="Quitar '+t+' de la watchlist"><span aria-hidden="true">✕</span></button></td>'+
       '</tr>';
@@ -5630,7 +5639,12 @@ function renderWatch(){
     '<div style="display:flex;gap:8px">'+
     '<input class="inp" id="wc" placeholder="Custom..." maxlength="6" style="width:120px;text-transform:uppercase" onkeydown="if(event.key===\'Enter\')addCustomW()"/>'+
     '<button class="btn" onclick="addCustomW()">+ Agregar</button></div></div>'+
-    '<div class="tw"><table id="tbl-watch" class="fos-table"><thead><tr><th>Ticker</th><th>Señal</th>'+sortTh("watch","sc","Score","Score 0–100: combina SMA200, RSI, MACD y volumen en un solo número. Arriba de 70 es una señal técnica fuerte, abajo de 40 es débil.")+'<th>Fuerza</th>'+sortTh("watch","price","Precio")+sortTh("watch","chg","Δ Hoy")+'<th title="Distancia sobre el mínimo de 52 semanas">vs mín 52s</th>'+deHeader+'<th>Quitar</th></tr></thead>'+
+    // Igual que Portfolio: en movil se esconden las columnas secundarias
+    // (Fuerza duplica el numero de Score como barra, vs min 52s y DE Score
+    // son detalle) y quedan las que responden "que es, como esta, que hago" —
+    // sin esto la tabla no tenia NINGUNA columna oculta en movil y quedaban
+    // 410px de scroll horizontal, mas ancho que la pantalla misma.
+    '<div class="tw"><table id="tbl-watch" class="fos-table"><thead><tr><th>Ticker</th><th>Señal</th>'+sortTh("watch","sc","Score","Score 0–100: combina SMA200, RSI, MACD y volumen en un solo número. Arriba de 70 es una señal técnica fuerte, abajo de 40 es débil.")+'<th class="col-sec">Fuerza</th>'+sortTh("watch","price","Precio")+sortTh("watch","chg","Δ Hoy")+'<th class="col-sec" title="Distancia sobre el mínimo de 52 semanas">vs mín 52s</th>'+deHeader.replace('<th ','<th class="col-sec" ')+'<th>Quitar</th></tr></thead>'+
     '<tbody>'+emptyMsg+wRows+'</tbody></table></div>'+
     '';
 
@@ -5698,10 +5712,10 @@ function renderSig(){
       '<td style="font-weight:600;color:var(--bright);cursor:pointer" role="button" tabindex="0" onclick="openDrawer(\''+s.t+'\','+lp+')">'+s.t+' <span style="font-size:11px;color:var(--text3)">↗</span></td>'+
       '<td>'+badge(s.sig)+'</td>'+
       '<td style="font-weight:700;color:'+(s.sc>=72?"var(--grn)":s.sc>=52?"var(--amber)":"var(--red)")+'">'+s.sc+'</td>'+
-      '<td>'+sbar(s.sc)+'</td>'+
+      '<td class="col-sec">'+sbar(s.sc)+'</td>'+
       '<td style="font-weight:600">$'+fmtD(lp)+'</td>'+
       '<td>'+chgCell(lq)+'</td>'+
-      '<td>'+dist52wCell(lp,lq)+'</td>'+
+      '<td class="col-sec">'+dist52wCell(lp,lq)+'</td>'+
       '<td>'+wbtn+'</td></tr>';
   }).join("");
 
@@ -5717,7 +5731,7 @@ function renderSig(){
     kpi("Indicador Medio",sigs.filter(function(s){return s.sig==="HOLD";}).length,"de "+sigs.length,"a")+
     kpi("Indicador Bajo",sigs.filter(function(s){return s.sig==="SELL";}).length,"de "+sigs.length,"r")+
     '</div>'+
-    '<div class="tw"><table id="tbl-sig"><thead><tr><th>Ticker</th><th>Indicador</th>'+sortTh("sig","sc","Score","Score 0–100: combina SMA200, RSI, MACD y volumen en un solo número. Arriba de 70 es una señal técnica fuerte, abajo de 40 es débil.")+'<th>Fuerza</th>'+sortTh("sig","price","Precio")+sortTh("sig","chg","Δ Hoy")+'<th title="Distancia sobre el mínimo de 52 semanas">vs mín 52s</th><th>Watch</th></tr></thead>'+
+    '<div class="tw"><table id="tbl-sig"><thead><tr><th>Ticker</th><th>Indicador</th>'+sortTh("sig","sc","Score","Score 0–100: combina SMA200, RSI, MACD y volumen en un solo número. Arriba de 70 es una señal técnica fuerte, abajo de 40 es débil.")+'<th class="col-sec">Fuerza</th>'+sortTh("sig","price","Precio")+sortTh("sig","chg","Δ Hoy")+'<th class="col-sec" title="Distancia sobre el mínimo de 52 semanas">vs mín 52s</th><th>Watch</th></tr></thead>'+
     '<tbody>'+rows+'</tbody></table></div>'+
     '<div style="margin-top:12px;padding:8px 10px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">'+
     '⚠ Los sesgos mostrados resultan de modelos técnicos automatizados (Trend×30% · Vol×20% · RSI×25% · MACD×25%). '+
@@ -6315,11 +6329,11 @@ function renderRiskBody(){
   var tableRows=rows.slice(0,8).map(function(r){
     return '<tr class="trow" onclick="openDrawer(\''+r.t+'\','+r.cur+')">'+
       '<td style="font-weight:600;color:var(--bright)">'+r.t+' <span style="font-size:11px;color:var(--text3)">↗</span></td>'+
-      '<td style="font-weight:600">$'+fmtD(r.cur)+'</td>'+
-      '<td style="color:var(--red)">$'+fmtD(r.stop)+'</td>'+
+      '<td class="col-sec" style="font-weight:600">$'+fmtD(r.cur)+'</td>'+
+      '<td class="col-sec" style="color:var(--red)">$'+fmtD(r.stop)+'</td>'+
       '<td style="color:var(--amber)">$'+fmt(rA)+'</td>'+
       '<td style="font-weight:600">$'+fmt(r.ps)+'</td>'+
-      '<td>'+fmtD(r.ps/r.cur)+'</td>'+
+      '<td class="col-sec">'+fmtD(r.ps/r.cur)+'</td>'+
       '<td style="font-weight:600;color:'+(r.rr>=2?"var(--grn)":r.rr>=1.5?"var(--amber)":"var(--red)")+'">'+fmtD(r.rr)+'x</td></tr>';
   }).join("");
 
@@ -6397,7 +6411,9 @@ function renderRiskBody(){
     '</div>'+
     '<div class="st"><div class="stbar"></div>Position Sizing</div>'+
     (rows.length>8?'<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-bottom:6px">Mostrando 8 de '+rows.length+' posiciones</div>':'')+
-    '<div class="tw"><table class="fos-table"><thead><tr><th>Activo</th><th>Precio</th><th title="Referencia de baja histórica –8%">Ref. –8%</th><th>Risk $</th><th>Tamaño</th><th>Unidades</th><th>R/R</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>'+
+    // En movil quedan Activo/Risk $/Tamaño/R:R — la salida real de la calculadora
+    // de riesgo; Precio, Ref-8% y Unidades son contexto derivable.
+    '<div class="tw"><table class="fos-table"><thead><tr><th>Activo</th><th class="col-sec">Precio</th><th class="col-sec" title="Referencia de baja histórica –8%">Ref. –8%</th><th>Risk $</th><th>Tamaño</th><th class="col-sec">Unidades</th><th>R/R</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>'+
     '<div class="grid2">'+
     '<div class="cb"><div class="st"><div class="stbar"></div>Escenarios</div>'+scRows+
     '<div style="display:flex;justify-content:space-between;padding-top:9px;border-top:1px solid var(--border);margin-top:2px"><span style="font-weight:700;color:var(--bright);font-size:12px">Valor Esperado</span><span style="font-weight:700;color:'+(ev>=0?"var(--pos)":"var(--neg)")+';font-family:\'JetBrains Mono\'">'+(ev>=0?"+":"")+D(ev)+'</span></div></div>'+
