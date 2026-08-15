@@ -4300,12 +4300,12 @@ function renderScreenerBody(){
           '</div>'+
         '</td>'+
         '<td><span style="font-size:11px;padding:2px 8px;border-radius:var(--r-md);border:1px solid '+s.actionColor+';color:'+s.actionColor+'">'+s.action+'</span></td>'+
-        '<td style="font-family:\'JetBrains Mono\',monospace;color:'+rsiC+'">'+s.rsi+'</td>'+
-        '<td style="font-family:\'JetBrains Mono\',monospace;color:'+pqC+';font-weight:600">'+(pq!=null?pq:'—')+'</td>'+
-        '<td style="font-family:\'JetBrains Mono\',monospace;color:var(--blue)">$'+s.entry+'</td>'+
-        '<td style="font-family:\'JetBrains Mono\',monospace;color:var(--red)">$'+s.stop+'</td>'+
-        '<td style="font-family:\'JetBrains Mono\',monospace;color:'+rrC+'">'+s.rr+'x</td>'+
-        '<td style="font-size:11px;color:var(--text3)'+(s.sectorRS?';color:'+s.sectorRS.color:'')+'">'+
+        '<td class="col-sec" style="font-family:\'JetBrains Mono\',monospace;color:'+rsiC+'">'+s.rsi+'</td>'+
+        '<td class="col-sec" style="font-family:\'JetBrains Mono\',monospace;color:'+pqC+';font-weight:600">'+(pq!=null?pq:'—')+'</td>'+
+        '<td class="col-sec" style="font-family:\'JetBrains Mono\',monospace;color:var(--blue)">$'+s.entry+'</td>'+
+        '<td class="col-sec" style="font-family:\'JetBrains Mono\',monospace;color:var(--red)">$'+s.stop+'</td>'+
+        '<td class="col-sec" style="font-family:\'JetBrains Mono\',monospace;color:'+rrC+'">'+s.rr+'x</td>'+
+        '<td class="col-sec" style="font-size:11px;color:var(--text3)'+(s.sectorRS?';color:'+s.sectorRS.color:'')+'">'+
           (s.sectorRS?s.sectorRS.etf+' '+s.sectorRS.label:'—')+'</td>'+
         '</tr>';
     }).join('');
@@ -4318,10 +4318,13 @@ function renderScreenerBody(){
       '</span>'+
       '<button onclick="exportScreenerCSV()" class="btn" style="margin-left:auto;font-size:11px;padding:4px 10px">'+icon('download')+'Export CSV</button>'+
       '</div>'+
+      // En movil quedan Ticker/Precio/Score DE/Acción — lo que responde "cuál
+      // y qué tan bueno es"; RSI/PQ/Entrada/Stop/R:R/Sector RS son el detalle
+      // de sizing que ya está un toque mas adentro (abrir el drawer del activo).
       '<div class="tw"><table>'+
       '<thead><tr>'+
         '<th>Ticker</th><th>Precio</th><th>Score DE</th><th>Acción</th>'+
-        '<th title="Fuerza Relativa (0-100): arriba de 70 se considera sobrecomprado, abajo de 30 sobrevendido">RSI</th><th>PQ</th><th>Entrada</th><th title="Basado en ATR(14): cuanto se mueve el precio en un dia tipico">Stop</th><th>R:R</th><th>Sector RS</th>'+
+        '<th class="col-sec" title="Fuerza Relativa (0-100): arriba de 70 se considera sobrecomprado, abajo de 30 sobrevendido">RSI</th><th class="col-sec">PQ</th><th class="col-sec">Entrada</th><th class="col-sec" title="Basado en ATR(14): cuanto se mueve el precio en un dia tipico">Stop</th><th class="col-sec">R:R</th><th class="col-sec">Sector RS</th>'+
       '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
       (errors.length?'<div style="margin-top:8px;font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">No disponibles: '+errors.map(function(e){return e.ticker;}).join(', ')+'</div>':'')+
       '</div>';
