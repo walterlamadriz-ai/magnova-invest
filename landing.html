@@ -69,6 +69,15 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 max(24px,calc(50% 
 
 /* ── HERO ── */
 .hero{position:relative;padding:140px 0 80px;text-align:center;overflow:hidden}
+/* Resplandor decorativo detras del texto: un solo acento con los tokens
+   propios (--grn), no compite con el contenido (z-index:-1, sin pointer
+   events) y .hero ya tenia overflow:hidden para contenerlo. */
+.hero-glow{
+  position:absolute;top:-220px;left:50%;transform:translateX(-50%);
+  width:900px;height:520px;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse at center,var(--grn-lt) 0%,rgba(208,237,223,.35) 45%,rgba(208,237,223,0) 72%);
+  filter:blur(40px);
+}
 
 .hero-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:var(--grn-bg);border:0.5px solid var(--grn-lt);border-radius:20px;font-size:11px;font-weight:600;color:var(--grn);font-family:'JetBrains Mono',monospace;letter-spacing:.4px;margin-bottom:28px}
 
@@ -212,6 +221,7 @@ footer{border-top:0.5px solid var(--border);padding:40px 0;text-align:center}
 
 <!-- HERO -->
 <div class="hero">
+  <div class="hero-glow" aria-hidden="true"></div>
 
   <div class="hero-badge">✦ Motor de Análisis · Portfolio tracking · LATAM</div>
 
