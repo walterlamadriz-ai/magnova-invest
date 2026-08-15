@@ -1854,8 +1854,11 @@ body:not(.no-auth) #mainnav {
 #main > *:not(.ph):not(.fos-module-header) { padding:0; }
 .page-body, #main > div { }
 
-/* content padding */
-#main > div:not(.ph):not(.fos-module-header) { padding:20px 28px; }
+/* content padding — .wv3-outer (pantalla de login) maneja su propio padding
+   via .wv3-wrap; sin excluirla, sumaba 28px de este selector genérico a los
+   24px propios y en mobile el contenido quedaba mas ancho que la pantalla
+   (52px de margen izquierdo, 13px de scroll horizontal fantasma). */
+#main > div:not(.ph):not(.fos-module-header):not(.wv3-outer) { padding:20px 28px; }
 
 /* ── DRAWER INNER COMPONENTS ── */
 .sigb {
