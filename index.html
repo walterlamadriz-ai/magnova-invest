@@ -884,6 +884,7 @@ tr:last-child td { border-bottom: none; }
   box-shadow: var(--shadow-lg);
   position: relative;
   max-height: 90vh;
+  max-height: 90dvh;
   overflow-y: auto;
 }
 .modal h2 {
@@ -943,9 +944,11 @@ tr:last-child td { border-bottom: none; }
   .drw {
     top: auto;
     bottom: -92vh;
+    bottom: -92dvh;
     right: 0; left: 0;
     width: 100%;
     height: 92vh;
+    height: 92dvh;
     border-left: none;
     border-radius:var(--r-xl) 16px 0 0;
     border-top: 1px solid var(--border);
@@ -4849,7 +4852,7 @@ function openTCModal(tab){
   el.id='tc-modal-overlay';
   el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
   el.innerHTML=
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);max-width:560px;width:100%;max-height:80vh;display:flex;flex-direction:column">'+
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);max-width:560px;width:100%;max-height:80vh;max-height:80dvh;display:flex;flex-direction:column">'+
     '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0">'+
     '<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);letter-spacing:1px">FINANCEOSPRO.COM</div>'+
     '<button onclick="document.getElementById(\'tc-modal-overlay\').remove()" style="background:transparent;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;padding:0 0 2px" aria-label="Cerrar"><span aria-hidden="true">×</span></button>'+
@@ -7810,7 +7813,7 @@ function renderAIPanel(){
   if(!document.getElementById('ai-panel')){
     var panel=document.createElement('div');
     panel.id='ai-panel';
-    panel.style.cssText='position:fixed;top:0;right:0;width:380px;max-width:95vw;height:100vh;background:var(--card);border-left:1px solid var(--border2);z-index:300;transform:'+(AI.open?'translateX(0)':'translateX(100%)')+';transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.6)';
+    panel.style.cssText='position:fixed;top:0;right:0;width:380px;max-width:95vw;height:100vh;height:100dvh;background:var(--card);border-left:1px solid var(--border2);z-index:300;transform:'+(AI.open?'translateX(0)':'translateX(100%)')+';transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.6)';
     document.body.appendChild(panel);
   }
   var panel=document.getElementById('ai-panel');
