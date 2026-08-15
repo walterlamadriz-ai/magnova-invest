@@ -3897,7 +3897,7 @@ function renderDecisionEngineBody(){
     'El score 0–100 combina tendencia frente a la SMA200 (30%), RSI (25%), MACD (20%) y volumen (25%), ajustado por la fuerza relativa del sector. '+
     'Los niveles de entrada, stop y objetivo son zonas de referencia calculadas con ATR(14), no recomendaciones.'+
     '</div></div>';
-  main.innerHTML=_ph('Pro · Motor de Análisis','Motor de Análisis','// Régimen SPY · Volatilidad VIX · Scoring técnico 0–100 por activo','<button class="btn" style="font-size:10px;border-color:var(--border);color:var(--text3)" onclick="openModal(\'score-info\')">¿Cómo se calcula? →</button>')+
+  main.innerHTML=_ph('Analizar · Motor de Análisis','Motor de Análisis','// Régimen SPY · Volatilidad VIX · Scoring técnico 0–100 por activo','<button class="btn" style="font-size:10px;border-color:var(--border);color:var(--text3)" onclick="openModal(\'score-info\')">¿Cómo se calcula? →</button>')+
     analisisTabs()+
     explicaUniverso+
     (isFreeUser&&teaserUsed?'<div style="margin:0 20px 16px;padding:12px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:var(--r-md);font-size:12px;color:var(--amber);display:flex;align-items:center;gap:10px">⚡ Vista previa utilizada hoy — <button onclick="openModal(\'upgrade\')" style="background:var(--amber);color:#000;border:none;border-radius:var(--r-sm);padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer">Activar Pro →</button></div>':'')+
@@ -4154,7 +4154,7 @@ function renderScreenerBody(){
   var plan=planOf();
   if(plan.locked&&plan.locked.indexOf('screener')>=0){
     document.getElementById('main').innerHTML=
-      _ph('Herramientas · Screener','Screener','// Filtro técnico · Score Motor · Export CSV')+
+      _ph('Investigar · Screener','Screener','// Filtro técnico · Score Motor · Export CSV')+
     analisisTabs()+
       lockedBanner('Screener','Filtra más de 50 activos simultáneamente por score técnico, señal y sector. Exporta resultados a CSV.');
     return;
@@ -4233,7 +4233,7 @@ function renderScreenerBody(){
   }
 
   document.getElementById('main').innerHTML=
-    _ph('Análisis · Screener','Screener','// Filtra el universo de activos por Score DE, RSI, acción y sector')+
+    _ph('Investigar · Screener','Screener','// Filtra el universo de activos por Score DE, RSI, acción y sector')+
 
     '<div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;margin-bottom:16px">'+
     '<div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start">'+
@@ -5031,7 +5031,7 @@ function renderDash(){
   var pageHeader=
     '<div class="dash-page-header">'+
     '<div>'+
-    '<div class="dash-page-breadcrumb">Inicio · Dashboard</div>'+
+    '<div class="dash-page-breadcrumb">Panorama · Dashboard</div>'+
     '<h1 class="dash-page-title">Dashboard</h1>'+
     '</div>'+
     // Acciones rapidas en la cabecera, a la altura del titulo: ocupaban una
@@ -5212,7 +5212,7 @@ function renderPort(){
   var isProPort=planOf().locked.indexOf('decision')<0;
   document.getElementById("main").innerHTML=
     '<div class="fos-module-header">'+
-    '<div><div class="fos-module-crumb">Principal · Portfolio</div><h1 class="fos-module-title">Portfolio Manager</h1><div class="fos-module-sub">Editable · <span id="saved">✓ Guardado</span></div></div>'+
+    '<div><div class="fos-module-crumb">Seguir · Portfolio</div><h1 class="fos-module-title">Portfolio Manager</h1><div class="fos-module-sub">Editable · <span id="saved">✓ Guardado</span></div></div>'+
     '<div class="ph-right">'+liveBadge()+(isProPort?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">'+icon('decision')+' Motor →</button>':'')+
     // Currency selector
     '<div style="display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm);padding:2px">'+
@@ -5330,7 +5330,7 @@ function renderBitacora(){
   }).join(""):'<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--text3)">Sin operaciones registradas todavía.<br><span style="font-size:11px">Usá el botón "Registrar operación" en Portfolio.</span></td></tr>';
 
   document.getElementById("main").innerHTML=
-    _ph('Seguimiento · Bitácora','Bitácora','// Historial completo de operaciones · P&L realizado','<button class="btn" onclick="openModal(\'addtrade\')">+ Registrar operación</button><button class="btn" style="margin-left:6px" onclick="exportTradesCSV()">'+icon('download')+'CSV</button>')+
+    _ph('Seguir · Bitácora','Bitácora','// Historial completo de operaciones · P&L realizado','<button class="btn" onclick="openModal(\'addtrade\')">+ Registrar operación</button><button class="btn" style="margin-left:6px" onclick="exportTradesCSV()">'+icon('download')+'CSV</button>')+
 
     // KPI summary
     // 1 respuesta (¿gano con lo que ya cerre?) + 3 apoyos. El conteo de
@@ -5528,7 +5528,7 @@ function renderWatch(){
     :'<th style="color:var(--text3)">🎯 DE</th>';
 
   document.getElementById("main").innerHTML=
-    '<div class="fos-module-header"><div><div class="fos-module-crumb">Principal · Watchlist</div><h1 class="fos-module-title">Watchlist</h1><div class="fos-module-sub">'+wl.length+' tickers · <span id="saved">✓ Guardado</span></div></div><div class="ph-right">'+liveBadge()+(isPro?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">'+icon('decision')+' Motor →</button>':'')+' <button class="btn" style="border-color:var(--border);color:var(--text3);font-size:10px" onclick="resetWatch()">↺ Default</button></div></div>'+
+    '<div class="fos-module-header"><div><div class="fos-module-crumb">Investigar · Watchlist</div><h1 class="fos-module-title">Watchlist</h1><div class="fos-module-sub">'+wl.length+' tickers · <span id="saved">✓ Guardado</span></div></div><div class="ph-right">'+liveBadge()+(isPro?'<button class="btn" style="font-size:10px;border-color:var(--blue);color:var(--blue)" onclick="setPage(\'decision\')">'+icon('decision')+' Motor →</button>':'')+' <button class="btn" style="border-color:var(--border);color:var(--text3);font-size:10px" onclick="resetWatch()">↺ Default</button></div></div>'+
     '<div class="cb">'+
     '<div class="st"><div class="stbar"></div>Agregar ticker</div>'+
     '<div class="wtag-grid">'+quickTags+'</div>'+
@@ -5599,7 +5599,7 @@ function renderSig(){
   }).join("");
 
   document.getElementById("main").innerHTML=
-    _ph('Mercado · Señales','Señales Técnicas'+(ALL_SIG_REAL?'':' <span style="font-size:10px;background:var(--amber);color:#000;padding:2px 6px;border-radius:4px;font-weight:700;vertical-align:middle;margin-left:6px">CALCULANDO</span>'),(ALL_SIG_REAL?'// Score 0–100 por activo · SMA200 30% + RSI 25% + MACD 20% + Volumen 25%, ajustado por fuerza del sector':'// Calculando scores con datos reales del último año…'),liveBadge())+
+    _ph('Analizar · Señales','Señales Técnicas'+(ALL_SIG_REAL?'':' <span style="font-size:10px;background:var(--amber);color:#000;padding:2px 6px;border-radius:4px;font-weight:700;vertical-align:middle;margin-left:6px">CALCULANDO</span>'),(ALL_SIG_REAL?'// Score 0–100 por activo · SMA200 30% + RSI 25% + MACD 20% + Volumen 25%, ajustado por fuerza del sector':'// Calculando scores con datos reales del último año…'),liveBadge())+
     (ALL_SIG_REAL?'':'<div style="padding:8px 12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:var(--r-sm);margin-bottom:14px;font-size:11px;color:var(--amber);font-family:\'JetBrains Mono\',monospace">⏳ Calculando los scores con datos reales del último año. Mientras tanto ves valores de referencia.</div>')+
     freeBanner("Estás viendo "+plan.maxS+" de "+ALL_SIG.length+" indicadores. Pro los muestra todos.")+
     '<div style="margin-bottom:14px">'+filterBtns+'</div>'+
@@ -6110,7 +6110,7 @@ function renderInd(){
   var plan=planOf();
   if(plan.locked&&plan.locked.indexOf('ind')>=0){
     document.getElementById('main').innerHTML=
-      _ph('Análisis · Indicadores','Indicadores Técnicos','// RSI · MACD · Bollinger Bands sobre datos reales')+
+      _ph('Analizar · Indicadores','Indicadores Técnicos','// RSI · MACD · Bollinger Bands sobre datos reales')+
       lockedBanner('Indicadores Pro','Visualiza indicadores técnicos reales (RSI, MACD, Bandas Bollinger) sobre todos tus activos simultáneamente.');
     return;
   }
@@ -6147,7 +6147,7 @@ function renderInd(){
   }).join("");
 
   document.getElementById("main").innerHTML=
-    '<div class="fos-module-header"><div><div class="fos-module-crumb">Análisis · Indicadores</div><h1 class="fos-module-title">Indicadores Técnicos</h1><div class="fos-module-sub">Click en cualquier ticker para análisis completo en el gráfico</div></div></div>'+
+    '<div class="fos-module-header"><div><div class="fos-module-crumb">Analizar · Indicadores</div><h1 class="fos-module-title">Indicadores Técnicos</h1><div class="fos-module-sub">Click en cualquier ticker para análisis completo en el gráfico</div></div></div>'+
     '<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">'+
     '<input class="inp" id="ind-in" placeholder="Buscar ticker..." style="width:150px;text-transform:uppercase" maxlength="6" onkeydown="if(event.key===\'Enter\'){var t=this.value.toUpperCase().trim();if(t){var s=ALL_SIG.find(function(x){return x.t===t;});openDrawer(t,s&&s.p?s.p:100);}}"/>'+
     '<button class="btn" onclick="var t=document.getElementById(\'ind-in\').value.toUpperCase().trim();if(t){var s=ALL_SIG.find(function(x){return x.t===t;});openDrawer(t,s&&s.p?s.p:100);}">📊 Analizar</button>'+
@@ -6307,7 +6307,7 @@ function renderBack(){
   var plan=planOf();
   if(plan.locked&&plan.locked.indexOf('back')>=0){
     document.getElementById("main").innerHTML=
-      _ph('Herramientas · Simulador','Probar una estrategia','// Qué habría pasado aplicando un cruce de medias en el pasado')+
+      _ph('Decidir · Simulador','Probar una estrategia','// Qué habría pasado aplicando un cruce de medias en el pasado')+
       lockedBanner("Simulación Histórica","Ejecuta estrategias reales sobre datos históricos y analiza el rendimiento de tus trades.");
     return;
   }
@@ -6321,7 +6321,7 @@ function renderBack(){
     '<button style="'+tabStyle('sim')+'" onclick="BT.tab=\'sim\';renderBack()">⚡ Simulación Histórica</button>'+
     '</div>';
 
-  var html=_ph('Herramientas · Simulador','Probar una estrategia','// Qué habría pasado aplicando un cruce de medias en el pasado')+tabs+
+  var html=_ph('Decidir · Simulador','Probar una estrategia','// Qué habría pasado aplicando un cruce de medias en el pasado')+tabs+
     '<div style="margin:0 20px 14px;padding:12px 16px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md);font-size:12px;color:var(--text2);line-height:1.65">'+
     '<b style="color:var(--bright)">Esto responde una sola pregunta:</b> si durante el período elegido hubieras entrado cada vez que la media corta cruzó '+
     '<b>hacia arriba</b> la larga, y salido cada vez que la cruzó <b>hacia abajo</b>, ¿cómo habría terminado tu capital?'+
@@ -6575,7 +6575,7 @@ function renderAlert(){
     '</div>';
 
   document.getElementById("main").innerHTML=
-    _ph('Principal · Alertas','Alertas de Precio','// Vigila cuándo un activo cruza el nivel que definas')+
+    _ph('Seguir · Alertas','Alertas de Precio','// Vigila cuándo un activo cruza el nivel que definas')+
     (function(){
       var perm=('Notification' in window)?Notification.permission:'unsupported';
       var base='Las alertas se evalúan cada 5 min mientras la app esté abierta (en cualquier sección). No funcionan con la app completamente cerrada.';
@@ -7912,7 +7912,7 @@ function renderPBBody(){
     '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">Ticker · Precio · Capital · % Riesgo · Ref. Baja</div></div>';
 
   document.getElementById("main").innerHTML=
-    _ph('Análisis · Position Builder','Position Builder','// Calculadora de entrada óptima · Regla del 2% · Simulación de escenarios')+
+    _ph('Decidir · Position Builder','Position Builder','// Calculadora de entrada óptima · Regla del 2% · Simulación de escenarios')+
     riskTabs()+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+
     '<div><div class="cb">'+
@@ -8148,7 +8148,7 @@ function renderSentimentWidget(){
     '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">VIX no cargado</span>';
 
   document.getElementById("main").innerHTML=
-    _ph('Análisis · Sentiment','Market Sentiment','// Fear & Greed · 5 componentes ponderados · VIX real',vixStatus+'<button id="sent-refresh" onclick="refreshSentiment()" class="btn" style="padding:5px 12px;font-size:11px">⟳ Actualizar VIX</button>')+
+    _ph('Analizar · Sentiment','Market Sentiment','// Fear & Greed · 5 componentes ponderados · VIX real',vixStatus+'<button id="sent-refresh" onclick="refreshSentiment()" class="btn" style="padding:5px 12px;font-size:11px">⟳ Actualizar VIX</button>')+
     '<div class="resp2" style="display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start">'+
     '<div style="display:flex;flex-direction:column;gap:12px">'+
     '<div class="cb" style="text-align:center">'+
@@ -9505,7 +9505,7 @@ function renderComp(){
   '<span style="font-size:9px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-left:8px">Retorno acumulado base-100</span>';
 
   document.getElementById('main').innerHTML=
-    _ph('Herramientas · Comparador','Comparador de Activos','// Performance normalizado · Correlación · Sharpe ratio',liveBadge())+
+    _ph('Investigar · Comparador','Comparador de Activos','// Performance normalizado · Correlación · Sharpe ratio',liveBadge())+
     '<div class="resp2" style="display:grid;grid-template-columns:220px 1fr;gap:16px;align-items:start">'+
     '<div>'+
     '<div class="cb">'+
@@ -9640,7 +9640,7 @@ function renderDivs(){
   }).join('');
 
   document.getElementById('main').innerHTML=
-    '<div class="fos-module-header"><div><div class="fos-module-crumb">Seguimiento · Dividendos</div><h1 class="fos-module-title">Dividendos</h1>'+
+    '<div class="fos-module-header"><div><div class="fos-module-crumb">Seguir · Dividendos</div><h1 class="fos-module-title">Dividendos</h1>'+
     '<div class="fos-module-sub">Proyección de ingresos · 12 meses</div></div>'+
     '<button onclick="loadDivData()" class="btn-big" style="padding:8px 18px;font-size:12px;flex-shrink:0">'+
     (DIVS.loading?'<span style="display:inline-flex;align-items:center;gap:7px"><span class="spin-sm"></span>Cargando...</span>':'💰 Cargar dividendos')+'</button></div>'+
@@ -9800,7 +9800,7 @@ function renderCapital(){
   var plan=planOf();
   if(plan.locked&&plan.locked.indexOf('capital')>=0){
     document.getElementById('main').innerHTML=
-      '<div class="fos-module-header"><div><div class="fos-module-crumb">Pro · Plan de Capital</div><h1 class="fos-module-title">Plan de Capital</h1><div class="fos-module-sub">Guía de distribución de capital mensual por condiciones de mercado</div></div></div>'+
+      '<div class="fos-module-header"><div><div class="fos-module-crumb">Decidir · Plan de Capital</div><h1 class="fos-module-title">Plan de Capital</h1><div class="fos-module-sub">Guía de distribución de capital mensual por condiciones de mercado</div></div></div>'+
       lockedBanner('Plan de Capital','Reparte tu capital mensual en un portafolio de ETFs diversificado con una escalera de tramos según la distancia del precio a sus medias móviles (SMA20/50/100/200) y el RSI. Una guía lógica de distribución educativa.');
     return;
   }
@@ -9949,7 +9949,7 @@ function renderCapital(){
   }
 
   document.getElementById('main').innerHTML=
-    '<div class="fos-module-header"><div><div class="fos-module-crumb">Pro · Plan de Capital</div><h1 class="fos-module-title">Plan de Capital</h1>'+
+    '<div class="fos-module-header"><div><div class="fos-module-crumb">Decidir · Plan de Capital</div><h1 class="fos-module-title">Plan de Capital</h1>'+
     '<div class="fos-module-sub">Distribución referencial del capital mensual según condiciones de mercado (SMA + RSI)</div></div>'+'<button onclick="abrirComoCalcula(\'escalera\')" style="background:none;border:1px solid var(--border);border-radius:var(--r-md);color:var(--blue);font-size:10px;cursor:pointer;padding:5px 10px;font-family:\'JetBrains Mono\',monospace;align-self:flex-start">\u00bfC\u00f3mo se reparte? \u2192</button></div>'+
 
     '<div class="fos-card" style="padding:var(--sp-8);margin-bottom:16px">'+
@@ -10126,7 +10126,7 @@ function renderRebal(){
   }).join('');
 
   document.getElementById('main').innerHTML=
-    '<div class="fos-module-header"><div><div class="fos-module-crumb">Seguimiento · Rebalanceo</div><h1 class="fos-module-title">Rebalanceo</h1>'+
+    '<div class="fos-module-header"><div><div class="fos-module-crumb">Seguir · Rebalanceo</div><h1 class="fos-module-title">Rebalanceo</h1>'+
     '<div class="fos-module-sub">Define pesos objetivo · Calcula ajustes exactos</div></div>'+
     '<div class="ph-right">'+liveBadge()+'</div></div>'+
     '<div class="resp2" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+
