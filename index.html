@@ -4130,7 +4130,7 @@ function renderDecisionEngineBody(){
       '</div>';
     if(usingDefaults){
       scoresHtml+='<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);margin-bottom:12px;padding:8px 12px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md)">'+
-        '⚡ Activos de referencia. <span onclick="setPage(\'watch\')" style="color:var(--grn);cursor:pointer">Agrega tu Watchlist →</span></div>';
+        '⚡ Activos de referencia. <span role="button" tabindex="0" onclick="setPage(\'watch\')" style="color:var(--grn);cursor:pointer">Agrega tu Watchlist →</span></div>';
     }
     if(!scores.length){
       scoresHtml+='<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:24px;text-align:center;color:var(--text3);font-size:12px">Sin datos disponibles. Verifica tu conexión.</div>';
@@ -5091,7 +5091,7 @@ function renderDash(){
     '<span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3)">'+port.length+' de '+(S.portfolio.length)+' posiciones</span>'+
     '</div>'+
     (S.user.plan==='free'&&S.portfolio.length>plan.maxT?
-      '<div style="font-size:11px;color:var(--amber);font-family:\'JetBrains Mono\',monospace;padding:0 20px 10px">⚠ Mostrando '+plan.maxT+' de '+S.portfolio.length+' · <span onclick="openModal(\'upgrade\')" style="cursor:pointer;text-decoration:underline">Upgrade Pro</span></div>':'')+
+      '<div style="font-size:11px;color:var(--amber);font-family:\'JetBrains Mono\',monospace;padding:0 20px 10px">⚠ Mostrando '+plan.maxT+' de '+S.portfolio.length+' · <span role="button" tabindex="0" onclick="openModal(\'upgrade\')" style="cursor:pointer;text-decoration:underline">Upgrade Pro</span></div>':'')+
     '<div class="tw"><table class="fos-table"><thead><tr><th>Ticker</th><th>Nombre</th><th>Precio</th><th>Cambio</th><th>P&amp;L</th><th>Peso%</th></tr></thead>'+
     '<tbody>'+portRows+'</tbody></table></div></div>';
 
@@ -5288,11 +5288,11 @@ function renderPort(){
     var lq=LIVE[h.t];
     var hj=JSON.stringify(h).replace(/"/g,"&quot;");
     return '<tr class="trow" data-pnl="'+pnl.toFixed(2)+'" data-ret="'+ret.toFixed(4)+'" data-val="'+(h.sh*h.cur).toFixed(2)+'" data-chg="'+(lq?(lq.changePct||0):0)+'">'+
-      '<td style="font-weight:600;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+h.t+'\','+h.cur+')">'+h.t+' <span style="font-size:11px;color:var(--text3)">↗</span></td>'+
+      '<td style="font-weight:600;color:var(--bright);cursor:pointer" role="button" tabindex="0" onclick="openDrawer(\''+h.t+'\','+h.cur+')">'+h.t+' <span style="font-size:11px;color:var(--text3)">↗</span></td>'+
       '<td class="col-sec">'+typeTag(h.type)+'</td>'+
       '<td class="col-sec">'+h.sh+'</td>'+
       '<td class="col-sec">$'+fmtD(h.cost)+'</td>'+
-      '<td style="font-weight:600;cursor:pointer" onclick="openDrawer(\''+h.t+'\','+h.cur+')">$'+fmtD(h.cur)+'</td>'+
+      '<td style="font-weight:600;cursor:pointer" role="button" tabindex="0" onclick="openDrawer(\''+h.t+'\','+h.cur+')">$'+fmtD(h.cur)+'</td>'+
       '<td>'+chgCell(lq)+'</td>'+
       '<td class="col-sec">$'+fmt(h.sh*h.cur)+'</td>'+
       '<td style="color:'+(pnl>=0?"var(--pos)":"var(--neg)")+';font-weight:600">'+(pnl>=0?"+":"")+'$'+fmt(pnl)+'</td>'+
@@ -5604,7 +5604,7 @@ function renderWatch(){
       ?'<td id="des-'+t+'" style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3)">…</td>'
       :'<td style="color:var(--text3);font-size:11px">🔒</td>';
     return '<tr class="trow" onmouseenter="prefetchFund(\''+t+'\')">'+
-      '<td style="font-weight:600;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+t+'\','+lp+')">'+t+portBadge+' <span style="font-size:11px;color:var(--text3)">↗</span></td>'+
+      '<td style="font-weight:600;color:var(--bright);cursor:pointer" role="button" tabindex="0" onclick="openDrawer(\''+t+'\','+lp+')">'+t+portBadge+' <span style="font-size:11px;color:var(--text3)">↗</span></td>'+
       '<td>'+badge(s.sig)+'</td>'+
       '<td style="font-weight:700;color:'+(s.sc>=72?"var(--grn)":s.sc>=52?"var(--amber)":"var(--red)")+'">'+s.sc+'</td>'+
       '<td>'+sbar(s.sc)+'</td>'+
@@ -5695,7 +5695,7 @@ function renderSig(){
     var inW=S.watchlist.indexOf(s.t)>=0;
     var wbtn='<button class="btn" style="padding:2px 7px;font-size:11px;'+(inW?"border-color:var(--amber);color:var(--amber)":"border-color:var(--text3);color:var(--text3)")+'" onclick="event.stopPropagation();'+(inW?"rmWatch('"+s.t+"')":"addWatch('"+s.t+"')")+'">'+(inW?"✓":"+")+' Watch</button>';
     return '<tr class="trow" data-sc="'+s.sc+'" data-price="'+lp+'" data-chg="'+(lq?(lq.changePct||0):0)+'" onmouseenter="prefetchFund(\''+s.t+'\')">'+
-      '<td style="font-weight:600;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+s.t+'\','+lp+')">'+s.t+' <span style="font-size:11px;color:var(--text3)">↗</span></td>'+
+      '<td style="font-weight:600;color:var(--bright);cursor:pointer" role="button" tabindex="0" onclick="openDrawer(\''+s.t+'\','+lp+')">'+s.t+' <span style="font-size:11px;color:var(--text3)">↗</span></td>'+
       '<td>'+badge(s.sig)+'</td>'+
       '<td style="font-weight:700;color:'+(s.sc>=72?"var(--grn)":s.sc>=52?"var(--amber)":"var(--red)")+'">'+s.sc+'</td>'+
       '<td>'+sbar(s.sc)+'</td>'+
@@ -5834,7 +5834,7 @@ function mercadoHoyBody(){
   ];
   var quickLinks=QUICK.map(function(q){
     var on=f===q.cat;
-    return '<span onclick="setNewsF(\''+q.cat+'\')" style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:var(--r-xl);border:1px solid '+(on?'rgba(245,158,11,.4)':'var(--border)')+';background:'+(on?'rgba(245,158,11,.1)':'var(--card2)')+';color:'+(on?'var(--amber)':'var(--text2)')+';font-size:11px;font-weight:600;cursor:pointer;font-family:\'JetBrains Mono\',monospace;transition:.15s;white-space:nowrap">'+q.label+'</span>';
+    return '<span role="button" tabindex="0" onclick="setNewsF(\''+q.cat+'\')" style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:var(--r-xl);border:1px solid '+(on?'rgba(245,158,11,.4)':'var(--border)')+';background:'+(on?'rgba(245,158,11,.1)':'var(--card2)')+';color:'+(on?'var(--amber)':'var(--text2)')+';font-size:11px;font-weight:600;cursor:pointer;font-family:\'JetBrains Mono\',monospace;transition:.15s;white-space:nowrap">'+q.label+'</span>';
   }).join('');
 
   // ── Category filter tabs ──────────────────────────────────────
@@ -5886,7 +5886,7 @@ function mercadoHoyBody(){
   var breakingBanner='';
   if(breakingItems.length>0){
     var bItems=breakingItems.map(function(n){
-      return '<span onclick="setNewsF(\''+n.cat+'\')" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:3px 0;border-right:1px solid rgba(255,255,255,.1);padding-right:16px;margin-right:12px;flex-shrink:0" onmouseover="this.style.opacity=\'.8\'" onmouseout="this.style.opacity=\'1\'">'+
+      return '<span role="button" tabindex="0" onclick="setNewsF(\''+n.cat+'\')" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:3px 0;border-right:1px solid rgba(255,255,255,.1);padding-right:16px;margin-right:12px;flex-shrink:0" onmouseover="this.style.opacity=\'.8\'" onmouseout="this.style.opacity=\'1\'">'+
         '<span style="font-size:11px;font-weight:600;color:var(--bright);font-family:\'JetBrains Mono\',monospace">'+esc(n.title.substring(0,55))+'...</span>'+
         '<span style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">'+relTime(n.hoursAgo)+'</span>'+
         '</span>';
@@ -6477,7 +6477,7 @@ function btRenderJournal(sells){
     var r=byTicker[tk];
     var wr=r.trades?r.wins/r.trades:0;
     return '<tr>'+
-      '<td style="font-weight:600;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+tk+'\',0)">'+tk+' <span style="font-size:11px">↗</span></td>'+
+      '<td style="font-weight:600;color:var(--bright);cursor:pointer" role="button" tabindex="0" onclick="openDrawer(\''+tk+'\',0)">'+tk+' <span style="font-size:11px">↗</span></td>'+
       '<td style="color:var(--text3)">'+r.trades+'</td>'+
       '<td style="color:var(--text3)">'+r.wins+'/'+r.losses+'</td>'+
       '<td style="color:'+(wr>=0.5?'var(--pos)':'var(--neg)')+'">'+pct(wr)+'</td>'+
@@ -6665,7 +6665,7 @@ function renderAlert(){
 
   var tableRows=rows.map(function(r){
     return '<tr style="'+(r.triggered?"background:var(--rbg)":"")+'">'+
-      '<td style="font-weight:600;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+esc(r.asset)+'\','+(r.cur||0)+')">'+esc(r.asset)+' <span style="font-size:11px">↗</span></td>'+
+      '<td style="font-weight:600;color:var(--bright);cursor:pointer" role="button" tabindex="0" onclick="openDrawer(\''+esc(r.asset)+'\','+(r.cur||0)+')">'+esc(r.asset)+' <span style="font-size:11px">↗</span></td>'+
       '<td style="color:'+(r.type==="Max"?"var(--pos)":"var(--neg)")+'">'+(r.type==="Max"?"⬆ Máx":"⬇ Mín")+'</td>'+
       '<td style="font-weight:600">$'+fmtD(r.trigger)+'</td>'+
       '<td style="font-weight:600;color:var(--bright)">'+(r.tieneprecio?'$'+fmtD(r.cur):'<span style="color:var(--text3)">sin precio</span>')+'</td>'+
@@ -9608,7 +9608,7 @@ function renderComp(){
       '<span style="font-size:11px;font-weight:600;color:'+colors[i]+';font-family:\'JetBrains Mono\',monospace">'+t+'</span></span>';
   }).join('')+
   (COMP.tickers.indexOf('SPY')<0?
-    '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;cursor:pointer;opacity:'+(COMP.showSPY?1:.4)+'" onclick="COMP.showSPY=!COMP.showSPY;renderComp()">'+
+    '<span role="button" tabindex="0" style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;cursor:pointer;opacity:'+(COMP.showSPY?1:.4)+'" onclick="COMP.showSPY=!COMP.showSPY;renderComp()">'+
     '<svg width="16" height="2" style="flex-shrink:0"><line x1="0" y1="1" x2="16" y2="1" stroke="rgba(156,163,175,.7)" stroke-width="1.5" stroke-dasharray="4,2"/></svg>'+
     '<span style="font-size:11px;color:rgba(156,163,175,.8);font-family:\'JetBrains Mono\',monospace">SPY Benchmark</span></span>':'')+
   '<span style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-left:8px">Retorno acumulado base-100</span>';
@@ -9980,7 +9980,7 @@ function renderCapital(){
     }).join('');
     var suggested=rsiOk?reached:0;
     return '<tr class="trow">'+
-      '<td style="font-weight:700;color:var(--bright);cursor:pointer" onclick="openDrawer(\''+row.t+'\','+r.price+')">'+row.t+' <span style="font-size:11px;color:var(--text3)">↗</span></td>'+
+      '<td style="font-weight:700;color:var(--bright);cursor:pointer" role="button" tabindex="0" onclick="openDrawer(\''+row.t+'\','+r.price+')">'+row.t+' <span style="font-size:11px;color:var(--text3)">↗</span></td>'+
       '<td style="color:var(--text3);font-size:11px">'+row.name+'</td>'+
       '<td style="font-family:\'JetBrains Mono\',monospace">'+row.pct+'%</td>'+
       '<td style="font-family:\'JetBrains Mono\',monospace">$'+fmt(etfMonthly)+'</td>'+
