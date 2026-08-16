@@ -4882,6 +4882,49 @@ function renderPaywall(){
 }
 
 // ── DASHBOARD ──────────────────────────────────────────────────
+// ── ÍNDICES ───────────────────────────────────────────────────────────────
+// Extraida de mercadoHoyBody() para poder ubicarla junto a Top Señales y
+// Portafolio en renderDash() (antes solo vivia en el rail de "Mercado hoy").
+// Los valores de partida eran cifras reales de 2024 hardcodeadas (VIX 16.8,
+// Bitcoin $97.400...). Como marketbar no devolvia VIX ni BTC, esos dos se
+// mostraban con datos de hace mas de un ano SIN ninguna marca de que eran
+// estaticos. Un dato viejo presentado como actual es peor que un hueco: ahora
+// el valor arranca vacio y solo se rellena si llega de la API.
+function indicesCard(){
+  var IDX_MAP={
+    '^GSPC':  {n:'S&P 500',    v:null,c:null,up:null},
+    '^IXIC':  {n:'NASDAQ',     v:null,c:null,up:null},
+    '^DJI':   {n:'Dow 30',     v:null,c:null,up:null},
+    '^VIX':   {n:'VIX',        v:null,c:null,up:null},
+    'BTC-USD':{n:'Bitcoin USD',v:null,c:null,up:null}
+  };
+  if(MARKET_BAR.length){
+    MARKET_BAR.forEach(function(b){
+      if(!IDX_MAP[b.sym]||!isFinite(b.price)) return;
+      var isUp=(b.changePct||0)>=0;
+      var pct=(isUp?'+':'')+(b.changePct||0).toFixed(2)+'%';
+      var val=b.sym==='BTC-USD'?'$'+(b.price/1000).toFixed(1)+'K':b.sym==='^VIX'?b.price.toFixed(2):b.price>=10000?b.price.toLocaleString('en-US',{maximumFractionDigits:0}):b.price.toFixed(2);
+      IDX_MAP[b.sym]={n:IDX_MAP[b.sym].n,v:val,c:pct,up:isUp};
+    });
+  }
+  var IDXS=[IDX_MAP['^GSPC'],IDX_MAP['^IXIC'],IDX_MAP['^DJI'],IDX_MAP['^VIX'],IDX_MAP['BTC-USD']];
+  var idxRows=IDXS.map(function(x){
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">'+
+      '<span style="font-size:11px;font-weight:600;color:var(--bright);font-family:\'JetBrains Mono\',monospace">'+x.n+'</span>'+
+      '<div style="display:flex;gap:8px;align-items:baseline">'+
+      '<span style="font-size:11px;color:'+(x.v?'var(--bright)':'var(--text3)')+';font-family:\'JetBrains Mono\',monospace">'+(x.v||'sin dato')+'</span>'+
+      (x.c?'<span style="font-size:11px;font-weight:700;font-family:\'JetBrains Mono\',monospace;color:'+(x.up?'var(--pos)':'var(--neg)')+'">'+x.c+'</span>':'')+
+      '</div></div>';
+  }).join('');
+  return '<div class="fos-card" style="overflow:hidden">'+
+    '<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--card2);display:flex;align-items:center;justify-content:space-between">'+
+      '<span class="fos-section-label" style="margin:0">Índices</span>'+
+      '<span style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">~15min delay</span>'+
+    '</div>'+
+    '<div style="padding:4px 14px 8px">'+idxRows+'</div>'+
+  '</div>';
+}
+
 // ── MARKET MOVERS ────────────────────────────────────────────────────────
 // Vivia dentro de Contexto. Al consolidar Contexto en el Dashboard se extrae a
 // funcion propia en vez de duplicar el widget en dos pantallas.
@@ -5127,9 +5170,9 @@ function renderDash(){
       '</div>';
   })();
 
-  // El banner de Régimen ya NO va full-width aqui: se movio al lateral derecho
-  // de "Mercado hoy" (debajo de Índices), dentro de mercadoHoyBody(). El
-  // elemento #de-regime-banner vive alli y dashLoadContext() lo llena async.
+  // El banner de Régimen ya NO va full-width aqui: vive en el rail de
+  // contexto (debajo de Índices) junto a Top Señales/Portafolio, mas abajo en
+  // este mismo render. dashLoadContext() lo llena async buscando su id.
 
   var now=new Date();
   var pageHeader=
@@ -5157,22 +5200,34 @@ function renderDash(){
     demoBanner('renderDash')+
     '<div class="dash-hero-row">'+kpiCards+'</div>'+
     dashFocoCard(port)+
-    // Fila 1: Top Senales y Portafolio, equilibradas lado a lado.
-    '<div class="grid2">'+sigCard+portCard+'</div>'+
-    // ── BANDA "MERCADO HOY" ──
-    // Contexto/Noticias fusionado en el Dashboard. El contexto de mercado ya NO
-    // va en bandas full-width que cruzan la pantalla: el feed de noticias queda a
-    // la izquierda y el LATERAL derecho apila Índices → Régimen → Movers
-    // (todo dentro de mercadoHoyBody).
-    '<div style="margin-top:30px;padding-top:22px;border-top:1px solid var(--border)">'+
-      '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:16px;flex-wrap:wrap">'+
-        '<h2 style="font-family:\'Fraunces\',Georgia,serif;font-size:20px;font-weight:600;color:var(--bright);margin:0;letter-spacing:-.01em">Mercado hoy</h2>'+
-        '<span style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Noticias · índices · régimen</span>'+
+    // Fila 1: Top Senales + Portafolio (mi cartera) junto al rail de contexto
+    // de mercado (Índices/Régimen/Movers) — antes el rail vivia abajo, al lado
+    // del feed de noticias; Walter pidio subirlo para verlo de un vistazo junto
+    // a sus señales y posiciones. Reusa el patron .resp2 (1fr..+rail fijo) ya
+    // establecido en el resto de la app: colapsa a 1 columna en mobile con la
+    // misma regla que ya existe (@media 768px .resp2{grid-template-columns:1fr}).
+    // align-items default (stretch, no "start"): el rail apilado (3 tarjetas)
+    // es mas alto que Top Señales/Portafolio por si solo — con "start" quedaba
+    // un hueco en blanco de ~500px por fuera de toda tarjeta bajo esas dos
+    // columnas. Con stretch, las 3 tarjetas igualan altura y el espacio extra
+    // queda DENTRO del fondo/borde de cada card, no como vacio suelto.
+    '<div class="resp2" style="display:grid;grid-template-columns:1fr 1fr 268px;gap:16px;margin-bottom:30px">'+
+      sigCard+portCard+
+      '<div style="display:flex;flex-direction:column;gap:14px">'+
+        indicesCard()+
+        '<div id="de-regime-banner" class="fos-card" style="padding:12px 14px"><div class="dash-ctx-loading" style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">// Cargando contexto…</div></div>'+
+        moversCard()+
       '</div>'+
-      // Sin card-wrapper externo (critique P0): mercadoHoyBody ya trae sus
-      // propias cards (Índices/Régimen/Movers en el rail, featCard en el feed).
-      // Envolverlo en otra card daba 3 marcos concentricos. La region ya la
-      // separa el <h2> + border-top de arriba. Maximo un nivel de borde.
+    '</div>'+
+    // ── BANDA "MERCADO HOY" ──
+    // Solo noticias ahora: Índices/Régimen/Movers se subieron a la fila de
+    // arriba (junto a Top Señales/Portafolio). El feed queda solo, de extremo
+    // a extremo, en vez de compartir la franja con el rail.
+    '<div style="padding-top:22px;border-top:1px solid var(--border)">'+
+      '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:16px;flex-wrap:wrap">'+
+        '<h2 style="font-family:\'Fraunces\',Georgia,serif;font-size:20px;font-weight:600;color:var(--bright);margin:0;letter-spacing:-.01em">Últimas noticias</h2>'+
+        '<span style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">Mercado · Fed · earnings · geopolítica</span>'+
+      '</div>'+
       mercadoHoyBody()+
     '</div>'+
     '</div>';
@@ -5193,41 +5248,22 @@ function dashLoadContext(){
     var isFree=S.user&&S.user.plan==='free';
     var rClass=r?(r.regime==='risk_on'?'fos-pill--grn':r.regime==='risk_off'?'fos-pill--red':'fos-pill--amb'):'';
     var rLabel=r?r.label.toUpperCase():'—';
+    // Version compacta: antes vivia junto a un feed de noticias largo, donde su
+    // altura (SPY/SMA200 en $, barra VIX + escala, chips de "Señales activas")
+    // se absorbia sin problema. Ahora esta tarjeta vive en el rail junto a
+    // Top Señales/Portafolio (fila "de un vistazo") y esos extras solo
+    // duplicaban el % vs SMA200 / la pildora de régimen ya visibles arriba —
+    // el detalle completo sigue a un click en "Abrir Motor de Análisis".
     var html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div class="fos-section-label">Régimen de Mercado</div>'+(r&&r.spy&&r.sma200?'<span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text3)">SMA50 '+(r.spy>r.sma200?'>':'<')+' SMA200</span>':'')+'</div>';
     if(r){
       html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:11px;color:var(--text3)">SPY · Tendencia</span><div class="dash-regime-pill '+rClass+'" style="margin:0"><span class="fos-dot"></span>'+rLabel+'</div></div>';
-      html+='<div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:10px">'+r.desc+'</div>';
-      if(r.spy) html+='<div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-top:1px solid var(--border)"><span style="color:var(--text3);font-family:\'JetBrains Mono\',monospace">SPY</span><span style="color:var(--bright);font-family:\'JetBrains Mono\',monospace">$'+fmtD(r.spy)+'</span></div>';
-      if(r.sma200) html+='<div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-top:1px solid var(--border)"><span style="color:var(--text3);font-family:\'JetBrains Mono\',monospace">SMA200</span><span style="color:var(--text2);font-family:\'JetBrains Mono\',monospace">$'+fmtD(r.sma200)+'</span></div>';
+      html+='<div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:8px">'+r.desc+'</div>';
       if(r.pct200!=null){var p200=(r.pct200*100);html+='<div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-top:1px solid var(--border)"><span style="color:var(--text3);font-family:\'JetBrains Mono\',monospace">% vs SMA200</span><span style="color:'+(p200>=0?'var(--pos)':'var(--neg)')+';font-family:\'JetBrains Mono\',monospace">'+(p200>=0?'+':'')+p200.toFixed(1)+'%</span></div>';}
     }
     if(v&&v.vix){
-      var vixN=v.vix; var vixPct=Math.min(100,Math.round(vixN/50*100));
+      var vixN=v.vix;
       var vixC=vixN<20?'var(--grn)':vixN<30?'var(--amber)':'var(--red)';
-      html+='<div style="padding:8px 0;border-top:1px solid var(--border);margin-top:4px">';
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">VIX (volatilidad)</span><span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:'+vixC+'">'+vixN.toFixed(1)+' · '+v.label+'</span></div>';
-      html+='<div style="background:var(--border);border-radius:3px;height:5px;overflow:hidden"><div style="height:100%;width:'+vixPct+'%;background:'+vixC+';border-radius:3px;transition:width .4s"></div></div>';
-      html+='<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-top:3px"><span>0</span><span>50</span></div>';
-      html+='</div>';
-    }
-    // Señales activas chips
-    if(r){
-      var chips=[];
-      if(r.regime==='risk_on') chips.push({label:'Momentum alcista',color:'var(--grn)',bg:'rgba(61,190,122,.1)'});
-      else if(r.regime==='risk_off') chips.push({label:'Momentum bajista',color:'var(--red)',bg:'rgba(239,68,68,.1)'});
-      else chips.push({label:'Momentum neutral',color:'var(--amber)',bg:'rgba(245,158,11,.1)'});
-      if(v&&v.vix){
-        var vn=v.vix;
-        if(vn<20) chips.push({label:'VIX bajo — calma',color:'var(--grn)',bg:'rgba(61,190,122,.1)'});
-        else if(vn<30) chips.push({label:'VIX moderado',color:'var(--amber)',bg:'rgba(245,158,11,.1)'});
-        else chips.push({label:'VIX elevado',color:'var(--red)',bg:'rgba(239,68,68,.1)'});
-      }
-      if(r.spy&&r.sma200&&r.spy>r.sma200) chips.push({label:'Breadth positivo',color:'var(--grn)',bg:'rgba(61,190,122,.1)'});
-      if(chips.length){
-        html+='<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px"><div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Señales activas</div>';
-        html+=chips.map(function(c){return '<span style="display:inline-flex;align-items:center;gap:5px;background:'+c.bg+';color:'+c.color+';border:1px solid '+c.color+';border-radius:var(--r-xl);padding:3px 10px;font-size:11px;font-weight:600;margin:2px 4px 2px 0"><span style="width:6px;height:6px;border-radius:50%;background:'+c.color+';flex-shrink:0"></span>'+c.label+'</span>';}).join('');
-        html+='</div>';
-      }
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 0;border-top:1px solid var(--border)"><span style="color:var(--text3);font-family:\'JetBrains Mono\',monospace">VIX (volatilidad)</span><span style="display:flex;align-items:center;gap:5px;font-family:\'JetBrains Mono\',monospace;color:'+vixC+'"><span style="width:6px;height:6px;border-radius:50%;background:'+vixC+';flex-shrink:0"></span>'+vixN.toFixed(1)+' · '+v.label+'</span></div>';
     }
     html+='<button onclick="setPage(\''+(isFree?'upgrade':'decision')+'\')" '+(isFree?'onclick="openModal(\'upgrade\')"':'')+
       ' style="width:100%;margin-top:10px;background:var(--grn);border:none;border-radius:var(--r-md);padding:7px 12px;color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:\'Inter\',sans-serif">→ Abrir Motor de Análisis</button>';
@@ -6153,11 +6189,11 @@ function mercadoHoyBody(){
       '</div>'+
     '</div>'+
 
-    // ── BODY 2-COL ──
-    '<div class="resp2" style="display:grid;grid-template-columns:1fr 268px;gap:0;align-items:start">'+
-
-    // LEFT: news feed
-    '<div style="padding:16px 20px;border-right:1px solid var(--border)">'+
+    // ── FEED, FULL-WIDTH ──
+    // Índices/Régimen/Movers ya no comparten esta franja: se subieron al rail
+    // junto a Top Señales/Portafolio (ver renderDash). El feed de noticias
+    // queda solo, de extremo a extremo.
+    '<div style="padding:16px 20px">'+
 
     // feed header
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'+
@@ -6170,29 +6206,6 @@ function mercadoHoyBody(){
       ?'<div style="text-align:center;color:var(--text3);padding:48px 20px;font-family:\'JetBrains Mono\',monospace;font-size:11px">'+(f!=='Todo'?'Sin noticias en la categoría “'+esc(f)+'”.':(_newsFetched?'Sin titulares en vivo ahora mismo. Reintentando…':'Cargando titulares…'))+'</div>'
       :featCard+'<div style="margin-top:10px">'+newsListHtml+'</div>')+
     '</div>'+
-
-    // RIGHT: sidebar
-    '<div style="padding:16px 16px;display:flex;flex-direction:column;gap:14px">'+
-
-    // Índices
-    '<div class="fos-card" style="overflow:hidden">'+
-      '<div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--card2);display:flex;align-items:center;justify-content:space-between">'+
-        '<span class="fos-section-label" style="margin:0">Índices</span>'+
-        '<span style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">~15min delay</span>'+
-      '</div>'+
-      '<div style="padding:4px 14px 8px">'+idxRows+'</div>'+
-    '</div>'+
-
-    // Régimen de Mercado: movido al lateral (debajo de Índices) en vez de una
-    // banda full-width que cruzaba toda la pantalla. dashLoadContext() lo llena
-    // async buscando este id. Es una tarjeta compacta, cabe en el lateral.
-    '<div id="de-regime-banner" class="fos-card" style="padding:12px 14px"><div class="dash-ctx-loading" style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace">// Cargando contexto…</div></div>'+
-
-    // Market Movers, tambien en el lateral de contexto.
-    moversCard()+
-
-    '</div>'+ // end right
-    '</div>'+ // end grid
     // El indice de sentimiento se retira de Contexto: se repite identico en la
     // pagina Sentimiento dentro de Analisis. Se conserva la marca de ultima
     // actualizacion de los datos.
