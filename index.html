@@ -9592,7 +9592,12 @@ function renderComp(){
         var ret=s.pts[s.pts.length-1].y;
         var maxR=Math.max.apply(null,s.pts.map(function(p){return p.y;}));
         var minR=Math.min.apply(null,s.pts.map(function(p){return p.y;}));
-        var sharpe=vol>0?(mean/vol)*Math.sqrt(252/(closes.length||1)):0;
+        // Anualiza con la constante de dias de trading/ano (datos diarios,
+        // interval=1d en fetchHistory) — NO con closes.length: dividir 252
+        // por el tamano de la ventana hacia que el mismo activo mostrara un
+        // Sharpe distinto solo por cambiar el período elegido (1M vs 1A),
+        // sin que cambiara nada del riesgo/retorno real.
+        var sharpe=vol>0?(mean/vol)*Math.sqrt(252):0;
         var sig=ALL_SIG.find(function(x){return x.t===s.t;})||{sig:'HOLD',sc:60};
         var lq=LIVE[s.t];
         return{t:s.t,color:s.color,ret:ret,vol:vol,maxR:maxR,minR:minR,sharpe:sharpe,
