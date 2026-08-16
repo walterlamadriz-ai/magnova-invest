@@ -6423,7 +6423,13 @@ function renderRiskBody(){
   document.getElementById("main").innerHTML=
     '<div class="fos-module-header"><div><div class="fos-module-crumb">Decidir · Riesgo y Sizing</div><h1 class="fos-module-title">Riesgo y Sizing</h1><div class="fos-module-sub">Cuánto arriesgar en cada posición · '+S.portfolio.length+' posiciones abiertas</div></div></div>'+
     riskTabs()+
+    '<div class="resp2" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">'+
     allocHtml+
+    '<div class="cb"><div class="st"><div class="stbar"></div>Escenarios</div>'+scRows+
+    '<div style="display:flex;justify-content:space-between;padding-top:9px;border-top:1px solid var(--border);margin-top:2px"><span style="font-weight:700;color:var(--bright);font-size:12px">Valor Esperado</span><span style="font-weight:700;color:'+(ev>=0?"var(--pos)":"var(--neg)")+';font-family:\'JetBrains Mono\'">'+(ev>=0?"+":"")+D(ev)+'</span></div></div>'+
+    '<div class="cb"><div class="st"><div class="stbar"></div>R/R por Activo</div>'+rrRows+
+    '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\';margin-top:4px">Referencia mínima: 2.0x</div></div>'+
+    '</div>'+
     '<div class="krow">'+
     kpi("Capital",D(cap),"","g")+
     kpi("Riesgo/Op",D(rA),"2% del capital","r")+
@@ -6435,13 +6441,7 @@ function renderRiskBody(){
     (rows.length>8?'<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;margin-bottom:6px">Mostrando 8 de '+rows.length+' posiciones</div>':'')+
     // En movil quedan Activo/Risk $/Tamaño/R:R — la salida real de la calculadora
     // de riesgo; Precio, Ref-8% y Unidades son contexto derivable.
-    '<div class="tw"><table class="fos-table"><thead><tr><th>Activo</th><th class="col-sec">Precio</th><th class="col-sec" title="Referencia de baja histórica –8%">Ref. –8%</th><th>Risk $</th><th>Tamaño</th><th class="col-sec">Unidades</th><th>R/R</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>'+
-    '<div class="grid2">'+
-    '<div class="cb"><div class="st"><div class="stbar"></div>Escenarios</div>'+scRows+
-    '<div style="display:flex;justify-content:space-between;padding-top:9px;border-top:1px solid var(--border);margin-top:2px"><span style="font-weight:700;color:var(--bright);font-size:12px">Valor Esperado</span><span style="font-weight:700;color:'+(ev>=0?"var(--pos)":"var(--neg)")+';font-family:\'JetBrains Mono\'">'+(ev>=0?"+":"")+D(ev)+'</span></div></div>'+
-    '<div class="cb"><div class="st"><div class="stbar"></div>R/R por Activo</div>'+rrRows+
-    '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\';margin-top:4px">Referencia mínima: 2.0x</div></div>'+
-    '</div>';
+    '<div class="tw"><table class="fos-table"><thead><tr><th>Activo</th><th class="col-sec">Precio</th><th class="col-sec" title="Referencia de baja histórica –8%">Ref. –8%</th><th>Risk $</th><th>Tamaño</th><th class="col-sec">Unidades</th><th>R/R</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
 }
 
 // ── BACKTEST (Pro) ─────────────────────────────────────────────
