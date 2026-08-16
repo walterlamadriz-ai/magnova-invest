@@ -5541,67 +5541,81 @@ function renderBitacora(){
     '<th>Fecha</th><th>Ticker</th><th>Tipo</th><th class="col-sec">Precio</th><th class="col-sec">Qty</th><th>Monto</th><th class="col-sec">RSI</th><th>P&L</th><th class="col-sec">Nota</th><th></th>'+
     '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
 
-    // Per-ticker cost basis summary
-    // Dividend summary section
+    // Dividendos recibidos + Costo promedio ponderado — mismo peso conceptual
+    // (dos resúmenes acotados "de un vistazo"), emparejados en .grid2 cuando
+    // ambos existen para que no compitan apilados a ancho completo; si sólo
+    // uno tiene datos, ese queda solo a ancho completo (no dejar una columna
+    // vacía en el grid).
     (function(){
       var divs=S.trades.filter(function(t){return t.type==='dividend';});
-      if(!divs.length) return '';
-      var totalDivs=divs.reduce(function(s,t){return s+t.amount;},0);
-      // Group by ticker
-      var byTicker={};
-      divs.forEach(function(d){
-        if(!byTicker[d.ticker]) byTicker[d.ticker]={ticker:d.ticker,count:0,total:0};
-        byTicker[d.ticker].count++;byTicker[d.ticker].total+=d.amount;
-      });
-      // Group by month
-      var byMonth={};
-      divs.forEach(function(d){
-        var m=d.date?d.date.substring(0,7):'?';
-        if(!byMonth[m]) byMonth[m]=0;byMonth[m]+=d.amount;
-      });
-      var tickerChips=Object.values(byTicker).sort(function(a,b){return b.total-a.total;}).map(function(d){
-        return '<div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md);padding:8px 14px;min-width:120px">'+
-          '<div style="font-weight:700;color:var(--bright);font-size:12px">'+d.ticker+'</div>'+
-          '<div style="font-size:11px;color:var(--grn)"><b>$'+fmt(d.total)+'</b></div>'+
-          '<div style="font-size:11px;color:var(--text3)">'+d.count+' pago'+(d.count>1?'s':'')+'</div>'+
+      var divsHtml='';
+      if(divs.length){
+        var totalDivs=divs.reduce(function(s,t){return s+t.amount;},0);
+        var byTicker={};
+        divs.forEach(function(d){
+          if(!byTicker[d.ticker]) byTicker[d.ticker]={ticker:d.ticker,count:0,total:0};
+          byTicker[d.ticker].count++;byTicker[d.ticker].total+=d.amount;
+        });
+        var byMonth={};
+        divs.forEach(function(d){
+          var m=d.date?d.date.substring(0,7):'?';
+          if(!byMonth[m]) byMonth[m]=0;byMonth[m]+=d.amount;
+        });
+        var tickerChips=Object.values(byTicker).sort(function(a,b){return b.total-a.total;}).map(function(d){
+          return '<div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md);padding:8px 14px;min-width:120px">'+
+            '<div style="font-weight:700;color:var(--bright);font-size:12px">'+d.ticker+'</div>'+
+            '<div style="font-size:11px;color:var(--grn)"><b>$'+fmt(d.total)+'</b></div>'+
+            '<div style="font-size:11px;color:var(--text3)">'+d.count+' pago'+(d.count>1?'s':'')+'</div>'+
+          '</div>';
+        }).join('');
+        var monthRows=Object.keys(byMonth).sort().reverse().slice(0,6).map(function(m){
+          var amt=byMonth[m];
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">'+
+            '<span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text2)">'+m+'</span>'+
+            '<span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:700;color:var(--grn)">+$'+fmt(amt)+'</span>'+
+          '</div>';
+        }).join('');
+        divsHtml='<div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px">'+
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
+            '<h3 style="font-size:13px;margin:0;color:var(--text2)">💰 Dividendos recibidos</h3>'+
+            '<span style="font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:700;color:var(--grn)">+$'+fmt(totalDivs)+'</span>'+
+          '</div>'+
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+tickerChips+'</div>'+
+          '<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Por mes</div>'+
+          monthRows+
         '</div>';
-      }).join('');
-      var monthRows=Object.keys(byMonth).sort().reverse().slice(0,6).map(function(m){
-        var amt=byMonth[m];
-        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">'+
-          '<span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:var(--text2)">'+m+'</span>'+
-          '<span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;font-weight:700;color:var(--grn)">+$'+fmt(amt)+'</span>'+
-        '</div>';
-      }).join('');
-      return '<div style="margin-top:18px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px">'+
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
-          '<h3 style="font-size:13px;margin:0;color:var(--text2)">💰 Dividendos recibidos</h3>'+
-          '<span style="font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:700;color:var(--grn)">+$'+fmt(totalDivs)+'</span>'+
-        '</div>'+
-        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+tickerChips+'</div>'+
-        '<div style="font-size:11px;font-family:\'JetBrains Mono\',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Por mes</div>'+
-        monthRows+
-      '</div>';
-    })()+
+      }
 
-    (S.trades.length?'<div style="margin-top:18px"><h3 style="font-size:13px;margin-bottom:10px;color:var(--text2)">Costo promedio ponderado por posición</h3>'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-    Array.from(new Set(S.trades.filter(function(t){return t.type==='buy';}).map(function(t){return t.ticker;}))).map(function(tkr){
-      var buys=S.trades.filter(function(t){return t.ticker===tkr&&t.type==='buy';});
-      var sells=S.trades.filter(function(t){return t.ticker===tkr&&t.type==='sell';});
-      var totalQ=buys.reduce(function(s,t){return s+t.qty;},0)-sells.reduce(function(s,t){return s+t.qty;},0);
-      var totalAmt=buys.reduce(function(s,t){return s+t.amount;},0);
-      var avgCost=buys.reduce(function(s,t){return s+t.qty;},0)>0?totalAmt/buys.reduce(function(s,t){return s+t.qty;},0):0;
-      var realPnl=realizedPnlFor(tkr);
-      if(totalQ<=0&&realPnl===0) return '';
-      return '<div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 14px;min-width:150px">'+
-        '<div style="font-weight:700;color:var(--bright);margin-bottom:4px">'+tkr+'</div>'+
-        '<div style="font-size:11px;color:var(--text2)">Costo prom: <b style="color:var(--bright)">$'+fmtD(avgCost)+'</b></div>'+
-        '<div style="font-size:11px;color:var(--text2)">Shares: <b>'+fmtD(totalQ)+'</b></div>'+
-        (realPnl!==0?'<div style="font-size:11px;color:'+(realPnl>=0?'var(--pos)':'var(--neg)')+'">P&L real: '+(realPnl>=0?'+':'')+'$'+fmt(realPnl)+'</div>':'')+
-        '</div>';
-    }).join("")+
-    '</div></div>':'');
+      var costHtml='';
+      if(S.trades.length){
+        var costChips=Array.from(new Set(S.trades.filter(function(t){return t.type==='buy';}).map(function(t){return t.ticker;}))).map(function(tkr){
+          var buys=S.trades.filter(function(t){return t.ticker===tkr&&t.type==='buy';});
+          var sells=S.trades.filter(function(t){return t.ticker===tkr&&t.type==='sell';});
+          var totalQ=buys.reduce(function(s,t){return s+t.qty;},0)-sells.reduce(function(s,t){return s+t.qty;},0);
+          var totalAmt=buys.reduce(function(s,t){return s+t.amount;},0);
+          var avgCost=buys.reduce(function(s,t){return s+t.qty;},0)>0?totalAmt/buys.reduce(function(s,t){return s+t.qty;},0):0;
+          var realPnl=realizedPnlFor(tkr);
+          if(totalQ<=0&&realPnl===0) return '';
+          return '<div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 14px;min-width:150px">'+
+            '<div style="font-weight:700;color:var(--bright);margin-bottom:4px">'+tkr+'</div>'+
+            '<div style="font-size:11px;color:var(--text2)">Costo prom: <b style="color:var(--bright)">$'+fmtD(avgCost)+'</b></div>'+
+            '<div style="font-size:11px;color:var(--text2)">Shares: <b>'+fmtD(totalQ)+'</b></div>'+
+            (realPnl!==0?'<div style="font-size:11px;color:'+(realPnl>=0?'var(--pos)':'var(--neg)')+'">P&L real: '+(realPnl>=0?'+':'')+'$'+fmt(realPnl)+'</div>':'')+
+            '</div>';
+        }).join("");
+        if(costChips){
+          costHtml='<div style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px">'+
+            '<h3 style="font-size:13px;margin:0 0 12px;color:var(--text2)">📊 Costo promedio ponderado por posición</h3>'+
+            '<div style="display:flex;gap:8px;flex-wrap:wrap">'+costChips+'</div>'+
+          '</div>';
+        }
+      }
+
+      if(divsHtml&&costHtml) return '<div class="grid2" style="margin-top:18px">'+divsHtml+costHtml+'</div>';
+      if(divsHtml) return '<div style="margin-top:18px">'+divsHtml+'</div>';
+      if(costHtml) return '<div style="margin-top:18px">'+costHtml+'</div>';
+      return '';
+    })();
 }
 
 function deleteTrade(id){
@@ -6329,10 +6343,8 @@ function renderRisk(){
 function riskTabs(){
   var st=function(t){var a=RISK_TAB===t;
     return 'padding:8px 18px;border-radius:var(--r-sm);font-size:12px;font-family:\'JetBrains Mono\',monospace;cursor:pointer;border:1px solid '+(a?'var(--grn)':'var(--border)')+';background:'+(a?'var(--grn-bg)':'var(--card2)')+';color:'+(a?'var(--grn)':'var(--text2)')+';font-weight:'+(a?'700':'400');};
-  return '<div style="display:flex;gap:8px;margin:0 20px 18px">'+
-    '<button style="'+st('mis')+'" onclick="RISK_TAB=\'mis\';renderRisk()">Mis posiciones</button>'+
-    '<button style="'+st('nueva')+'" onclick="RISK_TAB=\'nueva\';renderRisk()">Nueva posición</button>'+
-    '</div>';
+  return '<button style="'+st('mis')+'" onclick="RISK_TAB=\'mis\';renderRisk()">Mis posiciones</button>'+
+    '<button style="'+st('nueva')+'" onclick="RISK_TAB=\'nueva\';renderRisk()">Nueva posición</button>';
 }
 function renderRiskBody(){
   var plan=planOf();
@@ -6421,8 +6433,9 @@ function renderRiskBody(){
   }
 
   document.getElementById("main").innerHTML=
-    '<div class="fos-module-header"><div><div class="fos-module-crumb">Decidir · Riesgo y Sizing</div><h1 class="fos-module-title">Riesgo y Sizing</h1><div class="fos-module-sub">Cuánto arriesgar en cada posición · '+S.portfolio.length+' posiciones abiertas</div></div></div>'+
-    riskTabs()+
+    '<div class="fos-module-header"><div><div class="fos-module-crumb">Decidir · Riesgo y Sizing</div><h1 class="fos-module-title">Riesgo y Sizing</h1><div class="fos-module-sub">Cuánto arriesgar en cada posición · '+S.portfolio.length+' posiciones abiertas</div></div>'+
+    '<div class="ph-right">'+riskTabs()+'</div>'+
+    '</div>'+
     '<div class="krow">'+
     kpi("Capital",D(cap),"","g")+
     kpi("Riesgo/Op",D(rA),"2% del capital","r")+
@@ -8062,8 +8075,7 @@ function renderPBBody(){
     '<div style="font-size:11px;color:var(--text3);font-family:\'JetBrains Mono\',monospace;line-height:1.6">Ticker · Precio · Capital · % Riesgo · Ref. Baja</div></div>';
 
   document.getElementById("main").innerHTML=
-    _ph('Decidir · Position Builder','Position Builder','// Calculadora de entrada óptima · Regla del 2% · Simulación de escenarios')+
-    riskTabs()+
+    _ph('Decidir · Position Builder','Position Builder','// Calculadora de entrada óptima · Regla del 2% · Simulación de escenarios',riskTabs())+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">'+
     '<div><div class="cb">'+
     '<div class="st"><div class="stbar"></div>Configuración</div>'+
@@ -8300,7 +8312,7 @@ function renderSentimentWidget(){
   document.getElementById("main").innerHTML=
     _ph('Analizar · Sentiment','Market Sentiment','// Fear & Greed · 5 componentes ponderados · VIX real',vixStatus+'<button id="sent-refresh" onclick="refreshSentiment()" class="btn" style="padding:5px 12px;font-size:11px">⟳ Actualizar VIX</button>')+
     '<div class="resp2" style="display:grid;grid-template-columns:260px 1fr;gap:16px;align-items:start">'+
-    '<div style="display:flex;flex-direction:column;gap:12px">'+
+    '<div>'+
     '<div class="cb" style="text-align:center">'+
     buildDial(d.score,d.color,210)+
     '<div style="font-size:22px;margin-top:6px">'+d.emoji+'</div>'+
@@ -8310,7 +8322,7 @@ function renderSentimentWidget(){
     '<div class="cb"><div class="st"><div class="stbar"></div>Últimos 14 días</div>'+
     '<div style="display:flex;align-items:flex-end;height:60px;gap:2px">'+hBars+'</div></div>'+
     '</div>'+
-    '<div style="display:flex;flex-direction:column;gap:12px">'+
+    '<div>'+
     '<div class="cb"><div class="st"><div class="stbar"></div>Componentes del índice</div>'+compRows+
     '<div style="font-size:11px;color:var(--text3);margin-top:8px;font-family:\'JetBrains Mono\',monospace">BUY×30% + Score×15% + RSI×25% + VIX×15% + Momentum×15%</div></div>'+
     '<div class="cb"><div class="st"><div class="stbar"></div>Distribución de señales</div>'+
