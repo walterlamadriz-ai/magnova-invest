@@ -2558,6 +2558,30 @@ async function fetchQuote(ticker){
   }catch(e){fetchStats.fail++;fetchStats.lastErr=e.message;return null;}
 }
 
+// fetchCryptoQuote — single live crypto price via /api/crypto (CoinGecko proxy).
+// Same shape as fetchQuote's output so it drops straight into LIVE[ticker].
+// Only works behind the Vercel proxy (same constraint as every other /api/*
+// call here) — no local-dev fallback, CoinGecko id resolution lives server-side.
+async function fetchCryptoQuote(ticker){
+  if(!_USE_EDGE) return null;
+  try{
+    var ckey='c_'+ticker;
+    var cached=_cacheGet(ckey);
+    if(cached){fetchStats.ok++;return cached;}
+    var res=await fetchWithTimeout('/api/crypto?symbols='+encodeURIComponent(ticker),5000);
+    if(!res||!res.ok) throw new Error('HTTP '+(res?res.status:'no response'));
+    var json=await res.json();
+    var q=json[ticker.toUpperCase()];
+    if(!q) throw new Error('no data');
+    var out={ticker:ticker,price:q.price,prevClose:q.prevClose,
+             change:q.change,changePct:q.changePct,volume:q.volume||0,
+             marketCap:q.marketCap||0,high52:q.high52||null,
+             low52:q.low52||0,exchange:'',marketState:'REGULAR'};
+    _cacheSet(ckey,out);fetchStats.ok++;fetchStats.lastOk=Date.now();
+    return out;
+  }catch(e){fetchStats.fail++;fetchStats.lastErr=e.message;return null;}
+}
+
 // fetchHistory — OHLCV history via /api/history edge function
 async function fetchHistory(ticker,range){
   try{
@@ -2718,6 +2742,14 @@ async function refreshLive(tickers,manual){
     var gotAny=false;
     var isVercel=_USE_EDGE;
 
+    // Holdings marcadas type==="Crypto" en Portfolio van por /api/crypto
+    // (CoinGecko) en vez de /api/quote (Yahoo) — ver api/crypto.js. Watchlist
+    // y ALL_SIG no tienen noción de tipo hoy, así que siguen 100% por Yahoo.
+    var cryptoTickers=tickers.filter(function(t){
+      return S.portfolio.some(function(h){return h.t===t&&h.type==='Crypto';});
+    });
+    var stockTickers=tickers.filter(function(t){return cryptoTickers.indexOf(t)<0;});
+
     if(isVercel){
       // /api/quote recorta a 10 tickers por peticion. Antes se enviaban TODOS
       // en una sola URL: el servidor devolvia solo los 10 primeros, gotAny se
@@ -2725,9 +2757,9 @@ async function refreshLive(tickers,manual){
       // ninguna posicion recibia precio (ni valor actual, ni P&L, ni retorno).
       // Ahora se pide en trozos de 10 y se recorren todos.
       try{
-        for(var qi=0; qi<tickers.length; qi+=10){
+        for(var qi=0; qi<stockTickers.length; qi+=10){
           if(mySignal.aborted) return;
-          var trozo=tickers.slice(qi, qi+10);
+          var trozo=stockTickers.slice(qi, qi+10);
           var batchRes=await fetchWithTimeout('/api/quote?ticker='+trozo.join(','),6000);
           var batchData=await batchRes.json();
           Object.keys(batchData).forEach(function(t){
@@ -2742,14 +2774,31 @@ async function refreshLive(tickers,manual){
           if(gotAny) updateLivePricesInDOM();
         }
       }catch(e){if(mySignal.aborted) return;/* fall through to individual fetches */}
+
+      if(cryptoTickers.length&&!mySignal.aborted){
+        try{
+          var cRes=await fetchWithTimeout('/api/crypto?symbols='+cryptoTickers.join(','),6000);
+          var cData=await cRes.json();
+          Object.keys(cData).forEach(function(t){
+            var q=cData[t];
+            if(q&&q.price){
+              LIVE[t]=q;
+              S.portfolio.forEach(function(h){if(h.t===t)h.cur=q.price;});
+              gotAny=true;
+            }
+          });
+          updateLivePricesInDOM();
+        }catch(e){if(mySignal.aborted) return;/* precios crypto quedan sin refrescar, resto sigue */}
+      }
     }
 
     if(mySignal.aborted) return;
     if(!gotAny){
-      // Fallback: individual fetches with batching
+      // Fallback: individual fetches with batching (solo acciones/ETF — las
+      // crypto ya se intentaron arriba vía /api/crypto, fetchQuote no las resuelve)
       var BATCH_SIZE=6;
-      for(var bi=0;bi<tickers.length;bi+=BATCH_SIZE){
-        var batch=tickers.slice(bi,bi+BATCH_SIZE);
+      for(var bi=0;bi<stockTickers.length;bi+=BATCH_SIZE){
+        var batch=stockTickers.slice(bi,bi+BATCH_SIZE);
         var results=await Promise.allSettled(batch.map(function(t){return fetchQuote(t);}));
         results.forEach(function(r,i){
           if(r.status==="fulfilled"&&r.value){
@@ -6939,6 +6988,33 @@ async function doUpgrade(){
   }
 }
 
+// Autofill "Precio actual" en el modal de posición. Type==="Crypto" usa
+// /api/crypto (CoinGecko); el resto sigue por /api/quote (Yahoo) via fetchQuote.
+// Compartida entre el input de ticker y el select de tipo: cambiar cualquiera
+// de los dos debe re-resolver el precio con la fuente correcta.
+function posAutofillPrice(){
+  var tEl=document.getElementById('pt'),tyEl=document.getElementById('pty'),el=document.getElementById('pcur');
+  if(!tEl||!el)return;
+  var t=(tEl.value||"").toUpperCase().trim();
+  if(!t)return;
+  var isCrypto=tyEl&&tyEl.value==='Crypto';
+  if(LIVE[t]&&!isCrypto){el.value=LIVE[t].price.toFixed(2);return;}
+  var p=isCrypto?fetchCryptoQuote(t):fetchQuote(t);
+  p.then(function(q){
+    if(!q)return;
+    // Ticker y tipo pedidos en esta llamada — el usuario pudo haber tipeado
+    // otro ticker o cambiado Stock↔Crypto mientras la request estaba en vuelo.
+    // Sin este chequeo, una respuesta de Yahoo que tarda más que la de
+    // CoinGecko (o viceversa) puede llegar después y pisar el precio correcto
+    // con uno de la fuente equivocada (mismo ticker, forma de datos distinta).
+    var tNow=document.getElementById('pt'),tyNow=document.getElementById('pty');
+    if(!tNow||!el)return;
+    var curT=(tNow.value||"").toUpperCase().trim();
+    var curIsCrypto=tyNow&&tyNow.value==='Crypto';
+    if(curT!==t||curIsCrypto!==isCrypto)return;
+    LIVE[t]=q;el.value=q.price.toFixed(2);
+  });
+}
 function mPos(mr){
   var ed=S.modal==="editpos";
   var pos=ed&&S.editPos?S.editPos:{t:"",type:"Stock",sh:"",cost:"",cur:""};
@@ -6948,12 +7024,12 @@ function mPos(mr){
     '<p class="msub">'+(ed?"Modifica los valores":"Agrega un activo al portfolio")+'</p>'+
     '<div id="perr" class="err"></div>'+
     '<label class="fl">Ticker</label>'+
-    '<input id="pt" class="inp ifu" placeholder="AAPL" value="'+pos.t+'" style="text-transform:uppercase" '+(ed?"readonly":"")+' onchange="(function(){var t=this.value.toUpperCase().trim();if(!t)return;var el=document.getElementById(\'pcur\');if(LIVE[t]){if(el)el.value=LIVE[t].price.toFixed(2);}else{fetchQuote(t).then(function(q){if(q&&el){LIVE[t]=q;el.value=q.price.toFixed(2);}});}}).call(this)"/>'+
+    '<input id="pt" class="inp ifu" placeholder="AAPL" value="'+pos.t+'" style="text-transform:uppercase" '+(ed?"readonly":"")+' onchange="posAutofillPrice()"/>'+
     '<label class="fl">Tipo</label>'+
     // value explicito: .value ya devolvia el textContent, asi que el valor que se
     // persiste es identico. Se hace explicito para que renombrar la etiqueta
     // visible no altere en silencio lo que se guarda.
-    '<select id="pty" class="inp ifu" style="cursor:pointer"><option value="Stock" '+(pos.type==="Stock"?"selected":"")+'>Stock</option><option value="ETF" '+(pos.type==="ETF"?"selected":"")+'>ETF</option><option value="Crypto" '+(pos.type==="Crypto"?"selected":"")+'>Crypto</option></select>'+
+    '<select id="pty" class="inp ifu" style="cursor:pointer" onchange="posAutofillPrice()"><option value="Stock" '+(pos.type==="Stock"?"selected":"")+'>Stock</option><option value="ETF" '+(pos.type==="ETF"?"selected":"")+'>ETF</option><option value="Crypto" '+(pos.type==="Crypto"?"selected":"")+'>Crypto</option></select>'+
     '<label class="fl">Unidades</label>'+
     '<input id="ps" class="inp ifu" type="number" placeholder="10" value="'+(pos.sh||"")+'" min="0.001" step="0.001"/>'+
     '<label class="fl">Precio de entrada</label>'+
