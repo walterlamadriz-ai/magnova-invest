@@ -1,4 +1,4 @@
-// MAGNOVA Service Worker
+// MAXNOVA Service Worker
 // REGLA DE ORO: solo se interceptan peticiones SAME-ORIGIN. Interceptar un
 // <script> cross-origin (p.ej. el UMD de Supabase en cdn.jsdelivr.net) rompia su
 // carga con "unknown error fetching the script" -> window.supabase quedaba
@@ -10,7 +10,7 @@
 //    online, cache offline; evita servir el build viejo una recarga extra).
 //  - Iconos same-origin: CACHE-FIRST con revalidacion.
 //  - Todo lo demas same-origin (incl. /api/*): passthrough.
-const CACHE = 'magnova-v3';
+const CACHE = 'maxnova-v4';
 const CORE = ['/app', '/index.html'];
 
 function isAppHtml(path) {
